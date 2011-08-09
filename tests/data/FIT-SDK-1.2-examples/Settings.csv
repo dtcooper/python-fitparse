@@ -1,7 +1,0 @@
-Type,Local Number,Message,Field 1,Value 1,Units 1,Field 2,Value 2,Units 2,Field 3,Value 3,Units 3,Field 4,Value 4,Units 4,Field 5,Value 5,Units 5,
-Definition,0,file_id,manufacturer,1,,product,1,,serial_number,1,,type,1,,
-Data,0,file_id,manufacturer,1,,garmin_product,988,,serial_number,123456,,type,2,,
-Definition,0,user_profile,weight,1,,gender,1,,age,1,,height,1,,language,1,,
-Data,0,user_profile,weight,90.0,kg,gender,1,,age,28,years,height,1.9,m,language,0,,
-Definition,0,hrm_profile,hrm_ant_id,1,,,,,,,,,,,,,,
-Data,0,hrm_profile,hrm_ant_id,100,,,,,,,,,,,,,,
