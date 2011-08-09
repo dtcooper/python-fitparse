@@ -48,16 +48,12 @@ def print_records(activity):
 
 for f in filenames:
     if quiet:
-        sys.stdout.write("%s... " % f)
-        sys.stdout.flush()
+        print f
     else:
         print ('##### %s ' % f).ljust(60, '#')
 
     a = Activity(f)
     a.parse()
 
-    if quiet:
-        sys.stdout.write("done.\n")
-        sys.stdout.flush()
-    else:
+    if not quiet:
         print_records(a)
