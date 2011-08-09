@@ -2,7 +2,7 @@ python-fitparse
 ===============
 
 
-*This library is in active development. This are very turbulent right now.*
+*This library is in active development and is very turbulent right now.*
 
 
 About
