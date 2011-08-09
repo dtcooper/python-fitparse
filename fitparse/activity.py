@@ -22,5 +22,6 @@
 
 from fitparse.base import FitFile
 
+
 class Activity(FitFile):
     pass

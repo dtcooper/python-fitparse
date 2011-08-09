@@ -24,8 +24,6 @@ from collections import namedtuple
 import datetime
 import math
 import os
-import struct
-import sys
 
 
 RECORD_HEADER_NORMAL = 0
@@ -48,6 +46,7 @@ class RecordHeader(namedtuple('RecordHeader',
     # seconds_offset -- for RECORD_HEADER_COMPRESSED_TS, offset in seconds
     # NOTE: Though named similarly, none of these map to the namedtuples below
     pass
+
 
 class FieldTypeBase(namedtuple('FieldTypeBase', ('num', 'name', 'invalid', 'struct_fmt', 'is_variable_size'))):
     # Yields a singleton if called with just a num
@@ -118,7 +117,6 @@ class FieldType(namedtuple('FieldType', ('name', 'base', 'converter'))):
             return raw_data
 
 
-
 class Field(namedtuple('Field', ('name', 'type', 'units', 'scale', 'offset'))):
     # A name, type, units, scale, offset
     pass
@@ -162,6 +160,7 @@ class BoundField(namedtuple('BoundField', ('data', 'raw_data', 'field'))):
 
 class MessageType(namedtuple('MessageType', ('num', 'name', 'fields'))):
     _instances = {}
+
     def __new__(cls, num, *args, **kwargs):
         instance = MessageType._instances.get(num)
         if instance:
@@ -242,13 +241,14 @@ _convert_local_date_time = lambda x: datetime.datetime.fromtimestamp(631065600 +
 _convert_date_time = lambda x: datetime.datetime.fromtimestamp(631065600 + x)
 _convert_bool = lambda x: bool(x)
 
+
 # XXX -- untested
 # see FitSDK1_2.zip:c/examples/decode/decode.c lines 121-150 for an example
 def _convert_record_compressed_speed_distance(raw_data):
     first, second, third = (ord(b) for b in raw_data)
     speed = first + (second & 0b1111)
     distance = (third << 4) + ((second & 0b11110000) >> 4)
-    return speed/100. / 1000. * 60. * 60., distance/16.
+    return speed / 100. / 1000. * 60. * 60., distance / 16.
 
 
 # XXX -- we do this so ipython doesn't throw an error on __file__.

@@ -37,6 +37,7 @@ import sys
 
 import xlrd
 
+
 def banner_str(s):
     return ("   %s   " % s).center(BANNER_PADDING, '#')
 
@@ -170,6 +171,7 @@ def parse_fields():
 
     fields = {}
     last_field = None
+    last_f_def_num = None
 
     for row in range(1, messages_sheet.nrows):
         row_values = [str(v).strip() if isinstance(v, (str, unicode)) else v \
@@ -197,7 +199,6 @@ def parse_fields():
             else:
 
                 is_dynamic_field = False
-
 
                 try:
                     f_def_num = int(f_def_num)
@@ -240,7 +241,6 @@ def parse_fields():
                     last_field = field
                     last_f_def_num = f_def_num
 
-
     # Special considerations on fields dict
 
     # Copy possiblities for event.data into event.data16
@@ -254,7 +254,6 @@ def parse_fields():
         event[data16_num] = DynamicField(*tuple(event[data16_num] + (event[data_num].possibilities.copy(),)))
     except NameError:
         raise Exception("Couldn't find fields data/data16 in message type event")
-
 
     return fields
 
@@ -316,7 +315,6 @@ def autogen_python(types, fields):
                             raise Exception("Type misatch on '%s'" % field.name)
 
                     write("FieldType(%s)," % repr(type_name))
-
 
                 # Base type
                 elif field.type in FIELD_BASE_TYPES:

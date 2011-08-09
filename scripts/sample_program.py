@@ -20,7 +20,6 @@
 # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-
 import os
 import sys
 
@@ -41,6 +40,7 @@ if not filename:
 
 a = Activity(filename)
 a.parse()
+
 
 def print_records(records):
     for rec in records:

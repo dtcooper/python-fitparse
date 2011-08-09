@@ -43,7 +43,6 @@ class FitFile(object):
         0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400,
     )
 
-
     def __init__(self, f):
         '''Create a fit file. Argument f can be an open file object or a filename'''
         if isinstance(f, str):
@@ -82,7 +81,7 @@ class FitFile(object):
         stored_crc, = struct.unpack('H', self._file.read(2))
 
         if stored_crc != self.crc:
-            raise FitParseError, "Invalid CRC"
+            raise FitParseError("Invalid CRC")
 
     def parse_record_header(self):
         header_data, = self.struct_read(FitFile.RECORD_HEADER_FMT)
@@ -91,13 +90,15 @@ class FitFile(object):
 
         if header_type == r.RECORD_HEADER_NORMAL:
             message_type = self.get_bit(header_data, 6)
-            local_message_type = header_data & 0b1111 # Bits 0-3
+            local_message_type = header_data & 0b1111  # Bits 0-3
+            # TODO: Should we set time_offset to 0?
             return r.RecordHeader(
-                header_type, message_type, local_message_type, 0) # TODO: Should we set time_offset to 0?
+                header_type, message_type, local_message_type, 0,
+            )
         else:
             # Compressed timestamp
-            local_message_type = (header_data >> 5) & 0b11 # bits 5-6
-            seconds_offset = header_data & 0b1111 # bits 0-3
+            local_message_type = (header_data >> 5) & 0b11  # bits 5-6
+            seconds_offset = header_data & 0b1111  # bits 0-3
             return r.RecordHeader(
                 header_type, r.MESSAGE_DATA, local_message_type, seconds_offset)
 
@@ -115,7 +116,7 @@ class FitFile(object):
             f_def_num, f_size, f_base_type_num = \
                                self.struct_read(FitFile.DEFINITION_PART3_FIELDDEF_FMT, arch)
 
-            f_base_type_num = f_base_type_num & 0b11111 # bits 0-4
+            f_base_type_num = f_base_type_num & 0b11111  # bits 0-4
 
             try:
                 field = message_type.fields[f_def_num]
@@ -217,7 +218,7 @@ class FitFile(object):
         '''Parse a fit file's header. This needs to be the first operation
         performed when opening a file'''
         def throw_exception(error):
-            raise FitParseError, "Bad .FIT file header: %s" % error
+            raise FitParseError("Bad .FIT file header: %s" % error)
 
         if self.file_size < 12:
             throw_exception("Invalid file size")
