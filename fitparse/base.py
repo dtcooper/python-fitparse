@@ -48,14 +48,14 @@ class FitFile(object):
         if isinstance(f, str):
             f = open(f, 'rb')
 
-        # Private: call FitFile.read(), don't read from this. Important for CRC.
+        # Private: call FitFile._read(), don't read from this. Important for CRC.
         self._file = f
-        self.file_size = os.path.getsize(f.name)
-        self.data_read = 0
-        self.crc = 0
+        self._file_size = os.path.getsize(f.name)
+        self._data_read = 0
+        self._crc = 0
 
-        self.last_timestamp = None
-        self.global_messages = {}
+        self._last_timestamp = None
+        self._global_messages = {}
         self.definitions = []
         self.records = []
 
@@ -71,11 +71,11 @@ class FitFile(object):
 
     def parse(self, hook_function=None):
         # TODO: Document hook function
-        self.parse_file_header()
+        self._parse_file_header()
 
         try:
             while True:
-                record = self.parse_record()
+                record = self._parse_record()
                 if hook_function:
                     hook_function(record)
         except FitParseComplete:
@@ -91,16 +91,16 @@ class FitFile(object):
 
         self._file.close()
 
-        if stored_crc != self.crc:
+        if stored_crc != self._crc:
             raise FitParseError("Invalid CRC")
 
-    def parse_record_header(self):
-        header_data, = self.struct_read(FitFile.RECORD_HEADER_FMT)
+    def _parse_record_header(self):
+        header_data, = self._struct_read(FitFile.RECORD_HEADER_FMT)
 
-        header_type = self.get_bit(header_data, 7)
+        header_type = self._get_bit(header_data, 7)
 
         if header_type == r.RECORD_HEADER_NORMAL:
-            message_type = self.get_bit(header_data, 6)
+            message_type = self._get_bit(header_data, 6)
             local_message_type = header_data & 0b1111  # Bits 0-3
             # TODO: Should we set time_offset to 0?
             return r.RecordHeader(
@@ -113,11 +113,11 @@ class FitFile(object):
             return r.RecordHeader(
                 header_type, r.MESSAGE_DATA, local_message_type, seconds_offset)
 
-    def parse_definition_record(self, header):
-        reserved, arch = self.struct_read(FitFile.DEFINITION_PART1_FMT)
+    def _parse_definition_record(self, header):
+        reserved, arch = self._struct_read(FitFile.DEFINITION_PART1_FMT)
 
         # We have the architecture now
-        global_message_num, num_fields = self.struct_read(FitFile.DEFINITION_PART2_FMT, arch)
+        global_message_num, num_fields = self._struct_read(FitFile.DEFINITION_PART2_FMT, arch)
 
         # Fetch MessageType (unknown if it doesn't exist)
         message_type = r.MessageType(global_message_num)
@@ -125,7 +125,7 @@ class FitFile(object):
 
         for field_num in range(num_fields):
             f_def_num, f_size, f_base_type_num = \
-                               self.struct_read(FitFile.DEFINITION_PART3_FIELDDEF_FMT, arch)
+                               self._struct_read(FitFile.DEFINITION_PART3_FIELDDEF_FMT, arch)
 
             f_base_type_num = f_base_type_num & 0b11111  # bits 0-4
 
@@ -138,27 +138,27 @@ class FitFile(object):
             fields.append(r.AllocatedField(field, f_size))
 
         definition = r.DefinitionRecord(header, message_type, arch, fields)
-        self.global_messages[header.local_message_type] = definition
+        self._global_messages[header.local_message_type] = definition
 
         self.definitions.append(definition)
 
         return definition  # Do we need to return?
 
-    def parse_data_record(self, header):
+    def _parse_data_record(self, header):
         # XXX -- handle compressed timestamp header
-        definition = self.global_messages[header.local_message_type]
+        definition = self._global_messages[header.local_message_type]
 
         fields = []
         dynamic_fields = {}
 
         for i, (field, f_size) in enumerate(definition.fields):
-            f_raw_data, = self.struct_read(field.type.get_struct_fmt(f_size), definition.arch)
+            f_raw_data, = self._struct_read(field.type.get_struct_fmt(f_size), definition.arch)
             # BoundField handles data conversion (if necessary)
             bound_field = r.BoundField(f_raw_data, field)
 
             if field.name == r.COMPRESSED_TIMESTAMP_FIELD_NAME and \
                field.type.name == r.COMPRESSED_TIMESTAMP_TYPE_NAME:
-                self.last_timestamp = f_raw_data
+                self._last_timestamp = f_raw_data
 
             fields.append(bound_field)
 
@@ -191,9 +191,9 @@ class FitFile(object):
         if header.type == r.RECORD_HEADER_COMPRESSED_TS:
             ts_field = definition.type.fields.get(r.TIMESTAMP_FIELD_DEF_NUM)
             if ts_field:
-                timestamp = self.last_timestamp + header.seconds_offset
+                timestamp = self._last_timestamp + header.seconds_offset
                 fields.append(r.BoundField(timestamp, ts_field))
-                self.last_timestamp = timestamp
+                self._last_timestamp = timestamp
 
         # XXX -- do compressed speed distance decoding here, similar to compressed ts
         # ie, inject the fields iff they're in definition.type.fields
@@ -204,61 +204,61 @@ class FitFile(object):
 
         return data   # Do we need to return?
 
-    def parse_record(self):
-        record_header = self.parse_record_header()
+    def _parse_record(self):
+        record_header = self._parse_record_header()
 
         if record_header.message_type == r.MESSAGE_DEFINITION:
-            return self.parse_definition_record(record_header)
+            return self._parse_definition_record(record_header)
         else:
-            return self.parse_data_record(record_header)
+            return self._parse_data_record(record_header)
 
     @staticmethod
-    def get_bit(byte, bit_no):
+    def _get_bit(byte, bit_no):
         return (byte >> bit_no) & 1
 
-    def read(self, size):
+    def _read(self, size):
         '''Call read from the file, otherwise the CRC won't match.'''
 
-        if self.data_read >= self.file_size - 2:
+        if self._data_read >= self._file_size - 2:
             raise FitParseComplete
 
         data = self._file.read(size)
-        self.data_read += size
+        self._data_read += size
 
         for byte in data:
-            self.calc_crc(ord(byte))
+            self._calc_crc(ord(byte))
 
         return data
 
-    def struct_read(self, fmt, endian=r.LITTLE_ENDIAN):
+    def _struct_read(self, fmt, endian=r.LITTLE_ENDIAN):
         endian = '<' if endian == r.LITTLE_ENDIAN else '>'
         fmt = '%s%s' % (endian, fmt)
-        data = self.read(struct.calcsize(fmt))
+        data = self._read(struct.calcsize(fmt))
         return struct.unpack(fmt, data)
 
-    def calc_crc(self, char):
+    def _calc_crc(self, char):
         # Taken almost verbatim from FITDTP section 3.3.2
-        crc = self.crc
+        crc = self._crc
         tmp = FitFile.CRC_TABLE[crc & 0xF]
         crc = (crc >> 4) & 0x0FFF
         crc = crc ^ tmp ^ FitFile.CRC_TABLE[char & 0xF]
 
         tmp = FitFile.CRC_TABLE[crc & 0xF]
         crc = (crc >> 4) & 0x0FFF
-        self.crc = crc ^ tmp ^ FitFile.CRC_TABLE[(char >> 4) & 0xF]
+        self._crc = crc ^ tmp ^ FitFile.CRC_TABLE[(char >> 4) & 0xF]
 
-    def parse_file_header(self):
+    def _parse_file_header(self):
         '''Parse a fit file's header. This needs to be the first operation
         performed when opening a file'''
         def throw_exception(error):
             raise FitParseError("Bad .FIT file header: %s" % error)
 
-        if self.file_size < 12:
+        if self._file_size < 12:
             throw_exception("Invalid file size")
 
         # Parse the FIT header
         header_size, self.protocol_version, self.profile_version, data_size, data_type = \
-                   self.struct_read(FitFile.FILE_HEADER_FMT)
+                   self._struct_read(FitFile.FILE_HEADER_FMT)
 
         if header_size != 12:
             throw_exception("Invalid header size")
@@ -267,5 +267,5 @@ class FitFile(object):
             throw_exception('Data type not ".FIT"')
 
         # 12 byte header + 2 byte CRC = 14 bytes not included in that
-        if self.file_size != 14 + data_size:
+        if self._file_size != 14 + data_size:
             throw_exception("File size not set correctly in header.")
