@@ -341,7 +341,7 @@ def autogen_python(types, fields):
 
             if isinstance(field, DynamicField):
                 for ref_name, dynamic_fields in field.possibilities.iteritems():
-                    writeln('        %s: {  # reference field: %s' % (repr(ref_name), ref_name))
+                    writeln('        %s: {' % repr(ref_name))
                     for ref_value, dynamic_field in dynamic_fields.iteritems():
                         write('            %s: ' % repr(ref_value))
                         field_gen(dynamic_field)

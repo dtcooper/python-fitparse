@@ -25,7 +25,7 @@
 ##############################################################################
 #
 # profile.def -- Exported FIT SDK Profile Data
-# Created on 2011-08-08 23:15:48 by generate_profile.py from Profile.xls
+# Created on 2011-08-09 15:41:13 by generate_profile.py from Profile.xls
 #
 ##############################################################################
 #
@@ -600,7 +600,7 @@ MessageType(0, 'file_id', {
     0: Field('type', FieldType('file'), None, None, None),  # base type: enum
     1: Field('manufacturer', FieldType('manufacturer'), None, None, None),  # base type: uint16
     2: DynamicField('product', FieldTypeBase(4), None, None, None, {  # base type: uint16
-        'manufacturer': {  # reference field: manufacturer
+        'manufacturer': {
             'dynastream': Field('garmin_product', FieldType('garmin_product'), None, None, None),  # base type: uint16
             'dynastream_oem': Field('garmin_product', FieldType('garmin_product'), None, None, None),  # base type: uint16
             'garmin': Field('garmin_product', FieldType('garmin_product'), None, None, None),  # base type: uint16
@@ -744,7 +744,7 @@ MessageType(18, 'session', {
     8: Field('total_timer_time', FieldTypeBase(6), 's', 1000, None),  # base type: uint32
     9: Field('total_distance', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
     10: DynamicField('total_cycles', FieldTypeBase(6), 1, 'cycles', None, {  # base type: uint32
-        'sport': {  # reference field: sport
+        'sport': {
             'running': Field('total_strides', FieldTypeBase(6), 'strides', 1, None),  # base type: uint32
         },
     }),
@@ -755,12 +755,12 @@ MessageType(18, 'session', {
     16: Field('avg_heart_rate', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
     17: Field('max_heart_rate', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
     18: DynamicField('avg_cadence', FieldTypeBase(2), 1, 'rpm', None, {  # base type: uint8
-        'sport': {  # reference field: sport
+        'sport': {
             'running': Field('avg_running_cadence', FieldTypeBase(2), 'strides/min', 1, None),  # base type: uint8
         },
     }),
     19: DynamicField('max_cadence', FieldTypeBase(2), 1, 'rpm', None, {  # base type: uint8
-        'sport': {  # reference field: sport
+        'sport': {
             'running': Field('max_running_cadence', FieldTypeBase(2), 'strides/min', 1, None),  # base type: uint8
         },
     }),
@@ -793,7 +793,7 @@ MessageType(19, 'lap', {
     8: Field('total_timer_time', FieldTypeBase(6), 's', 1000, None),  # base type: uint32
     9: Field('total_distance', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
     10: DynamicField('total_cycles', FieldTypeBase(6), None, 'cycles', None, {  # base type: uint32
-        'sport': {  # reference field: sport
+        'sport': {
             'running': Field('total_strides', FieldTypeBase(6), 'strides', None, None),  # base type: uint32
         },
     }),
@@ -804,12 +804,12 @@ MessageType(19, 'lap', {
     15: Field('avg_heart_rate', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
     16: Field('max_heart_rate', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
     17: DynamicField('avg_cadence', FieldTypeBase(2), None, 'rpm', None, {  # base type: uint8
-        'sport': {  # reference field: sport
+        'sport': {
             'running': Field('avg_running_cadence', FieldTypeBase(2), 'strides/min', None, None),  # base type: uint8
         },
     }),
     18: DynamicField('max_cadence', FieldTypeBase(2), None, 'rpm', None, {  # base type: uint8
-        'sport': {  # reference field: sport
+        'sport': {
             'running': Field('max_running_cadence', FieldTypeBase(2), 'strides/min', None, None),  # base type: uint8
         },
     }),
@@ -847,7 +847,7 @@ MessageType(21, 'event', {
     0: Field('event', FieldType('event'), None, None, None),  # base type: enum
     1: Field('event_type', FieldType('event_type'), None, None, None),  # base type: enum
     2: DynamicField('data16', FieldTypeBase(4), 1, None, None, {  # base type: uint16
-        'event': {  # reference field: event
+        'event': {
             'cad_low_alert': Field('cad_low_alert', FieldTypeBase(4), 'rpm', 1, None),  # base type: uint16
             'fitness_equipment': Field('fitness_equipment_state', FieldType('fitness_equipment_state'), None, 1, None),  # base type: enum
             'calorie_duration_alert': Field('calorie_duration_alert', FieldTypeBase(6), 'calories', 1, None),  # base type: uint32
@@ -867,7 +867,7 @@ MessageType(21, 'event', {
         },
     }),
     3: DynamicField('data', FieldTypeBase(6), 1, None, None, {  # base type: uint32
-        'event': {  # reference field: event
+        'event': {
             'cad_low_alert': Field('cad_low_alert', FieldTypeBase(4), 'rpm', 1, None),  # base type: uint16
             'fitness_equipment': Field('fitness_equipment_state', FieldType('fitness_equipment_state'), None, 1, None),  # base type: enum
             'calorie_duration_alert': Field('calorie_duration_alert', FieldTypeBase(6), 'calories', 1, None),  # base type: uint32
@@ -915,7 +915,7 @@ MessageType(27, 'workout_step', {
     0: Field('wkt_step_name', FieldTypeBase(7), None, 1, None),  # base type: string
     1: Field('duration_type', FieldType('wkt_step_duration'), None, 1, None),  # base type: enum
     2: DynamicField('duration_value', FieldTypeBase(6), 1, None, None, {  # base type: uint32
-        'duration_type': {  # reference field: duration_type
+        'duration_type': {
             'repeat_until_power_less_than': Field('duration_step', FieldTypeBase(6), None, None, None),  # base type: uint32
             'distance': Field('duration_distance', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
             'power_less_than': Field('duration_power', FieldType('workout_power'), '% or watts', 1, None),  # base type: uint32
@@ -935,7 +935,7 @@ MessageType(27, 'workout_step', {
     }),
     3: Field('target_type', FieldType('wkt_step_target'), None, 1, None),  # base type: enum
     4: DynamicField('target_value', FieldTypeBase(6), 1, None, None, {  # base type: uint32
-        'duration_type': {  # reference field: duration_type
+        'duration_type': {
             'repeat_until_power_less_than': Field('repeat_power', FieldType('workout_power'), '% or watts', 1, None),  # base type: uint32
             'repeat_until_steps_cmplt': Field('repeat_steps', FieldTypeBase(6), None, None, None),  # base type: uint32
             'repeat_until_power_greater_than': Field('repeat_power', FieldType('workout_power'), '% or watts', 1, None),  # base type: uint32
@@ -945,13 +945,13 @@ MessageType(27, 'workout_step', {
             'repeat_until_hr_greater_than': Field('repeat_hr', FieldType('workout_hr'), '% or bpm', 1, None),  # base type: uint32
             'repeat_until_hr_less_than': Field('repeat_hr', FieldType('workout_hr'), '% or bpm', 1, None),  # base type: uint32
         },
-        'target_type': {  # reference field: target_type
+        'target_type': {
             'heart_rate': Field('target_hr_zone', FieldTypeBase(6), None, None, None),  # base type: uint32
             'power': Field('target_power_zone', FieldTypeBase(6), None, None, None),  # base type: uint32
         },
     }),
     5: DynamicField('custom_target_value_low', FieldTypeBase(6), 1, None, None, {  # base type: uint32
-        'target_type': {  # reference field: target_type
+        'target_type': {
             'heart_rate': Field('custom_target_heart_rate_low', FieldType('workout_hr'), '% or bpm', 1, None),  # base type: uint32
             'speed': Field('custom_target_speed_low', FieldTypeBase(6), 'm/s', 1000, None),  # base type: uint32
             'power': Field('custom_target_power_low', FieldType('workout_power'), '% or watts', 1, None),  # base type: uint32
@@ -959,7 +959,7 @@ MessageType(27, 'workout_step', {
         },
     }),
     6: DynamicField('custom_target_value_high', FieldTypeBase(6), 1, None, None, {  # base type: uint32
-        'target_type': {  # reference field: target_type
+        'target_type': {
             'heart_rate': Field('custom_target_heart_rate_high', FieldType('workout_hr'), '% or bpm', 1, None),  # base type: uint32
             'speed': Field('custom_target_speed_high', FieldTypeBase(6), 'm/s', 1000, None),  # base type: uint32
             'power': Field('custom_target_power_high', FieldType('workout_power'), '% or watts', 1, None),  # base type: uint32
@@ -1043,7 +1043,7 @@ MessageType(38, 'mesg_capabilities', {
     1: Field('mesg_num', FieldType('mesg_num'), None, None, None),  # base type: uint16
     2: Field('count_type', FieldType('mesg_count'), None, None, None),  # base type: enum
     3: DynamicField('count', FieldTypeBase(4), None, None, None, {  # base type: uint16
-        'count_type': {  # reference field: count_type
+        'count_type': {
             'num_per_file': Field('num_per_file', FieldTypeBase(4), None, None, None),  # base type: uint16
             'max_per_file_type': Field('max_per_file_type', FieldTypeBase(4), None, None, None),  # base type: uint16
             'max_per_file': Field('max_per_file', FieldTypeBase(4), None, None, None),  # base type: uint16
