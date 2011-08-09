@@ -68,12 +68,15 @@ class FitFile(object):
         else:
             raise FitError
 
-    def parse(self):
+    def parse(self, hook_function=None):
+        # TODO: Document hook function
         self.parse_file_header()
 
         try:
             while True:
-                self.parse_record()
+                record = self.parse_record()
+                if hook_function:
+                    hook_function(record)
         except FitParseComplete:
             pass
 
@@ -134,6 +137,7 @@ class FitFile(object):
         return definition  # Do we need to return?
 
     def parse_data_record(self, header):
+        # XXX -- handle compressed timestamp header
         definition = self.global_messages[header.local_message_type]
 
         fields = []
