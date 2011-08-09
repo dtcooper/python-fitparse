@@ -81,10 +81,8 @@ def create_fit_sdk_example_test(file_prefix):
 
         fit.parse(hook_function)
 
-
     test_fit_sdk_example.__name__ = 'test_fit_sdk_example_%s' % file_prefix
     return test_fit_sdk_example
-
 
 for f in os.listdir(testfile(FitSDKExamplesTestCase.test_data_dir)):
     if f.lower().endswith('.fit'):
