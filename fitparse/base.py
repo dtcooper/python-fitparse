@@ -80,9 +80,16 @@ class FitFile(object):
                     hook_function(record)
         except FitParseComplete:
             pass
+        except Exception, e:
+            self._file.close()
+            raise FitParseError("Unexpected exception (%s: %s)" % (
+                e.__class__.__name__, e,
+            ))
 
         # Compare CRC (read last two bytes on _file without recalculating CRC)
         stored_crc, = struct.unpack('H', self._file.read(2))
+
+        self._file.close()
 
         if stored_crc != self.crc:
             raise FitParseError("Invalid CRC")
