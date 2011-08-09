@@ -165,23 +165,28 @@ class FitFile(object):
             if isinstance(field, r.DynamicField):
                 dynamic_fields[i] = bound_field
 
-        # XXX -- This could probably be refactored heavily. It's slow and a bit unclear.
-        # Go through already bound fields that are dynamic fields
-        for dynamic_field_index, bound_field in dynamic_fields.iteritems():
-            # Go by the reference field name and possible values
-            for ref_field_name, possible_values in bound_field.field.possibilities.iteritems():
-                # Go through the definitions fields looking for the reference field
-                for field_index, (field, f_size) in enumerate(definition.fields):
-                    # Did we find the refence field in the definition?
-                    if field.name == ref_field_name:
-                        # Get the reference field's value
-                        ref_field_value = fields[field_index].data
-                        # Is the reference field's value a value for a new dynamic field type?
-                        new_field = possible_values.get(ref_field_value)
-                        if new_field:
-                            # Set it to the new type with old bound field's raw data
-                            fields[dynamic_field_index] = r.BoundField(bound_field.raw_data, new_field)
+        # Closure so we can break out of the nested loops quickly
+        def resolve_dynamic_fields():
+            # XXX -- This could probably be refactored heavily. It's slow and a bit unclear.
+            # Go through already bound fields that are dynamic fields
+            for dynamic_field_index, bound_field in dynamic_fields.iteritems():
+                # Go by the reference field name and possible values
+                for ref_field_name, possible_values in bound_field.field.possibilities.iteritems():
+                    # Go through the definitions fields looking for the reference field
+                    for field_index, (field, f_size) in enumerate(definition.fields):
+                        # Did we find the refence field in the definition?
+                        if field.name == ref_field_name:
+                            # Get the reference field's value
+                            ref_field_value = fields[field_index].data
+                            # Is the reference field's value a value for a new dynamic field type?
+                            new_field = possible_values.get(ref_field_value)
+                            if new_field:
+                                # Set it to the new type with old bound field's raw data
+                                fields[dynamic_field_index] = r.BoundField(bound_field.raw_data, new_field)
+                                return
 
+        if dynamic_fields:
+            resolve_dynamic_fields()
 
         if header.type == r.RECORD_HEADER_COMPRESSED_TS:
             ts_field = definition.type.fields.get(r.TIMESTAMP_FIELD_DEF_NUM)
