@@ -40,7 +40,7 @@ def testfile(*filename):
 
 class FitFileTestCase(unittest.TestCase):
     def test_fitfile_parses_with_correct_number_of_recs_defs_and_file_size_and_CRC(self):
-        fit = FitFile(test_filename('sample-activity.fit'))
+        fit = FitFile(testfile('sample-activity.fit'))
         fit.parse()
 
         self.assertEquals(len(fit.records), 3228)
