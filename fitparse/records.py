@@ -35,6 +35,10 @@ MESSAGE_DATA = 0
 LITTLE_ENDIAN = 0
 BIG_ENDIAN = 1
 
+TIMESTAMP_FIELD_DEF_NUM = 253
+COMPRESSED_TIMESTAMP_FIELD_NAME = 'timestamp'
+COMPRESSED_TIMESTAMP_TYPE_NAME = 'date_time'
+
 
 class RecordHeader(namedtuple('RecordHeader',
     ('type', 'message_type', 'local_message_type', 'seconds_offset'))):

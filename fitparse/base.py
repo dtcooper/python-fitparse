@@ -54,6 +54,7 @@ class FitFile(object):
         self.data_read = 0
         self.crc = 0
 
+        self.last_timestamp = None
         self.global_messages = {}
         self.definitions = []
         self.records = []
@@ -96,7 +97,7 @@ class FitFile(object):
             local_message_type = header_data & 0b1111  # Bits 0-3
             # TODO: Should we set time_offset to 0?
             return r.RecordHeader(
-                header_type, message_type, local_message_type, 0,
+                header_type, message_type, local_message_type, None,
             )
         else:
             # Compressed timestamp
@@ -144,9 +145,14 @@ class FitFile(object):
         dynamic_fields = {}
 
         for i, (field, f_size) in enumerate(definition.fields):
-            f_data, = self.struct_read(field.type.get_struct_fmt(f_size), definition.arch)
+            f_raw_data, = self.struct_read(field.type.get_struct_fmt(f_size), definition.arch)
             # BoundField handles data conversion (if necessary)
-            bound_field = r.BoundField(f_data, field)
+            bound_field = r.BoundField(f_raw_data, field)
+
+            if field.name == r.COMPRESSED_TIMESTAMP_FIELD_NAME and \
+               field.type.name == r.COMPRESSED_TIMESTAMP_TYPE_NAME:
+                self.last_timestamp = f_raw_data
+
             fields.append(bound_field)
 
             if isinstance(field, r.DynamicField):
@@ -168,6 +174,17 @@ class FitFile(object):
                         if new_field:
                             # Set it to the new type with old bound field's raw data
                             fields[dynamic_field_index] = r.BoundField(bound_field.raw_data, new_field)
+
+
+        if header.type == r.RECORD_HEADER_COMPRESSED_TS:
+            ts_field = definition.type.fields.get(r.TIMESTAMP_FIELD_DEF_NUM)
+            if ts_field:
+                timestamp = self.last_timestamp + header.seconds_offset
+                fields.append(r.BoundField(timestamp, ts_field))
+                self.last_timestamp = timestamp
+
+        # XXX -- do compressed speed distance decoding here, similar to compressed ts
+        # ie, inject the fields iff they're in definition.type.fields
 
         data = r.DataRecord(header, definition, fields)
 
