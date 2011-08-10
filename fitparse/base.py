@@ -23,7 +23,7 @@
 import os
 import struct
 
-from fitparse import FitError, FitParseError, FitParseComplete
+from fitparse import FitParseError, FitParseComplete
 from fitparse import records as r
 
 

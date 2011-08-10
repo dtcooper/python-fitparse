@@ -226,7 +226,6 @@ class DataRecord(namedtuple('DataRecord', ('header', 'definition', 'fields'))):
                 d.setdefault(k, None)
         return d
 
-
     def get(self, field_name):
         for field in self.fields:
             if field.name == field_name:

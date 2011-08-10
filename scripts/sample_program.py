@@ -39,6 +39,7 @@ if len(sys.argv) >= 2:
 if not filenames:
     filenames = [os.path.join(PROJECT_PATH, 'tests', 'data', 'sample-activity.fit')]
 
+
 def print_records(activity):
     for rec in activity.records:
         print ("----- #%d: %s (%d entries) " % (rec.num, rec.type.name, len(rec.fields))).ljust(60, '-')
