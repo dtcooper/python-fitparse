@@ -61,23 +61,31 @@ class FitFile(object):
 
     def get_records_by_type(self, t):
         if isinstance(t, str):
-            return (r for r in self.records if r.type.name == t)
+            return (rec for rec in self.records if rec.type.name == t)
         elif isinstance(t, int):
-            return (r for r in self.records if r.type.num == t)
-        elif isinstance(t, r.MessageType):
-            return (r for r in self.records if r.type == t)
+            return (rec for rec in self.records if rec.type.num == t)
+        elif isinstance(t, rec.MessageType):
+            return (rec for rec in self.records if rec.type == t)
         else:
-            raise FitError
+            return ()
 
-    def parse(self, hook_function=None):
+    def get_records_as_dicts(self, t=None, with_ommited_fields=False):
+        if t is None:
+            records = self.records
+        else:
+            records = self.get_records_by_type(t)
+        return (rec for rec in (rec.as_dict(with_ommited_fields) for rec in records) if rec)
+
+    def parse(self, hook_func=None, hook_definitions=False):
         # TODO: Document hook function
         self._parse_file_header()
 
         try:
             while True:
                 record = self._parse_record()
-                if hook_function:
-                    hook_function(record)
+                if hook_func:
+                    if hook_definitions or isinstance(record, r.DataRecord):
+                        hook_func(record)
         except FitParseComplete:
             pass
         except Exception, e:
@@ -132,8 +140,8 @@ class FitFile(object):
             try:
                 field = message_type.fields[f_def_num]
             except (KeyError, TypeError):
-                # Field type wasn't stored in message_type, fall back to a basic type
-                field = r.Field('unknown', r.FieldTypeBase(f_base_type_num), None, None, None)
+                # Field type wasn't stored in message_type, fall back to a basic, unknown type
+                field = r.Field(r.UNKNOWN_FIELD_NAME, r.FieldTypeBase(f_base_type_num), None, None, None)
 
             fields.append(r.AllocatedField(field, f_size))
 

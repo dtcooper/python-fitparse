@@ -39,6 +39,8 @@ TIMESTAMP_FIELD_DEF_NUM = 253
 COMPRESSED_TIMESTAMP_FIELD_NAME = 'timestamp'
 COMPRESSED_TIMESTAMP_TYPE_NAME = 'date_time'
 
+UNKNOWN_FIELD_NAME = 'unknown'
+
 
 class RecordHeader(namedtuple('RecordHeader',
     ('type', 'message_type', 'local_message_type', 'seconds_offset'))):
@@ -180,6 +182,10 @@ class MessageType(namedtuple('MessageType', ('num', 'name', 'fields'))):
         MessageType._instances[num] = instance
         return instance
 
+    @property
+    def field_names(self):
+        return [f.name for f in self.fields.values()]
+
 
 class DefinitionRecord(namedtuple('DefinitionRecord', ('header', 'type', 'arch', 'fields'))):
     # arch -- Little endian or big endian
@@ -212,6 +218,14 @@ class DataRecord(namedtuple('DataRecord', ('header', 'definition', 'fields'))):
 
     def iteritems(self):
         return (f.items() for f in self.fields)
+
+    def as_dict(self, with_ommited_fields=False):
+        d = dict((k, v) for k, v in self.iteritems() if k != UNKNOWN_FIELD_NAME)
+        if with_ommited_fields:
+            for k in self.type.field_names:
+                d.setdefault(k, None)
+        return d
+
 
     def get(self, field_name):
         for field in self.fields:
