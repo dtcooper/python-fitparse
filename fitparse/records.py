@@ -267,13 +267,17 @@ FieldTypeBase(12, 'uint32z', 0, 'I', False)
 FieldTypeBase(13, 'byte', lambda x: all([ord(c) == '\xFF' for c in x]), '%ds', True)
 
 
-# Conversion functions for FieldTypes
+# Custom conversion functions for FieldTypes (specific to FIT SDK 1.2)
 
-# XXX -- need to handle UTC/timezones
-_convert_local_date_time = lambda x: datetime.datetime.fromtimestamp(631065600 + x)
+# TODO:
+#   "0x10000000: if date_time is < 0x10000000 then it is system time (seconds
+#   from device power on)" -- not ofr local_date_time
 _convert_date_time = lambda x: datetime.datetime.fromtimestamp(631065600 + x)
-_convert_bool = lambda x: bool(x)
 
+# TODO: Handle local tz conversion
+_convert_local_date_time = lambda x: datetime.datetime.fromtimestamp(631065600 + x)
+
+_convert_bool = lambda x: bool(x)
 
 # XXX -- untested
 # see FitSDK1_2.zip:c/examples/decode/decode.c lines 121-150 for an example
@@ -283,6 +287,25 @@ def _convert_record_compressed_speed_distance(raw_data):
     distance = (third << 4) + ((second & 0b11110000) >> 4)
     return speed / 100. / 1000. * 60. * 60., distance / 16.
 
+
+class MessageIndexValue(int):
+    __slots__ = ('selected',)
+
+def _convert_message_index(raw_data):
+    message_index = MessageIndexValue(raw_data & 0x0FFF)
+    message_index.selected = bool(raw_data & 0x8000)
+    return message_index
+
+class ActivityClassValue(int):
+    __slots__ = ('athlete',)
+
+def _convert_activity_class(raw_data):
+    activity_class = ActivityClassValue(raw_data & 0x7F)
+    activity_class.athlete = bool(raw_data & 0x80)
+    return activity_class
+
+
+# Load in Profile
 
 # XXX -- we do this so ipython doesn't throw an error on __file__.
 try:
