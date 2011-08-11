@@ -123,18 +123,21 @@ class FieldType(namedtuple('FieldType', ('name', 'base', 'converter'))):
         else:
             return raw_data
 
+
 def _field_convert(self, raw_data):
     data = self.type.convert(raw_data)
     if isinstance(data, (int, float)):
         if self.offset:
             data = data - self.offset
         if self.scale:
-            data = float(data)/self.scale
+            data = float(data) / self.scale
     return data
+
 
 class Field(namedtuple('Field', ('name', 'type', 'units', 'scale', 'offset'))):
     # A name, type, units, scale, offset
     convert = _field_convert
+
 
 class DynamicField(namedtuple('DynamicField', ('name', 'type', 'units', 'scale', 'offset', 'possibilities'))):
     # A name, type, units, scale, offset
