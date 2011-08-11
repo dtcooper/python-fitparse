@@ -146,6 +146,19 @@ class FitFile(object):
                 # Field type wasn't stored in message_type, fall back to a basic, unknown type
                 field = r.Field(r.UNKNOWN_FIELD_NAME, r.FieldTypeBase(f_base_type_num), None, None, None)
 
+            # XXX: -- very yucky!
+            #  Convert extremely odd types where field size != type size to a byte
+            #  field. They'll need to be handled customly. The FIT SDK has no examples
+            #  of this but Cycling.fit on my Garmin Edge 500 does it, so I'll
+            #  support it. This is probably the wrong way to do this, since it's
+            #  not endian aware. Eventually, it should be a tuple/list of the type.
+            #  Doing this will have to rethink the whole is_variable_size on FieldTypeBase
+            calculated_f_size = struct.calcsize(
+                self._get_endian_aware_struct(field.type.get_struct_fmt(f_size), arch)
+            )
+            if calculated_f_size != f_size:
+                field = field._replace(type=r.FieldTypeBase(13))  # 13 = byte
+
             fields.append(r.AllocatedField(field, f_size))
 
         definition = r.DefinitionRecord(header, message_type, arch, fields)
@@ -241,9 +254,13 @@ class FitFile(object):
 
         return data
 
-    def _struct_read(self, fmt, endian=r.LITTLE_ENDIAN):
+    @staticmethod
+    def _get_endian_aware_struct(fmt, endian):
         endian = '<' if endian == r.LITTLE_ENDIAN else '>'
-        fmt = '%s%s' % (endian, fmt)
+        return '%s%s' % (endian, fmt)
+
+    def _struct_read(self, fmt, endian=r.LITTLE_ENDIAN):
+        fmt = self._get_endian_aware_struct(fmt, endian)
         data = self._read(struct.calcsize(fmt))
         return struct.unpack(fmt, data)
 
