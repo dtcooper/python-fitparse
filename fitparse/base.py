@@ -140,6 +140,9 @@ class FitFile(object):
             try:
                 field = message_type.fields[f_def_num]
             except (KeyError, TypeError):
+                # unknown message has msg.fields as None = TypeError
+                # if a known message doesn't define such a field = KeyError
+
                 # Field type wasn't stored in message_type, fall back to a basic, unknown type
                 field = r.Field(r.UNKNOWN_FIELD_NAME, r.FieldTypeBase(f_base_type_num), None, None, None)
 

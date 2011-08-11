@@ -40,11 +40,13 @@ if not filenames:
     filenames = [os.path.join(PROJECT_PATH, 'tests', 'data', 'sample-activity.fit')]
 
 
-def print_records(activity):
-    for rec in activity.records:
-        print ("----- #%d: %s (%d entries) " % (rec.num, rec.type.name, len(rec.fields))).ljust(60, '-')
-        for field in rec.fields:
-            print "%s [%s]: %s " % (field.name, field.type.name, field.data)
+def print_record(rec):
+    print ("----- #%d: %s (%d entries) " % (rec.num, rec.type.name, len(rec.fields))).ljust(60, '-')
+    for field in rec.fields:
+        to_print = "%s [%s]: %s" % (field.name, field.type.name, field.data)
+        if field.data is not None and field.units:
+            to_print += " [%s]" % field.units
+        print to_print
     print
 
 for f in filenames:
@@ -53,8 +55,9 @@ for f in filenames:
     else:
         print ('##### %s ' % f).ljust(60, '#')
 
-    a = Activity(f)
-    a.parse()
-
+    print_hook_func = None
     if not quiet:
-        print_records(a)
+        print_hook_func = print_record
+
+    a = Activity(f)
+    a.parse(hook_func=print_hook_func)

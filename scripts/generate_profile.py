@@ -30,6 +30,8 @@
 # (NOTE: it'll probably break on any version of the FIT SDK that isn't 1.2)
 #
 
+# TODO: Units override code -- for at least date_time (it's "s" now, want None)
+
 from collections import namedtuple
 import datetime
 import os

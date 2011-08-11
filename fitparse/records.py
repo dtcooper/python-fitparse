@@ -74,15 +74,16 @@ class FieldTypeBase(namedtuple('FieldTypeBase', ('num', 'name', 'invalid', 'stru
             return self.struct_fmt
 
     def convert(self, raw_data):
-        if self.name == 'string':
-            raw_data = raw_data.rstrip('\x00')
-
         if callable(self.invalid):
             if self.invalid(raw_data):
                 return None
         else:
             if raw_data == self.invalid:
                 return None
+
+        if self.name == 'string':
+            raw_data = raw_data.rstrip('\x00')
+
         return raw_data
 
     @property
@@ -122,16 +123,23 @@ class FieldType(namedtuple('FieldType', ('name', 'base', 'converter'))):
         else:
             return raw_data
 
+def _field_convert(self, raw_data):
+    data = self.type.convert(raw_data)
+    if isinstance(data, (int, float)):
+        if self.offset:
+            data = data - self.offset
+        if self.scale:
+            data = float(data)/self.scale
+    return data
 
 class Field(namedtuple('Field', ('name', 'type', 'units', 'scale', 'offset'))):
     # A name, type, units, scale, offset
-    pass
-
+    convert = _field_convert
 
 class DynamicField(namedtuple('DynamicField', ('name', 'type', 'units', 'scale', 'offset', 'possibilities'))):
     # A name, type, units, scale, offset
     # TODO: Describe format of possiblities
-    pass
+    convert = _field_convert
 
 
 class AllocatedField(namedtuple('AllocatedField', ('field', 'size'))):
@@ -149,7 +157,7 @@ class AllocatedField(namedtuple('AllocatedField', ('field', 'size'))):
 class BoundField(namedtuple('BoundField', ('data', 'raw_data', 'field'))):
     # Convert data
     def __new__(cls, raw_data, field):
-        data = field.type.convert(raw_data)
+        data = field.convert(raw_data)
         return super(BoundField, cls).__new__(cls, data, raw_data, field)
 
     @property
@@ -160,11 +168,16 @@ class BoundField(namedtuple('BoundField', ('data', 'raw_data', 'field'))):
     def type(self):
         return self.field.type
 
+    @property
+    def units(self):
+        return self.field.units
+
     def items(self):
         return self.name, self.data
 
 
 class MessageType(namedtuple('MessageType', ('num', 'name', 'fields'))):
+    # TODO: Describe format of fields (dict)
     _instances = {}
 
     def __new__(cls, num, *args, **kwargs):
