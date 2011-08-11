@@ -28,7 +28,7 @@ import sys
 PROJECT_PATH = os.path.realpath(os.path.join(sys.path[0], '..'))
 sys.path.append(PROJECT_PATH)
 
-from fitparse.activity import Activity
+from fitparse import Activity
 
 quiet = 'quiet' in sys.argv or '-q' in sys.argv
 filenames = None

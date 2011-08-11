@@ -242,10 +242,19 @@ class DataRecord(namedtuple('DataRecord', ('header', 'definition', 'fields'))):
                 d.setdefault(k, None)
         return d
 
-    def get(self, field_name):
+    def get_valid_field_names(self):
+        return [f.name for f in self.fields if f.name != UNKNOWN_FIELD_NAME and f.data is not None]
+
+    def get_data(self, field_name):
         for field in self.fields:
             if field.name == field_name:
                 return field.data
+        return None
+
+    def get_units(self, field_name):
+        for field in self.fields:
+            if field.name == field_name:
+                return field.units
         return None
 
 

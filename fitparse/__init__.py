@@ -20,13 +20,5 @@
 #
 
 
-class FitError(Exception):
-    pass
-
-
-class FitParseError(FitError):
-    pass
-
-
-class FitParseComplete(Exception):
-    pass
+from fitparse.activity import Activity
+from fitparse.exceptions import FitError, FitParseError, FitParseComplete
