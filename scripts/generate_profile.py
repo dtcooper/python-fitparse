@@ -63,7 +63,7 @@ PROFILE_OUTPUT_FILE_HEADER_FMT = '''%s
 # are the similar to their counterparts in records.py by coincidence
 
 Field = namedtuple('Field', ('name', 'type', 'scale', 'units', 'offset'))
-DynamicField = namedtuple('DynamicField', ('name', 'type', 'units', 'scale', 'offset', 'possibilities'))
+DynamicField = namedtuple('DynamicField', ('name', 'type', 'scale', 'units', 'offset', 'possibilities'))
 # Type.values can be a str, (ie, a lambda or the name of a function defined in records.py)
 Type = namedtuple('Type', ('name', 'base_type', 'values'))
 TypeValue = namedtuple('TypeValue', ('name', 'value'))
