@@ -279,6 +279,7 @@ _convert_local_date_time = lambda x: datetime.datetime.fromtimestamp(631065600 +
 
 _convert_bool = lambda x: bool(x)
 
+
 # XXX -- untested
 # see FitSDK1_2.zip:c/examples/decode/decode.c lines 121-150 for an example
 def _convert_record_compressed_speed_distance(raw_data):
@@ -291,13 +292,16 @@ def _convert_record_compressed_speed_distance(raw_data):
 class MessageIndexValue(int):
     __slots__ = ('selected',)
 
+
 def _convert_message_index(raw_data):
     message_index = MessageIndexValue(raw_data & 0x0FFF)
     message_index.selected = bool(raw_data & 0x8000)
     return message_index
 
+
 class ActivityClassValue(int):
     __slots__ = ('athlete',)
+
 
 def _convert_activity_class(raw_data):
     activity_class = ActivityClassValue(raw_data & 0x7F)
