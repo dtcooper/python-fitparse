@@ -25,11 +25,15 @@
 ##############################################################################
 #
 # profile.def -- Exported FIT SDK Profile Data
-# Created on 2011-08-11 10:52:29 by generate_profile.py from Profile.xls
+# Created on 2011-08-11 13:56:10 by generate_profile.py from Profile.xls
 #
 ##############################################################################
 #
 # Please define the following functions (types that use them are listed):
+#
+#  _convert_activity_class
+#    * Used by types:
+#       - activity_class
 #
 #  _convert_bool
 #    * Used by types:
@@ -42,6 +46,10 @@
 #  _convert_local_date_time
 #    * Used by types:
 #       - local_date_time
+#
+#  _convert_message_index
+#    * Used by types:
+#       - message_index
 #
 #  _convert_record_compressed_speed_distance
 #    * Used by types:
@@ -57,11 +65,7 @@ FieldType('activity', FieldTypeBase(0), {  # base type: enum
     1: 'auto_multi_sport',
 })
 
-FieldType('activity_class', FieldTypeBase(0), {  # base type: enum
-    100: 'level_max',
-    0x7F: 'level',
-    0x80: 'athlete',
-})
+FieldType('activity_class', FieldTypeBase(0), _convert_activity_class)  # base type: enum
 
 FieldType('autolap_trigger', FieldTypeBase(0), {  # base type: enum
     0: 'time',
@@ -458,11 +462,7 @@ FieldType('mesg_num', FieldTypeBase(4), {  # base type: uint16
     51: 'blood_pressure',
 })
 
-FieldType('message_index', FieldTypeBase(4), {  # base type: uint16
-    0x0FFF: 'mask',
-    0x7000: 'reserved',
-    0x8000: 'selected',
-})
+FieldType('message_index', FieldTypeBase(4), _convert_message_index)  # base type: uint16
 
 FieldType('pwr_zone_calc', FieldTypeBase(0), {  # base type: enum
     0: 'custom',
@@ -622,25 +622,25 @@ MessageType(2, 'device_settings', {
 })
 
 MessageType(3, 'user_profile', {
-    0: Field('friendly_name', FieldTypeBase(7), None, 1, None),  # base type: string
-    1: Field('gender', FieldType('gender'), None, 1, None),  # base type: enum
-    2: Field('age', FieldTypeBase(2), 'years', 1, None),  # base type: uint8
+    0: Field('friendly_name', FieldTypeBase(7), None, None, None),  # base type: string
+    1: Field('gender', FieldType('gender'), None, None, None),  # base type: enum
+    2: Field('age', FieldTypeBase(2), 'years', None, None),  # base type: uint8
     3: Field('height', FieldTypeBase(2), 'm', 100, None),  # base type: uint8
     4: Field('weight', FieldTypeBase(4), 'kg', 10, None),  # base type: uint16
-    5: Field('language', FieldType('language'), None, 1, None),  # base type: enum
-    6: Field('elev_setting', FieldType('display_measure'), None, 1, None),  # base type: enum
-    7: Field('weight_setting', FieldType('display_measure'), None, 1, None),  # base type: enum
-    8: Field('resting_heart_rate', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
-    9: Field('default_max_running_heart_rate', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
-    10: Field('default_max_biking_heart_rate', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
-    11: Field('default_max_heart_rate', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
-    12: Field('hr_setting', FieldType('display_heart'), None, 1, None),  # base type: enum
-    13: Field('speed_setting', FieldType('display_measure'), None, 1, None),  # base type: enum
-    14: Field('dist_setting', FieldType('display_measure'), None, 1, None),  # base type: enum
-    16: Field('power_setting', FieldType('display_power'), None, 1, None),  # base type: enum
-    17: Field('activity_class', FieldType('activity_class'), None, 1, None),  # base type: enum
-    18: Field('position_setting', FieldType('display_position'), None, 1, None),  # base type: enum
-    21: Field('temperature_setting', FieldType('display_measure'), None, 1, None),  # base type: enum
+    5: Field('language', FieldType('language'), None, None, None),  # base type: enum
+    6: Field('elev_setting', FieldType('display_measure'), None, None, None),  # base type: enum
+    7: Field('weight_setting', FieldType('display_measure'), None, None, None),  # base type: enum
+    8: Field('resting_heart_rate', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
+    9: Field('default_max_running_heart_rate', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
+    10: Field('default_max_biking_heart_rate', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
+    11: Field('default_max_heart_rate', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
+    12: Field('hr_setting', FieldType('display_heart'), None, None, None),  # base type: enum
+    13: Field('speed_setting', FieldType('display_measure'), None, None, None),  # base type: enum
+    14: Field('dist_setting', FieldType('display_measure'), None, None, None),  # base type: enum
+    16: Field('power_setting', FieldType('display_power'), None, None, None),  # base type: enum
+    17: Field('activity_class', FieldType('activity_class'), None, None, None),  # base type: enum
+    18: Field('position_setting', FieldType('display_position'), None, None, None),  # base type: enum
+    21: Field('temperature_setting', FieldType('display_measure'), None, None, None),  # base type: enum
     22: Field('local_id', FieldType('user_local_id'), None, None, None),  # base type: uint16
     23: Field('global_id', FieldTypeBase(13), None, None, None),  # base type: byte
     254: Field('message_index', FieldType('message_index'), None, None, None),  # base type: uint16
@@ -648,129 +648,129 @@ MessageType(3, 'user_profile', {
 
 MessageType(4, 'hrm_profile', {
     0: Field('enabled', FieldType('bool'), None, None, None),  # base type: enum
-    1: Field('hrm_ant_id', FieldTypeBase(11), None, 1, None),  # base type: uint16z
-    254: Field('message_index', FieldType('message_index'), None, 1, None),  # base type: uint16
+    1: Field('hrm_ant_id', FieldTypeBase(11), None, None, None),  # base type: uint16z
+    254: Field('message_index', FieldType('message_index'), None, None, None),  # base type: uint16
 })
 
 MessageType(5, 'sdm_profile', {
     0: Field('enabled', FieldType('bool'), None, None, None),  # base type: enum
-    1: Field('sdm_ant_id', FieldTypeBase(11), None, 1, None),  # base type: uint16z
+    1: Field('sdm_ant_id', FieldTypeBase(11), None, None, None),  # base type: uint16z
     2: Field('sdm_cal_factor', FieldTypeBase(4), '%', 10, None),  # base type: uint16
     3: Field('odometer', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
     4: Field('speed_source', FieldType('bool'), None, None, None),  # base type: enum
-    254: Field('message_index', FieldType('message_index'), None, 1, None),  # base type: uint16
+    254: Field('message_index', FieldType('message_index'), None, None, None),  # base type: uint16
 })
 
 MessageType(6, 'bike_profile', {
-    0: Field('name', FieldTypeBase(7), None, 1, None),  # base type: string
-    1: Field('sport', FieldType('sport'), None, 1, None),  # base type: enum
-    2: Field('sub_sport', FieldType('sub_sport'), None, 1, None),  # base type: enum
+    0: Field('name', FieldTypeBase(7), None, None, None),  # base type: string
+    1: Field('sport', FieldType('sport'), None, None, None),  # base type: enum
+    2: Field('sub_sport', FieldType('sub_sport'), None, None, None),  # base type: enum
     3: Field('odometer', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
-    4: Field('bike_spd_ant_id', FieldTypeBase(11), None, 1, None),  # base type: uint16z
-    5: Field('bike_cad_ant_id', FieldTypeBase(11), None, 1, None),  # base type: uint16z
-    6: Field('bike_spdcad_ant_id', FieldTypeBase(11), None, 1, None),  # base type: uint16z
-    7: Field('bike_power_ant_id', FieldTypeBase(11), None, 1, None),  # base type: uint16z
+    4: Field('bike_spd_ant_id', FieldTypeBase(11), None, None, None),  # base type: uint16z
+    5: Field('bike_cad_ant_id', FieldTypeBase(11), None, None, None),  # base type: uint16z
+    6: Field('bike_spdcad_ant_id', FieldTypeBase(11), None, None, None),  # base type: uint16z
+    7: Field('bike_power_ant_id', FieldTypeBase(11), None, None, None),  # base type: uint16z
     8: Field('custom_wheelsize', FieldTypeBase(4), 'm', 1000, None),  # base type: uint16
     9: Field('auto_wheelsize', FieldTypeBase(4), 'm', 1000, None),  # base type: uint16
     10: Field('bike_weight', FieldTypeBase(4), 'kg', 10, None),  # base type: uint16
     11: Field('power_cal_factor', FieldTypeBase(4), '%', 10, None),  # base type: uint16
-    12: Field('auto_wheel_cal', FieldType('bool'), None, 1, None),  # base type: enum
-    13: Field('auto_power_zero', FieldType('bool'), None, 1, None),  # base type: enum
+    12: Field('auto_wheel_cal', FieldType('bool'), None, None, None),  # base type: enum
+    13: Field('auto_power_zero', FieldType('bool'), None, None, None),  # base type: enum
     14: Field('id', FieldTypeBase(2), None, None, None),  # base type: uint8
     15: Field('spd_enabled', FieldType('bool'), None, None, None),  # base type: enum
     16: Field('cad_enabled', FieldType('bool'), None, None, None),  # base type: enum
     17: Field('spdcad_enabled', FieldType('bool'), None, None, None),  # base type: enum
     18: Field('power_enabled', FieldType('bool'), None, None, None),  # base type: enum
-    254: Field('message_index', FieldType('message_index'), None, 1, None),  # base type: uint16
+    254: Field('message_index', FieldType('message_index'), None, None, None),  # base type: uint16
 })
 
 MessageType(7, 'zones_target', {
-    1: Field('max_heart_rate', FieldTypeBase(2), None, 1, None),  # base type: uint8
-    2: Field('threshold_heart_rate', FieldTypeBase(2), None, 1, None),  # base type: uint8
-    3: Field('functional_threshold_power', FieldTypeBase(4), None, 1, None),  # base type: uint16
-    5: Field('hr_calc_type', FieldType('hr_zone_calc'), None, 1, None),  # base type: enum
-    7: Field('pwr_calc_type', FieldType('pwr_zone_calc'), None, 1, None),  # base type: enum
+    1: Field('max_heart_rate', FieldTypeBase(2), None, None, None),  # base type: uint8
+    2: Field('threshold_heart_rate', FieldTypeBase(2), None, None, None),  # base type: uint8
+    3: Field('functional_threshold_power', FieldTypeBase(4), None, None, None),  # base type: uint16
+    5: Field('hr_calc_type', FieldType('hr_zone_calc'), None, None, None),  # base type: enum
+    7: Field('pwr_calc_type', FieldType('pwr_zone_calc'), None, None, None),  # base type: enum
 })
 
 MessageType(8, 'hr_zone', {
-    1: Field('high_bpm', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
-    2: Field('name', FieldTypeBase(7), None, 1, None),  # base type: string
-    254: Field('message_index', FieldType('message_index'), None, 1, None),  # base type: uint16
+    1: Field('high_bpm', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
+    2: Field('name', FieldTypeBase(7), None, None, None),  # base type: string
+    254: Field('message_index', FieldType('message_index'), None, None, None),  # base type: uint16
 })
 
 MessageType(9, 'power_zone', {
-    1: Field('high_value', FieldTypeBase(4), 'watts', 1, None),  # base type: uint16
-    2: Field('name', FieldTypeBase(7), None, 1, None),  # base type: string
-    254: Field('message_index', FieldType('message_index'), None, 1, None),  # base type: uint16
+    1: Field('high_value', FieldTypeBase(4), 'watts', None, None),  # base type: uint16
+    2: Field('name', FieldTypeBase(7), None, None, None),  # base type: string
+    254: Field('message_index', FieldType('message_index'), None, None, None),  # base type: uint16
 })
 
 MessageType(10, 'met_zone', {
-    1: Field('high_bpm', FieldTypeBase(2), None, 1, None),  # base type: uint8
+    1: Field('high_bpm', FieldTypeBase(2), None, None, None),  # base type: uint8
     2: Field('calories', FieldTypeBase(4), 'kcal / min', 10, None),  # base type: uint16
     3: Field('fat_calories', FieldTypeBase(2), 'kcal / min', 10, None),  # base type: uint8
-    254: Field('message_index', FieldType('message_index'), None, 1, None),  # base type: uint16
+    254: Field('message_index', FieldType('message_index'), None, None, None),  # base type: uint16
 })
 
 MessageType(12, 'sport', {
-    0: Field('sport', FieldType('sport'), None, 1, None),  # base type: enum
-    1: Field('sub_sport', FieldType('sub_sport'), None, 1, None),  # base type: enum
+    0: Field('sport', FieldType('sport'), None, None, None),  # base type: enum
+    1: Field('sub_sport', FieldType('sub_sport'), None, None, None),  # base type: enum
     3: Field('name', FieldTypeBase(7), None, None, None),  # base type: string
 })
 
 MessageType(15, 'goal', {
-    0: Field('sport', FieldType('sport'), None, 1, None),  # base type: enum
-    1: Field('sub_sport', FieldType('sub_sport'), None, 1, None),  # base type: enum
+    0: Field('sport', FieldType('sport'), None, None, None),  # base type: enum
+    1: Field('sub_sport', FieldType('sub_sport'), None, None, None),  # base type: enum
     2: Field('start_date', FieldType('date_time'), None, None, None),  # base type: uint32
     3: Field('end_date', FieldType('date_time'), None, None, None),  # base type: uint32
     4: Field('type', FieldType('goal'), None, None, None),  # base type: enum
-    5: Field('value', FieldTypeBase(6), None, 1, None),  # base type: uint32
+    5: Field('value', FieldTypeBase(6), None, None, None),  # base type: uint32
     6: Field('repeat', FieldType('bool'), None, None, None),  # base type: enum
-    7: Field('target_value', FieldTypeBase(6), None, 1, None),  # base type: uint32
-    8: Field('recurrence', FieldType('goal_recurrence'), None, 1, None),  # base type: enum
-    9: Field('recurrence_value', FieldTypeBase(4), None, 1, None),  # base type: uint16
-    10: Field('enabled', FieldType('bool'), None, 1, None),  # base type: enum
-    254: Field('message_index', FieldType('message_index'), None, 1, None),  # base type: uint16
+    7: Field('target_value', FieldTypeBase(6), None, None, None),  # base type: uint32
+    8: Field('recurrence', FieldType('goal_recurrence'), None, None, None),  # base type: enum
+    9: Field('recurrence_value', FieldTypeBase(4), None, None, None),  # base type: uint16
+    10: Field('enabled', FieldType('bool'), None, None, None),  # base type: enum
+    254: Field('message_index', FieldType('message_index'), None, None, None),  # base type: uint16
 })
 
 MessageType(18, 'session', {
     0: Field('event', FieldType('event'), None, None, None),  # base type: enum
     1: Field('event_type', FieldType('event_type'), None, None, None),  # base type: enum
-    2: Field('start_time', FieldType('date_time'), None, 1, None),  # base type: uint32
-    3: Field('start_position_lat', FieldTypeBase(5), 'semicircles', 1, None),  # base type: sint32
-    4: Field('start_position_long', FieldTypeBase(5), 'semicircles', 1, None),  # base type: sint32
-    5: Field('sport', FieldType('sport'), None, 1, None),  # base type: enum
-    6: Field('sub_sport', FieldType('sub_sport'), None, 1, None),  # base type: enum
+    2: Field('start_time', FieldType('date_time'), None, None, None),  # base type: uint32
+    3: Field('start_position_lat', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
+    4: Field('start_position_long', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
+    5: Field('sport', FieldType('sport'), None, None, None),  # base type: enum
+    6: Field('sub_sport', FieldType('sub_sport'), None, None, None),  # base type: enum
     7: Field('total_elapsed_time', FieldTypeBase(6), 's', 1000, None),  # base type: uint32
     8: Field('total_timer_time', FieldTypeBase(6), 's', 1000, None),  # base type: uint32
     9: Field('total_distance', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
-    10: DynamicField('total_cycles', FieldTypeBase(6), 'cycles', 1, None, {  # base type: uint32
+    10: DynamicField('total_cycles', FieldTypeBase(6), 'cycles', None, None, {  # base type: uint32
         'sport': {
-            'running': Field('total_strides', FieldTypeBase(6), 'strides', 1, None),  # base type: uint32
+            'running': Field('total_strides', FieldTypeBase(6), 'strides', None, None),  # base type: uint32
         },
     }),
-    11: Field('total_calories', FieldTypeBase(4), 'kcal', 1, None),  # base type: uint16
-    13: Field('total_fat_calories', FieldTypeBase(4), 'kcal', 1, None),  # base type: uint16
+    11: Field('total_calories', FieldTypeBase(4), 'kcal', None, None),  # base type: uint16
+    13: Field('total_fat_calories', FieldTypeBase(4), 'kcal', None, None),  # base type: uint16
     14: Field('avg_speed', FieldTypeBase(4), 'm/s', 1000, None),  # base type: uint16
     15: Field('max_speed', FieldTypeBase(4), 'm/s', 1000, None),  # base type: uint16
-    16: Field('avg_heart_rate', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
-    17: Field('max_heart_rate', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
-    18: DynamicField('avg_cadence', FieldTypeBase(2), 'rpm', 1, None, {  # base type: uint8
+    16: Field('avg_heart_rate', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
+    17: Field('max_heart_rate', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
+    18: DynamicField('avg_cadence', FieldTypeBase(2), 'rpm', None, None, {  # base type: uint8
         'sport': {
-            'running': Field('avg_running_cadence', FieldTypeBase(2), 'strides/min', 1, None),  # base type: uint8
+            'running': Field('avg_running_cadence', FieldTypeBase(2), 'strides/min', None, None),  # base type: uint8
         },
     }),
-    19: DynamicField('max_cadence', FieldTypeBase(2), 'rpm', 1, None, {  # base type: uint8
+    19: DynamicField('max_cadence', FieldTypeBase(2), 'rpm', None, None, {  # base type: uint8
         'sport': {
-            'running': Field('max_running_cadence', FieldTypeBase(2), 'strides/min', 1, None),  # base type: uint8
+            'running': Field('max_running_cadence', FieldTypeBase(2), 'strides/min', None, None),  # base type: uint8
         },
     }),
-    20: Field('avg_power', FieldTypeBase(4), 'watts', 1, None),  # base type: uint16
-    21: Field('max_power', FieldTypeBase(4), 'watts', 1, None),  # base type: uint16
-    22: Field('total_ascent', FieldTypeBase(4), 'm', 1, None),  # base type: uint16
-    23: Field('total_descent', FieldTypeBase(4), 'm', 1, None),  # base type: uint16
+    20: Field('avg_power', FieldTypeBase(4), 'watts', None, None),  # base type: uint16
+    21: Field('max_power', FieldTypeBase(4), 'watts', None, None),  # base type: uint16
+    22: Field('total_ascent', FieldTypeBase(4), 'm', None, None),  # base type: uint16
+    23: Field('total_descent', FieldTypeBase(4), 'm', None, None),  # base type: uint16
     24: Field('total_training_effect', FieldTypeBase(2), None, 10, None),  # base type: uint8
-    25: Field('first_lap_index', FieldTypeBase(4), None, 1, None),  # base type: uint16
-    26: Field('num_laps', FieldTypeBase(4), None, 1, None),  # base type: uint16
+    25: Field('first_lap_index', FieldTypeBase(4), None, None, None),  # base type: uint16
+    26: Field('num_laps', FieldTypeBase(4), None, None, None),  # base type: uint16
     27: Field('event_group', FieldTypeBase(2), None, None, None),  # base type: uint8
     28: Field('trigger', FieldType('session_trigger'), None, None, None),  # base type: enum
     29: Field('nec_lat', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
@@ -778,17 +778,17 @@ MessageType(18, 'session', {
     31: Field('swc_lat', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
     32: Field('swc_long', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
     253: Field('timestamp', FieldType('date_time'), 's', None, None),  # base type: uint32
-    254: Field('message_index', FieldType('message_index'), None, 1, None),  # base type: uint16
+    254: Field('message_index', FieldType('message_index'), None, None, None),  # base type: uint16
 })
 
 MessageType(19, 'lap', {
     0: Field('event', FieldType('event'), None, None, None),  # base type: enum
     1: Field('event_type', FieldType('event_type'), None, None, None),  # base type: enum
-    2: Field('start_time', FieldType('date_time'), None, 1, None),  # base type: uint32
-    3: Field('start_position_lat', FieldTypeBase(5), 'semicircles', 1, None),  # base type: sint32
-    4: Field('start_position_long', FieldTypeBase(5), 'semicircles', 1, None),  # base type: sint32
-    5: Field('end_position_lat', FieldTypeBase(5), 'semicircles', 1, None),  # base type: sint32
-    6: Field('end_position_long', FieldTypeBase(5), 'semicircles', 1, None),  # base type: sint32
+    2: Field('start_time', FieldType('date_time'), None, None, None),  # base type: uint32
+    3: Field('start_position_lat', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
+    4: Field('start_position_long', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
+    5: Field('end_position_lat', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
+    6: Field('end_position_long', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
     7: Field('total_elapsed_time', FieldTypeBase(6), 's', 1000, None),  # base type: uint32
     8: Field('total_timer_time', FieldTypeBase(6), 's', 1000, None),  # base type: uint32
     9: Field('total_distance', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
@@ -822,68 +822,68 @@ MessageType(19, 'lap', {
     25: Field('sport', FieldType('sport'), None, None, None),  # base type: enum
     26: Field('event_group', FieldTypeBase(2), None, None, None),  # base type: uint8
     253: Field('timestamp', FieldType('date_time'), 's', None, None),  # base type: uint32
-    254: Field('message_index', FieldType('message_index'), None, 1, None),  # base type: uint16
+    254: Field('message_index', FieldType('message_index'), None, None, None),  # base type: uint16
 })
 
 MessageType(20, 'record', {
-    0: Field('position_lat', FieldTypeBase(5), 'semicircles', 1, None),  # base type: sint32
-    1: Field('position_long', FieldTypeBase(5), 'semicircles', 1, None),  # base type: sint32
+    0: Field('position_lat', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
+    1: Field('position_long', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
     2: Field('altitude', FieldTypeBase(4), 'm', 5, 500),  # base type: uint16
-    3: Field('heart_rate', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
-    4: Field('cadence', FieldTypeBase(2), 'rpm', 1, None),  # base type: uint8
+    3: Field('heart_rate', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
+    4: Field('cadence', FieldTypeBase(2), 'rpm', None, None),  # base type: uint8
     5: Field('distance', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
     6: Field('speed', FieldTypeBase(4), 'm/s', 1000, None),  # base type: uint16
     7: Field('power', FieldTypeBase(4), 'watts', None, None),  # base type: uint16
     8: Field('compressed_speed_distance', FieldType('record-compressed_speed_distance'), 'm/s,\nm', None, None),  # base type: byte
     9: Field('grade', FieldTypeBase(3), '%', 100, None),  # base type: sint16
-    10: Field('resistance', FieldTypeBase(2), None, 1, None),  # base type: uint8
+    10: Field('resistance', FieldTypeBase(2), None, None, None),  # base type: uint8
     11: Field('time_from_course', FieldTypeBase(5), 's', 1000, None),  # base type: sint32
     12: Field('cycle_length', FieldTypeBase(2), 'm', 100, None),  # base type: uint8
     13: Field('temperature', FieldTypeBase(1), 'C', None, None),  # base type: sint8
-    253: Field('timestamp', FieldType('date_time'), 's', 1, None),  # base type: uint32
+    253: Field('timestamp', FieldType('date_time'), 's', None, None),  # base type: uint32
 })
 
 MessageType(21, 'event', {
     0: Field('event', FieldType('event'), None, None, None),  # base type: enum
     1: Field('event_type', FieldType('event_type'), None, None, None),  # base type: enum
-    2: DynamicField('data16', FieldTypeBase(4), None, 1, None, {  # base type: uint16
+    2: DynamicField('data16', FieldTypeBase(4), None, None, None, {  # base type: uint16
         'event': {
-            'cad_low_alert': Field('cad_low_alert', FieldTypeBase(4), 'rpm', 1, None),  # base type: uint16
-            'fitness_equipment': Field('fitness_equipment_state', FieldType('fitness_equipment_state'), None, 1, None),  # base type: enum
-            'calorie_duration_alert': Field('calorie_duration_alert', FieldTypeBase(6), 'calories', 1, None),  # base type: uint32
-            'cad_high_alert': Field('cad_high_alert', FieldTypeBase(4), 'rpm', 1, None),  # base type: uint16
-            'hr_high_alert': Field('hr_high_alert', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
+            'cad_low_alert': Field('cad_low_alert', FieldTypeBase(4), 'rpm', None, None),  # base type: uint16
+            'fitness_equipment': Field('fitness_equipment_state', FieldType('fitness_equipment_state'), None, None, None),  # base type: enum
+            'calorie_duration_alert': Field('calorie_duration_alert', FieldTypeBase(6), 'calories', None, None),  # base type: uint32
+            'cad_high_alert': Field('cad_high_alert', FieldTypeBase(4), 'rpm', None, None),  # base type: uint16
+            'hr_high_alert': Field('hr_high_alert', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
             'battery': Field('battery_level', FieldTypeBase(4), 'V', 1000, None),  # base type: uint16
-            'power_low_alert': Field('power_low_alert', FieldTypeBase(4), 'watts', 1, None),  # base type: uint16
-            'timer': Field('timer_trigger', FieldType('timer_trigger'), None, 1, None),  # base type: enum
+            'power_low_alert': Field('power_low_alert', FieldTypeBase(4), 'watts', None, None),  # base type: uint16
+            'timer': Field('timer_trigger', FieldType('timer_trigger'), None, None, None),  # base type: enum
             'distance_duration_alert': Field('distance_duration_alert', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
-            'power_high_alert': Field('power_high_alert', FieldTypeBase(4), 'watts', 1, None),  # base type: uint16
+            'power_high_alert': Field('power_high_alert', FieldTypeBase(4), 'watts', None, None),  # base type: uint16
             'speed_low_alert': Field('speed_low_alert', FieldTypeBase(4), 'm/s', 1000, None),  # base type: uint16
             'time_duration_alert': Field('time_duration_alert', FieldTypeBase(6), 's', 1000, None),  # base type: uint32
             'virtual_partner_pace': Field('virtual_partner_speed', FieldTypeBase(4), 'm/s', 1000, None),  # base type: uint16
-            'hr_low_alert': Field('hr_low_alert', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
+            'hr_low_alert': Field('hr_low_alert', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
             'speed_high_alert': Field('speed_high_alert', FieldTypeBase(4), 'm/s', 1000, None),  # base type: uint16
-            'course_point': Field('course_point_index', FieldType('message_index'), None, 1, None),  # base type: uint16
+            'course_point': Field('course_point_index', FieldType('message_index'), None, None, None),  # base type: uint16
         },
     }),
-    3: DynamicField('data', FieldTypeBase(6), None, 1, None, {  # base type: uint32
+    3: DynamicField('data', FieldTypeBase(6), None, None, None, {  # base type: uint32
         'event': {
-            'cad_low_alert': Field('cad_low_alert', FieldTypeBase(4), 'rpm', 1, None),  # base type: uint16
-            'fitness_equipment': Field('fitness_equipment_state', FieldType('fitness_equipment_state'), None, 1, None),  # base type: enum
-            'calorie_duration_alert': Field('calorie_duration_alert', FieldTypeBase(6), 'calories', 1, None),  # base type: uint32
-            'cad_high_alert': Field('cad_high_alert', FieldTypeBase(4), 'rpm', 1, None),  # base type: uint16
-            'hr_high_alert': Field('hr_high_alert', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
+            'cad_low_alert': Field('cad_low_alert', FieldTypeBase(4), 'rpm', None, None),  # base type: uint16
+            'fitness_equipment': Field('fitness_equipment_state', FieldType('fitness_equipment_state'), None, None, None),  # base type: enum
+            'calorie_duration_alert': Field('calorie_duration_alert', FieldTypeBase(6), 'calories', None, None),  # base type: uint32
+            'cad_high_alert': Field('cad_high_alert', FieldTypeBase(4), 'rpm', None, None),  # base type: uint16
+            'hr_high_alert': Field('hr_high_alert', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
             'battery': Field('battery_level', FieldTypeBase(4), 'V', 1000, None),  # base type: uint16
-            'power_low_alert': Field('power_low_alert', FieldTypeBase(4), 'watts', 1, None),  # base type: uint16
-            'timer': Field('timer_trigger', FieldType('timer_trigger'), None, 1, None),  # base type: enum
+            'power_low_alert': Field('power_low_alert', FieldTypeBase(4), 'watts', None, None),  # base type: uint16
+            'timer': Field('timer_trigger', FieldType('timer_trigger'), None, None, None),  # base type: enum
             'distance_duration_alert': Field('distance_duration_alert', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
-            'power_high_alert': Field('power_high_alert', FieldTypeBase(4), 'watts', 1, None),  # base type: uint16
+            'power_high_alert': Field('power_high_alert', FieldTypeBase(4), 'watts', None, None),  # base type: uint16
             'speed_low_alert': Field('speed_low_alert', FieldTypeBase(4), 'm/s', 1000, None),  # base type: uint16
             'time_duration_alert': Field('time_duration_alert', FieldTypeBase(6), 's', 1000, None),  # base type: uint32
             'virtual_partner_pace': Field('virtual_partner_speed', FieldTypeBase(4), 'm/s', 1000, None),  # base type: uint16
-            'hr_low_alert': Field('hr_low_alert', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
+            'hr_low_alert': Field('hr_low_alert', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
             'speed_high_alert': Field('speed_high_alert', FieldTypeBase(4), 'm/s', 1000, None),  # base type: uint16
-            'course_point': Field('course_point_index', FieldType('message_index'), None, 1, None),  # base type: uint16
+            'course_point': Field('course_point_index', FieldType('message_index'), None, None, None),  # base type: uint16
         },
     }),
     4: Field('event_group', FieldTypeBase(2), None, None, None),  # base type: uint8
@@ -891,41 +891,41 @@ MessageType(21, 'event', {
 })
 
 MessageType(23, 'device_info', {
-    0: Field('device_index', FieldType('device_index'), None, 1, None),  # base type: uint8
-    1: Field('device_type', FieldType('device_type'), None, 1, None),  # base type: uint8
-    2: Field('manufacturer', FieldType('manufacturer'), None, 1, None),  # base type: uint16
-    3: Field('serial_number', FieldTypeBase(12), None, 1, None),  # base type: uint32z
-    4: Field('product', FieldTypeBase(4), None, 1, None),  # base type: uint16
+    0: Field('device_index', FieldType('device_index'), None, None, None),  # base type: uint8
+    1: Field('device_type', FieldType('device_type'), None, None, None),  # base type: uint8
+    2: Field('manufacturer', FieldType('manufacturer'), None, None, None),  # base type: uint16
+    3: Field('serial_number', FieldTypeBase(12), None, None, None),  # base type: uint32z
+    4: Field('product', FieldTypeBase(4), None, None, None),  # base type: uint16
     5: Field('software_version', FieldTypeBase(4), None, 100, None),  # base type: uint16
-    6: Field('hardware_version', FieldTypeBase(2), None, 1, None),  # base type: uint8
-    7: Field('cum_operating_time', FieldTypeBase(6), 's', 1, None),  # base type: uint32
+    6: Field('hardware_version', FieldTypeBase(2), None, None, None),  # base type: uint8
+    7: Field('cum_operating_time', FieldTypeBase(6), 's', None, None),  # base type: uint32
     10: Field('battery_voltage', FieldTypeBase(4), 'V', 256, None),  # base type: uint16
     11: Field('battery_status', FieldType('battery_status'), None, None, None),  # base type: uint8
-    253: Field('timestamp', FieldType('date_time'), 's', 1, None),  # base type: uint32
+    253: Field('timestamp', FieldType('date_time'), 's', None, None),  # base type: uint32
 })
 
 MessageType(26, 'workout', {
-    4: Field('sport', FieldType('sport'), None, 1, None),  # base type: enum
+    4: Field('sport', FieldType('sport'), None, None, None),  # base type: enum
     5: Field('capabilities', FieldType('workout_capabilities'), None, None, None),  # base type: uint32z
-    6: Field('num_valid_steps', FieldTypeBase(4), None, 1, None),  # base type: uint16
-    8: Field('wkt_name', FieldTypeBase(7), None, 1, None),  # base type: string
+    6: Field('num_valid_steps', FieldTypeBase(4), None, None, None),  # base type: uint16
+    8: Field('wkt_name', FieldTypeBase(7), None, None, None),  # base type: string
 })
 
 MessageType(27, 'workout_step', {
-    0: Field('wkt_step_name', FieldTypeBase(7), None, 1, None),  # base type: string
-    1: Field('duration_type', FieldType('wkt_step_duration'), None, 1, None),  # base type: enum
-    2: DynamicField('duration_value', FieldTypeBase(6), None, 1, None, {  # base type: uint32
+    0: Field('wkt_step_name', FieldTypeBase(7), None, None, None),  # base type: string
+    1: Field('duration_type', FieldType('wkt_step_duration'), None, None, None),  # base type: enum
+    2: DynamicField('duration_value', FieldTypeBase(6), None, None, None, {  # base type: uint32
         'duration_type': {
             'repeat_until_power_less_than': Field('duration_step', FieldTypeBase(6), None, None, None),  # base type: uint32
             'distance': Field('duration_distance', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
-            'power_less_than': Field('duration_power', FieldType('workout_power'), '% or watts', 1, None),  # base type: uint32
-            'power_greater_than': Field('duration_power', FieldType('workout_power'), '% or watts', 1, None),  # base type: uint32
+            'power_less_than': Field('duration_power', FieldType('workout_power'), '% or watts', None, None),  # base type: uint32
+            'power_greater_than': Field('duration_power', FieldType('workout_power'), '% or watts', None, None),  # base type: uint32
             'repeat_until_power_greater_than': Field('duration_step', FieldTypeBase(6), None, None, None),  # base type: uint32
             'repeat_until_steps_cmplt': Field('duration_step', FieldTypeBase(6), None, None, None),  # base type: uint32
-            'hr_less_than': Field('duration_hr', FieldType('workout_hr'), '% or bpm', 1, None),  # base type: uint32
-            'calories': Field('duration_calories', FieldTypeBase(6), 'calories', 1, None),  # base type: uint32
+            'hr_less_than': Field('duration_hr', FieldType('workout_hr'), '% or bpm', None, None),  # base type: uint32
+            'calories': Field('duration_calories', FieldTypeBase(6), 'calories', None, None),  # base type: uint32
             'repeat_until_time': Field('duration_step', FieldTypeBase(6), None, None, None),  # base type: uint32
-            'hr_greater_than': Field('duration_hr', FieldType('workout_hr'), '% or bpm', 1, None),  # base type: uint32
+            'hr_greater_than': Field('duration_hr', FieldType('workout_hr'), '% or bpm', None, None),  # base type: uint32
             'repeat_until_distance': Field('duration_step', FieldTypeBase(6), None, None, None),  # base type: uint32
             'repeat_until_calories': Field('duration_step', FieldTypeBase(6), None, None, None),  # base type: uint32
             'time': Field('duration_time', FieldTypeBase(6), 's', 1000, None),  # base type: uint32
@@ -933,40 +933,40 @@ MessageType(27, 'workout_step', {
             'repeat_until_hr_less_than': Field('duration_step', FieldTypeBase(6), None, None, None),  # base type: uint32
         },
     }),
-    3: Field('target_type', FieldType('wkt_step_target'), None, 1, None),  # base type: enum
-    4: DynamicField('target_value', FieldTypeBase(6), None, 1, None, {  # base type: uint32
+    3: Field('target_type', FieldType('wkt_step_target'), None, None, None),  # base type: enum
+    4: DynamicField('target_value', FieldTypeBase(6), None, None, None, {  # base type: uint32
         'duration_type': {
-            'repeat_until_power_less_than': Field('repeat_power', FieldType('workout_power'), '% or watts', 1, None),  # base type: uint32
+            'repeat_until_power_less_than': Field('repeat_power', FieldType('workout_power'), '% or watts', None, None),  # base type: uint32
             'repeat_until_steps_cmplt': Field('repeat_steps', FieldTypeBase(6), None, None, None),  # base type: uint32
-            'repeat_until_power_greater_than': Field('repeat_power', FieldType('workout_power'), '% or watts', 1, None),  # base type: uint32
+            'repeat_until_power_greater_than': Field('repeat_power', FieldType('workout_power'), '% or watts', None, None),  # base type: uint32
             'repeat_until_time': Field('repeat_time', FieldTypeBase(6), 's', 1000, None),  # base type: uint32
-            'repeat_until_calories': Field('repeat_calories', FieldTypeBase(6), 'calories', 1, None),  # base type: uint32
+            'repeat_until_calories': Field('repeat_calories', FieldTypeBase(6), 'calories', None, None),  # base type: uint32
             'repeat_until_distance': Field('repeat_distance', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
-            'repeat_until_hr_greater_than': Field('repeat_hr', FieldType('workout_hr'), '% or bpm', 1, None),  # base type: uint32
-            'repeat_until_hr_less_than': Field('repeat_hr', FieldType('workout_hr'), '% or bpm', 1, None),  # base type: uint32
+            'repeat_until_hr_greater_than': Field('repeat_hr', FieldType('workout_hr'), '% or bpm', None, None),  # base type: uint32
+            'repeat_until_hr_less_than': Field('repeat_hr', FieldType('workout_hr'), '% or bpm', None, None),  # base type: uint32
         },
         'target_type': {
             'heart_rate': Field('target_hr_zone', FieldTypeBase(6), None, None, None),  # base type: uint32
             'power': Field('target_power_zone', FieldTypeBase(6), None, None, None),  # base type: uint32
         },
     }),
-    5: DynamicField('custom_target_value_low', FieldTypeBase(6), None, 1, None, {  # base type: uint32
+    5: DynamicField('custom_target_value_low', FieldTypeBase(6), None, None, None, {  # base type: uint32
         'target_type': {
-            'heart_rate': Field('custom_target_heart_rate_low', FieldType('workout_hr'), '% or bpm', 1, None),  # base type: uint32
+            'heart_rate': Field('custom_target_heart_rate_low', FieldType('workout_hr'), '% or bpm', None, None),  # base type: uint32
             'speed': Field('custom_target_speed_low', FieldTypeBase(6), 'm/s', 1000, None),  # base type: uint32
-            'power': Field('custom_target_power_low', FieldType('workout_power'), '% or watts', 1, None),  # base type: uint32
-            'cadence': Field('custom_target_cadence_low', FieldTypeBase(6), 'rpm', 1, None),  # base type: uint32
+            'power': Field('custom_target_power_low', FieldType('workout_power'), '% or watts', None, None),  # base type: uint32
+            'cadence': Field('custom_target_cadence_low', FieldTypeBase(6), 'rpm', None, None),  # base type: uint32
         },
     }),
-    6: DynamicField('custom_target_value_high', FieldTypeBase(6), None, 1, None, {  # base type: uint32
+    6: DynamicField('custom_target_value_high', FieldTypeBase(6), None, None, None, {  # base type: uint32
         'target_type': {
-            'heart_rate': Field('custom_target_heart_rate_high', FieldType('workout_hr'), '% or bpm', 1, None),  # base type: uint32
+            'heart_rate': Field('custom_target_heart_rate_high', FieldType('workout_hr'), '% or bpm', None, None),  # base type: uint32
             'speed': Field('custom_target_speed_high', FieldTypeBase(6), 'm/s', 1000, None),  # base type: uint32
-            'power': Field('custom_target_power_high', FieldType('workout_power'), '% or watts', 1, None),  # base type: uint32
-            'cadence': Field('custom_target_cadence_high', FieldTypeBase(6), 'rpm', 1, None),  # base type: uint32
+            'power': Field('custom_target_power_high', FieldType('workout_power'), '% or watts', None, None),  # base type: uint32
+            'cadence': Field('custom_target_cadence_high', FieldTypeBase(6), 'rpm', None, None),  # base type: uint32
         },
     }),
-    7: Field('intensity', FieldType('intensity'), None, 1, None),  # base type: enum
+    7: Field('intensity', FieldType('intensity'), None, None, None),  # base type: enum
     254: Field('message_index', FieldType('message_index'), None, None, None),  # base type: uint16
 })
 
@@ -978,12 +978,12 @@ MessageType(30, 'weight_scale', {
     4: Field('bone_mass', FieldTypeBase(4), 'kg', 100, None),  # base type: uint16
     5: Field('muscle_mass', FieldTypeBase(4), 'kg', 100, None),  # base type: uint16
     7: Field('basal_met', FieldTypeBase(4), 'kcal/day', 4, None),  # base type: uint16
-    8: Field('physique_rating', FieldTypeBase(2), None, 1, None),  # base type: uint8
+    8: Field('physique_rating', FieldTypeBase(2), None, None, None),  # base type: uint8
     9: Field('active_met', FieldTypeBase(4), 'kcal/day', 4, None),  # base type: uint16
-    10: Field('metabolic_age', FieldTypeBase(2), 'years', 1, None),  # base type: uint8
-    11: Field('visceral_fat_rating', FieldTypeBase(2), None, 1, None),  # base type: uint8
+    10: Field('metabolic_age', FieldTypeBase(2), 'years', None, None),  # base type: uint8
+    11: Field('visceral_fat_rating', FieldTypeBase(2), None, None, None),  # base type: uint8
     12: Field('user_profile_index', FieldType('message_index'), None, None, None),  # base type: uint16
-    253: Field('timestamp', FieldType('date_time'), 's', 1, None),  # base type: uint32
+    253: Field('timestamp', FieldType('date_time'), 's', None, None),  # base type: uint32
 })
 
 MessageType(31, 'course', {
@@ -993,11 +993,11 @@ MessageType(31, 'course', {
 })
 
 MessageType(32, 'course_point', {
-    1: Field('timestamp', FieldType('date_time'), None, 1, None),  # base type: uint32
-    2: Field('position_lat', FieldTypeBase(5), 'semicircles', 1, None),  # base type: sint32
-    3: Field('position_long', FieldTypeBase(5), 'semicircles', 1, None),  # base type: sint32
+    1: Field('timestamp', FieldType('date_time'), None, None, None),  # base type: uint32
+    2: Field('position_lat', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
+    3: Field('position_long', FieldTypeBase(5), 'semicircles', None, None),  # base type: sint32
     4: Field('distance', FieldTypeBase(6), 'm', 100, None),  # base type: uint32
-    5: Field('type', FieldType('course_point'), None, 1, None),  # base type: enum
+    5: Field('type', FieldType('course_point'), None, None, None),  # base type: enum
     6: Field('name', FieldTypeBase(7), None, None, None),  # base type: string
     254: Field('message_index', FieldType('message_index'), None, None, None),  # base type: uint16
 })
@@ -1014,7 +1014,7 @@ MessageType(33, 'totals', {
 
 MessageType(34, 'activity', {
     0: Field('total_timer_time', FieldTypeBase(6), 's', 1000, None),  # base type: uint32
-    1: Field('num_sessions', FieldTypeBase(4), None, 1, None),  # base type: uint16
+    1: Field('num_sessions', FieldTypeBase(4), None, None, None),  # base type: uint16
     2: Field('type', FieldType('activity'), None, None, None),  # base type: enum
     3: Field('event', FieldType('event'), None, None, None),  # base type: enum
     4: Field('event_type', FieldType('event_type'), None, None, None),  # base type: enum
@@ -1066,25 +1066,27 @@ MessageType(49, 'file_creator', {
 })
 
 MessageType(51, 'blood_pressure', {
-    0: Field('systolic_pressure', FieldTypeBase(4), 'mmHg', 1, None),  # base type: uint16
-    1: Field('diastolic_pressure', FieldTypeBase(4), 'mmHg', 1, None),  # base type: uint16
-    2: Field('mean_arterial_pressure', FieldTypeBase(4), 'mmHg', 1, None),  # base type: uint16
-    3: Field('map_3_sample_mean', FieldTypeBase(4), 'mmHg', 1, None),  # base type: uint16
-    4: Field('map_morning_values', FieldTypeBase(4), 'mmHg', 1, None),  # base type: uint16
-    5: Field('map_evening_values', FieldTypeBase(4), 'mmHg', 1, None),  # base type: uint16
-    6: Field('heart_rate', FieldTypeBase(2), 'bpm', 1, None),  # base type: uint8
+    0: Field('systolic_pressure', FieldTypeBase(4), 'mmHg', None, None),  # base type: uint16
+    1: Field('diastolic_pressure', FieldTypeBase(4), 'mmHg', None, None),  # base type: uint16
+    2: Field('mean_arterial_pressure', FieldTypeBase(4), 'mmHg', None, None),  # base type: uint16
+    3: Field('map_3_sample_mean', FieldTypeBase(4), 'mmHg', None, None),  # base type: uint16
+    4: Field('map_morning_values', FieldTypeBase(4), 'mmHg', None, None),  # base type: uint16
+    5: Field('map_evening_values', FieldTypeBase(4), 'mmHg', None, None),  # base type: uint16
+    6: Field('heart_rate', FieldTypeBase(2), 'bpm', None, None),  # base type: uint8
     7: Field('heart_rate_type', FieldType('hr_type'), None, None, None),  # base type: enum
     8: Field('status', FieldType('bp_status'), None, None, None),  # base type: enum
     9: Field('user_profile_index', FieldType('message_index'), None, None, None),  # base type: uint16
-    253: Field('timestamp', FieldType('date_time'), 's', 1, None),  # base type: uint32
+    253: Field('timestamp', FieldType('date_time'), 's', None, None),  # base type: uint32
 })
 
 
 ######################   DELETE CONVERSION FUNCTIONS   #######################
 
+del _convert_activity_class
 del _convert_bool
 del _convert_date_time
 del _convert_local_date_time
+del _convert_message_index
 del _convert_record_compressed_speed_distance
 
 

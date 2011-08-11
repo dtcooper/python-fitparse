@@ -30,7 +30,9 @@
 # (NOTE: it'll probably break on any version of the FIT SDK that isn't 1.2)
 #
 
-# TODO: Units override code -- for at least date_time (it's "s" now, want None)
+# TODO: Units override code -- for at least,
+#  * date_time -- it's "s" now, want None
+#  * compressed_speed_distance -- it's "m/s,\nm", probably want None
 
 from collections import namedtuple
 import datetime
@@ -99,10 +101,11 @@ SPECIAL_TYPES = {
 SPECIAL_TYPES_IN_TYPES_SPREADSHEET = {
     'date_time': SpecialFunctionType('date_time', 'uint32', None),
     'local_date_time': SpecialFunctionType('local_date_time', 'uint32', None),
+    'message_index': SpecialFunctionType('message_index', 'uint16', None),
+    'activity_class': SpecialFunctionType('activity_class', 'enum', None),
 }
 
 SPECIAL_TYPES_ALL = dict(SPECIAL_TYPES.items() + SPECIAL_TYPES_IN_TYPES_SPREADSHEET.items())
-
 
 if len(sys.argv) <= 1 or not os.path.exists(sys.argv[1]):
     print "Usage: %s <Profile.xls> [profile.def]" % os.path.basename(sys.argv[0])
@@ -220,6 +223,8 @@ def parse_fields():
 
                 try:
                     f_scale = int(messages_sheet.row_values(row)[6])
+                    if f_scale == 1:
+                        raise ValueError
                 except ValueError:
                     f_scale = None
 
