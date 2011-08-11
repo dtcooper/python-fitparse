@@ -127,10 +127,10 @@ class FieldType(namedtuple('FieldType', ('name', 'base', 'converter'))):
 def _field_convert(self, raw_data):
     data = self.type.convert(raw_data)
     if isinstance(data, (int, float)):
-        if self.offset:
-            data = data - self.offset
         if self.scale:
             data = float(data) / self.scale
+        if self.offset:
+            data = data - self.offset
     return data
 
 

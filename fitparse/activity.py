@@ -20,8 +20,12 @@
 #
 
 
+from fitparse import FitParseError
 from fitparse.base import FitFile
 
 
 class Activity(FitFile):
-    pass
+    def parse(self, *args, **kwargs):
+        return_value = super(Activity, self).parse(*args, **kwargs)
+        if self.records[0].get('type') != 'activity':
+            raise FitParseError("File parsed is not an activity file.")
