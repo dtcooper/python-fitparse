@@ -39,9 +39,12 @@ if len(sys.argv) >= 2:
 if not filenames:
     filenames = [os.path.join(PROJECT_PATH, 'tests', 'data', 'sample-activity.fit')]
 
+record_number = 0
 
-def print_record(rec):
-    print ("----- #%d: %s (%d entries) " % (rec.num, rec.type.name, len(rec.fields))).ljust(60, '-')
+def print_record(rec, ):
+    global record_number
+    record_number +=1
+    print ("-- %d. #%d: %s (%d entries) " % (record_number, rec.num, rec.type.name, len(rec.fields))).ljust(60, '-')
     for field in rec.fields:
         to_print = "%s [%s]: %s" % (field.name, field.type.name, field.data)
         if field.data is not None and field.units:
