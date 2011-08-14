@@ -51,11 +51,12 @@ class RecordHeader(namedtuple('RecordHeader',
     #    * for a data message, the key to look up the associated definition
     # seconds_offset -- for RECORD_HEADER_COMPRESSED_TS, offset in seconds
     # NOTE: Though named similarly, none of these map to the namedtuples below
-    pass
+    __slots__ = ()
 
 
 class FieldTypeBase(namedtuple('FieldTypeBase', ('num', 'name', 'invalid', 'struct_fmt', 'is_variable_size'))):
     # Yields a singleton if called with just a num
+    __slots__ = ()
     _instances = {}
 
     def __new__(cls, num, *args, **kwargs):
@@ -96,6 +97,7 @@ class FieldType(namedtuple('FieldType', ('name', 'base', 'converter'))):
     #
     # converter is a dict or a func. If type is uint*z, then converter should
     # look through the value as a bit array and return all found values
+    __slots__ = ()
     _instances = {}
 
     def __new__(cls, name, *args, **kwargs):
@@ -136,17 +138,20 @@ def _field_convert(self, raw_data):
 
 class Field(namedtuple('Field', ('name', 'type', 'units', 'scale', 'offset'))):
     # A name, type, units, scale, offset
+    __slots__ = ()
     convert = _field_convert
 
 
 class DynamicField(namedtuple('DynamicField', ('name', 'type', 'units', 'scale', 'offset', 'possibilities'))):
     # A name, type, units, scale, offset
     # TODO: Describe format of possiblities
+    __slots__ = ()
     convert = _field_convert
 
 
 class AllocatedField(namedtuple('AllocatedField', ('field', 'size'))):
     # A field along with its size
+    __slots__ = ()
 
     @property
     def name(self):
@@ -159,6 +164,8 @@ class AllocatedField(namedtuple('AllocatedField', ('field', 'size'))):
 
 class BoundField(namedtuple('BoundField', ('data', 'raw_data', 'field'))):
     # Convert data
+    __slots__ = ()
+
     def __new__(cls, raw_data, field):
         data = field.convert(raw_data)
         return super(BoundField, cls).__new__(cls, data, raw_data, field)
@@ -181,6 +188,7 @@ class BoundField(namedtuple('BoundField', ('data', 'raw_data', 'field'))):
 
 class MessageType(namedtuple('MessageType', ('num', 'name', 'fields'))):
     # TODO: Describe format of fields (dict)
+    __slots__ = ()
     _instances = {}
 
     def __new__(cls, num, *args, **kwargs):
@@ -207,6 +215,7 @@ class DefinitionRecord(namedtuple('DefinitionRecord', ('header', 'type', 'arch',
     # arch -- Little endian or big endian
     # fields -- list of AllocatedFields
     # type -- MessageType
+    __slots__ = ()
 
     @property
     def name(self):
@@ -219,6 +228,7 @@ class DefinitionRecord(namedtuple('DefinitionRecord', ('header', 'type', 'arch',
 
 class DataRecord(namedtuple('DataRecord', ('header', 'definition', 'fields'))):
     # fields -- list of BoundFields
+    __slots__ = ()
 
     @property
     def name(self):
