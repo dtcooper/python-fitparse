@@ -169,7 +169,6 @@ class FitFile(object):
         return definition  # Do we need to return?
 
     def _parse_data_record(self, header):
-        # XXX -- handle compressed timestamp header
         definition = self._global_messages[header.local_message_type]
 
         fields = []
