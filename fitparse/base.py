@@ -60,6 +60,7 @@ class FitFile(object):
         self.records = []
 
     def get_records_by_type(self, t):
+        # TODO: let t be a list/tuple of arbitary types (str, num, actual type)
         if isinstance(t, str):
             return (rec for rec in self.records if rec.type.name == t)
         elif isinstance(t, int):
