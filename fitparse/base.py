@@ -47,7 +47,7 @@ class FitFile(object):
         '''
         Create a fit file. Argument f can be an open file-like object or a filename
         '''
-        if isinstance(f, basesting):
+        if isinstance(f, basestring):
             f = open(f, 'rb')
 
         # Private: call FitFile._read(), don't read from this. Important for CRC.
