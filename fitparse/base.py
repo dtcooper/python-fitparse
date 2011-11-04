@@ -44,8 +44,10 @@ class FitFile(object):
     )
 
     def __init__(self, f):
-        '''Create a fit file. Argument f can be an open file object or a filename'''
-        if isinstance(f, str):
+        '''
+        Create a fit file. Argument f can be an open file-like object or a filename
+        '''
+        if isinstance(f, basesting):
             f = open(f, 'rb')
 
         # Private: call FitFile._read(), don't read from this. Important for CRC.
