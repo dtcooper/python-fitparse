@@ -27,3 +27,5 @@ converting m/s to km/h and semi-circles to degrees longitude and latitude.
 This could probably be done by sub-classing the parser and calling the child
 classes fix-ups in some way.
 
+* Review and update based on new FIT SDK v1.2 (FitSDK1_5.zip) 
+at <http://www.thisisant.com/pages/ant/fit-license>

@@ -16,7 +16,8 @@ The FIT (Flexible and Interoperable Data Transfer) file protocol is specified
 by ANT (<http://www.thisisant.com/>) and an SDK is available for download at
 <http://www.thisisant.com/pages/products/fit-sdk>
 
-I'm currently using version 1.2 of the SDK to develop this library.
+I'm currently using version 1.1 of the SDK to develop this library
+(FitSDK1_2.zip).
 
 
 Sample Usage

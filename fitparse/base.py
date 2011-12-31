@@ -44,8 +44,10 @@ class FitFile(object):
     )
 
     def __init__(self, f):
-        '''Create a fit file. Argument f can be an open file object or a filename'''
-        if isinstance(f, str):
+        '''
+        Create a fit file. Argument f can be an open file-like object or a filename
+        '''
+        if isinstance(f, basestring):
             f = open(f, 'rb')
 
         # Private: call FitFile._read(), don't read from this. Important for CRC.
@@ -283,13 +285,19 @@ class FitFile(object):
         # Parse the FIT header
         header_size, self.protocol_version, self.profile_version, data_size, data_type = \
                    self._struct_read(FitFile.FILE_HEADER_FMT)
+        num_extra_bytes = 0
 
-        if header_size != 12:
+        if header_size < 12:
             throw_exception("Invalid header size")
+        elif header_size > 12:
+            # Read and discard some extra bytes in the header
+            # as per https://github.com/dtcooper/python-fitparse/issues/1
+            num_extra_bytes = header_size - 12
+            self._read(num_extra_bytes)
 
         if data_type != '.FIT':
             throw_exception('Data type not ".FIT"')
 
         # 12 byte header + 2 byte CRC = 14 bytes not included in that
-        if self._file_size != 14 + data_size:
+        if self._file_size != 14 + data_size + num_extra_bytes:
             throw_exception("File size not set correctly in header.")
