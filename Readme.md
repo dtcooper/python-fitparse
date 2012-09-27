@@ -14,7 +14,7 @@ produced by several newer Garmin cycling computers, notably the Garmin Edge
 
 The FIT (Flexible and Interoperable Data Transfer) file protocol is specified
 by ANT (<http://www.thisisant.com/>) and an SDK is available for download at
-<http://www.thisisant.com/pages/products/fit-sdk>
+<http://www.thisisant.com/pages/products/fit-sdk>.
 
 I'm currently using version 1.1 of the SDK to develop this library
 (FitSDK1_2.zip).
@@ -67,7 +67,7 @@ The package is by no means mature, but here's one sample usage for now.
 License
 -------
 
-    Copyright (c) 2011, David Cooper <dave@kupesoft.com>
+    Copyright (c) 2011-2012, David Cooper <dave@kupesoft.com>
     All rights reserved.
 
     Dedicated to Kate Lacey

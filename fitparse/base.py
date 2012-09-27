@@ -112,7 +112,7 @@ class FitFile(object):
 
         if header_type == r.RECORD_HEADER_NORMAL:
             message_type = self._get_bit(header_data, 6)
-            local_message_type = header_data & 0b1111  # Bits 0-3
+            local_message_type = header_data & 0b11111  # Bits 0-4
             # TODO: Should we set time_offset to 0?
             return r.RecordHeader(
                 header_type, message_type, local_message_type, None,
