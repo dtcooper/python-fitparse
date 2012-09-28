@@ -12,8 +12,9 @@ setup(
     name = "python-fitparse",
     version = "0.1",
     # scripts = ['scripts/generate_profile.py', 'scripts/sample_program.py'],
-    zip_safe = False,
+    zip_safe = True,
     packages = find_packages(),
+    include_package_data = True,
 
     # metadata for upload to PyPI
     # author = "",
