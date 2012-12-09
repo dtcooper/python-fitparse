@@ -5,8 +5,9 @@ Important Note
 --------------
 
 This version of the library is **deprecated** and it is currently being
-rewritten on the ng branch. For now, this library can still be considered
-stable. Updates to come.
+rewritten on the ng branch.
+
+For now, the master branch can still be considered stable. Updates to come.
 
 
 About
