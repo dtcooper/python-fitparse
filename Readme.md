@@ -1,8 +1,12 @@
 python-fitparse
 ===============
 
+Important Note
+--------------
 
-*This library is in active development and is very turbulent right now.*
+This version of the library is **deprecated** and it is currently being
+rewritten on the ng branch. For now, this library can still be considered
+stable. Updates to come.
 
 
 About
