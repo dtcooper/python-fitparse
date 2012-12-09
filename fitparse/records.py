@@ -1,14 +1,25 @@
-from collections import namedtuple
 import datetime
 import math
 import struct
 
 
-MessageHeader = namedtuple('MessageHeader', ('is_definition', 'local_mesg_type', 'time_offset'))
-
-
-class DefinitionMessage(namedtuple('DefinitionMessage', ('header', 'endian', 'mesg_type', 'mesg_num', 'field_defs'))):
+class RecordBase(object):
+    # namedtuple-like base class. Subclasses should must __slots__
     __slots__ = ()
+
+    def __init__(self, *args, **kwargs):
+        for slot_name, value in zip(self.__slots__, args):
+            setattr(self, slot_name, value)
+        for slot_name, value in kwargs.iteritems():
+            setattr(self, slot_name, value)
+
+
+class MessageHeader(RecordBase):
+    __slots__ = ('is_definition', 'local_mesg_type', 'time_offset')
+
+
+class DefinitionMessage(RecordBase):
+    __slots__ = ('header', 'endian', 'mesg_type', 'mesg_num', 'field_defs')
     type = 'definition'
 
     @property
@@ -16,16 +27,16 @@ class DefinitionMessage(namedtuple('DefinitionMessage', ('header', 'endian', 'me
         return self.mesg_type.name if self.mesg_type else None
 
 
-class FieldDefinition(namedtuple('FieldDefinition', ('field', 'def_num', 'base_type', 'size'))):
-    __slots__ = ()
+class FieldDefinition(RecordBase):
+    __slots__ = ('field', 'def_num', 'base_type', 'size')
 
     @property
     def name(self):
         return self.field.name if self.field else None
 
 
-class DataMessage(namedtuple('DataMessage', ('header', 'def_mesg', 'fields'))):
-    __slots__ = ()
+class DataMessage(RecordBase):
+    __slots__ = ('header', 'def_mesg', 'fields')
     type = 'data'
 
     def get(self, field_name, as_dict=True):
@@ -55,10 +66,12 @@ class DataMessage(namedtuple('DataMessage', ('header', 'def_mesg', 'fields'))):
             'fields': [f.as_dict() for f in self.fields],
         }
 
+    def __str__(self):
+        return '%s (#%d)' % (self.name if self.name else 'unknown', self.mesg_num)
 
-class FieldData(namedtuple('FieldData', ('field_def', 'field', 'parent_field', 'value', 'raw_value'))):
-    # We need field as well as field_def to figure out what we decoded to
-    __slots__ = ()
+
+class FieldData(RecordBase):
+    __slots__ = ('field_def', 'field', 'parent_field', 'value', 'raw_value')
 
     @property
     def name(self):
@@ -113,6 +126,13 @@ class FieldData(namedtuple('FieldData', ('field_def', 'field', 'parent_field', '
             'raw_value': self.raw_value,
         }
 
+    def __iter__(self):
+        for field in sorted(
+            self.fields, key=lambda f: (int(f.name is None), f.name, f.def_num),
+        ):
+            if not field.components:
+                yield field
+
     def __str__(self):
         return '%s: %s%s' % (
             self.name if self.name else 'unknown-%d' % self.def_num,
@@ -120,8 +140,8 @@ class FieldData(namedtuple('FieldData', ('field_def', 'field', 'parent_field', '
         )
 
 
-class BaseType(namedtuple('BaseType', ('name', 'num', 'fmt', 'parse'))):
-    __slots__ = ()
+class BaseType(RecordBase):
+    __slots__ = ('name', 'num', 'fmt', 'parse')
     values = None  # In case we're treated as a FieldType
 
     @property
@@ -131,11 +151,15 @@ class BaseType(namedtuple('BaseType', ('name', 'num', 'fmt', 'parse'))):
 
 # Bare minimum profile.py to make generate_profile.py work
 
-FieldType = namedtuple('FieldType', ('name', 'base_type', 'values'))
-MessageType = namedtuple('MessageType', ('name', 'mesg_num', 'fields'))
+class FieldType(RecordBase):
+    __slots__ = ('name', 'base_type', 'values')
 
 
-class _FieldMixIn(object):
+class MessageType(RecordBase):
+    __slots__ = ('name', 'mesg_num', 'fields')
+
+
+class FieldBase(RecordBase):
     __slots__ = ()
 
     @property
@@ -181,16 +205,17 @@ class _FieldMixIn(object):
         return raw_value
 
 
-class SubField(namedtuple('SubField', ('name', 'def_num', 'type', 'scale', 'offset', 'units', 'ref_fields')), _FieldMixIn):
-    __slots__ = ()
+class SubField(FieldBase):
+    __slots__ = ('name', 'def_num', 'type', 'scale', 'offset', 'units', 'ref_fields')
     field_type = 'subfield'
 
 
-ReferenceField = namedtuple('ReferenceField', ('name', 'def_num', 'value', 'raw_value'))
+class ReferenceField(RecordBase):
+    __slots__ = ('name', 'def_num', 'value', 'raw_value')
 
 
-class ComponentField(namedtuple('ComponentField', ('name', 'def_num', 'scale', 'offset', 'units', 'accumulate', 'bits', 'bit_offset'))):
-    __slots__ = ()
+class ComponentField(RecordBase):
+    __slots__ = ('name', 'def_num', 'scale', 'offset', 'units', 'accumulate', 'bits', 'bit_offset')
     field_type = 'component'
 
     def render(self, raw_value):
@@ -209,19 +234,9 @@ class ComponentField(namedtuple('ComponentField', ('name', 'def_num', 'scale', '
 
         return raw_value
 
-    def apply_accumulation(self, raw_value, accumulation):
-        max_value = (1 << self.bits)
-        max_mask = max_value - 1
-        base_value = raw_value + (accumulation & ~max_mask)
 
-        if raw_value < (accumulation & max_mask):
-            base_value += max_value
-
-        return base_value
-
-
-class Field(namedtuple('Field', ('name', 'type', 'def_num', 'scale', 'offset', 'units', 'components', 'subfields')), _FieldMixIn):
-    __slots__ = ()
+class Field(FieldBase):
+    __slots__ = ('name', 'type', 'def_num', 'scale', 'offset', 'units', 'components', 'subfields')
     field_type = 'field'
 
 

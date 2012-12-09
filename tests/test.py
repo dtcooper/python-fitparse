@@ -2,7 +2,12 @@ import csv
 import datetime
 import os
 from struct import pack
-import unittest
+import sys
+
+if sys.version_info >= (2, 7):
+    import unittest
+else:
+    import unittest2 as unittest
 
 from fitparse import FitFile
 from fitparse.records import BASE_TYPES
@@ -14,7 +19,7 @@ def generate_messages(mesg_num, local_mesg_num, field_defs, endian='<', data=Non
     base_type_list = []
 
     # definition message, local message num
-    s = pack('<B', 0b01000000 | local_mesg_num)
+    s = pack('<B', 0x40 | local_mesg_num)
     # reserved byte and endian
     s += pack('<xB', int(endian == '>'))
     # global message num, num fields

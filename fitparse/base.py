@@ -1,4 +1,3 @@
-import numbers
 import struct
 
 try:
@@ -148,16 +147,16 @@ class FitFile(object):
     def _parse_message_header(self):
         header = self._read_struct('B')
 
-        if header & (1 << 7):  # bit 7: Is this record a compressed timestamp?
+        if header & 0x80:  # bit 7: Is this record a compressed timestamp?
             return MessageHeader(
                 is_definition=False,
-                local_mesg_type=(header >> 5) & 0b11,  # bits 5-6
-                time_offset=header & 0b11111,  # bits 0-4
+                local_mesg_type=(header >> 5) & 0x3,  # bits 5-6
+                time_offset=header & 0x1F,  # bits 0-4
             )
         else:
             return MessageHeader(
-                is_definition=bool(header & (1 << 6)),  # bit 6
-                local_mesg_type=header & 0b1111,  # bits 0-3
+                is_definition=bool(header & 0x40),  # bit 6
+                local_mesg_type=header & 0xF,  # bits 0-3
                 time_offset=None,
             )
 
@@ -253,7 +252,7 @@ class FitFile(object):
     @staticmethod
     def _apply_scale_offset(field, raw_value):
         # Apply numeric transformations (scale+offset)
-        if isinstance(raw_value, numbers.Real):
+        if isinstance(raw_value, (int, long, float)):
             if field.scale:
                 raw_value = float(raw_value) / field.scale
             if field.offset:
@@ -385,6 +384,10 @@ class FitFile(object):
         #     for msg in self.messages
         #     if with_definitions or msg.header.is_data
         # )
+
+    def __iter__(self):
+        for message in self.messages:
+            yield message
 
     def get_messages_by_name(self, name, as_dict=True):
         for message in self.messages:

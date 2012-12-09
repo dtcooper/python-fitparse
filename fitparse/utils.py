@@ -5,13 +5,14 @@ CRC_TABLE = (
 
 
 def calc_crc(bytes, crc=0):
-    for byte in bytearray(bytes):
+    for byte in bytes:
+        byte_char = ord(byte)
         # Taken verbatim from FIT SDK docs
         tmp = CRC_TABLE[crc & 0xF]
         crc = (crc >> 4) & 0x0FFF
-        crc = crc ^ tmp ^ CRC_TABLE[byte & 0xF]
+        crc = crc ^ tmp ^ CRC_TABLE[byte_char & 0xF]
 
         tmp = CRC_TABLE[crc & 0xF]
         crc = (crc >> 4) & 0x0FFF
-        crc = crc ^ tmp ^ CRC_TABLE[(byte >> 4) & 0xF]
+        crc = crc ^ tmp ^ CRC_TABLE[(byte_char >> 4) & 0xF]
     return crc
