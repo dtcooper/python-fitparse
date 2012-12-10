@@ -27,7 +27,7 @@ def generate_messages(mesg_num, local_mesg_num, field_defs, endian='<', data=Non
     for def_num, base_type in field_defs:
         base_type = [bt for bt in BASE_TYPES.values() if bt.name == base_type][0]
         base_type_list.append(base_type)
-        s += pack('<3B', def_num, base_type.size, base_type.num)
+        s += pack('<3B', def_num, base_type.size, base_type.identifier)
 
     mesgs.append(s)
 

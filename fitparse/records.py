@@ -15,7 +15,14 @@ class RecordBase(object):
 
 
 class MessageHeader(RecordBase):
-    __slots__ = ('is_definition', 'local_mesg_type', 'time_offset')
+    __slots__ = ('is_definition', 'local_mesg_num', 'time_offset')
+
+    def __repr__(self):
+        return '<MessageHeader: %s -- local mesg: #%d%s>' % (
+            'definition' if self.is_definition else 'data',
+            self.local_mesg_num,
+            ', time offset: %d' % self.time_offset if self.time_offset else '',
+        )
 
 
 class DefinitionMessage(RecordBase):
@@ -24,7 +31,19 @@ class DefinitionMessage(RecordBase):
 
     @property
     def name(self):
-        return self.mesg_type.name if self.mesg_type else None
+        return self.mesg_type.name if self.mesg_type else 'unknown-%d' % self.mesg_num
+
+    @property
+    def local_mesg_num(self):
+        return self.header.local_mesg_num
+
+    def __repr__(self):
+        return '<DefinitionMessage: %s (#%d) -- local mesg: #%d, field defs: [%s]>' % (
+            self.name,
+            self.mesg_num,
+            self.local_mesg_num,
+            ', '.join([fd.name for fd in self.field_defs]),
+        )
 
 
 class FieldDefinition(RecordBase):
@@ -32,7 +51,20 @@ class FieldDefinition(RecordBase):
 
     @property
     def name(self):
-        return self.field.name if self.field else None
+        return self.field.name if self.field else 'unknown-%d' % self.def_num
+
+    @property
+    def type(self):
+        return self.field.type if self.field else self.base_type
+
+    def __repr__(self):
+        return '<FieldDefinition: %s (#%d) -- type: %s, size: %d byte%s>' % (
+            self.name,
+            self.def_num,
+            '%s (%s)' % (self.type.name, self.base_type.name)
+            if self.type.name != self.base_type.name else self.base_type.name,
+            self.size, 's' if self.size != 1 else '',
+        )
 
 
 class DataMessage(RecordBase):
@@ -60,14 +92,21 @@ class DataMessage(RecordBase):
     def mesg_num(self):
         return self.def_mesg.mesg_num
 
+    @property
+    def local_mesg_num(self):
+        return self.header.local_mesg_num
+
     def as_dict(self):
         return {
             'name': self.name,
             'fields': [f.as_dict() for f in self.fields],
         }
 
-    def __str__(self):
-        return '%s (#%d)' % (self.name if self.name else 'unknown', self.mesg_num)
+    def __repr__(self):
+        return '<DataMessage: %s (#%d) -- local mesg: #%d, fields: [%s]>' % (
+            self.name, self.mesg_num, self.local_mesg_num,
+            ', '.join(["%s: %s" % (fd.name, fd.value) for fd in self.fields]),
+        )
 
 
 class FieldData(RecordBase):
@@ -75,7 +114,7 @@ class FieldData(RecordBase):
 
     @property
     def name(self):
-        return self.field.name if self.field else None
+        return self.field.name if self.field else 'unknown-%d' % self.def_num
 
     # TODO: Some notion of flags
 
@@ -141,25 +180,38 @@ class FieldData(RecordBase):
 
 
 class BaseType(RecordBase):
-    __slots__ = ('name', 'num', 'fmt', 'parse')
+    __slots__ = ('name', 'identifier', 'fmt', 'parse')
     values = None  # In case we're treated as a FieldType
 
     @property
     def size(self):
         return struct.calcsize(self.fmt)
 
+    @property
+    def type_num(self):
+        return self.identifier & 0x1F
 
-# Bare minimum profile.py to make generate_profile.py work
+    def __repr__(self):
+        return '<BaseType: %s (#%d [0x%X])>' % (
+            self.name, self.type_num, self.identifier,
+        )
+
 
 class FieldType(RecordBase):
     __slots__ = ('name', 'base_type', 'values')
+
+    def __repr__(self):
+        return '<FieldType: %s (%s)>' % (self.name, self.base_type)
 
 
 class MessageType(RecordBase):
     __slots__ = ('name', 'mesg_num', 'fields')
 
+    def __repr__(self):
+        return '<MessageType: %s (#%d)>' % (self.name, self.mesg_num)
 
-class FieldBase(RecordBase):
+
+class FieldAndSubFieldBase(RecordBase):
     __slots__ = ()
 
     @property
@@ -205,7 +257,12 @@ class FieldBase(RecordBase):
         return raw_value
 
 
-class SubField(FieldBase):
+class Field(FieldAndSubFieldBase):
+    __slots__ = ('name', 'type', 'def_num', 'scale', 'offset', 'units', 'components', 'subfields')
+    field_type = 'field'
+
+
+class SubField(FieldAndSubFieldBase):
     __slots__ = ('name', 'def_num', 'type', 'scale', 'offset', 'units', 'ref_fields')
     field_type = 'subfield'
 
@@ -235,27 +292,22 @@ class ComponentField(RecordBase):
         return raw_value
 
 
-class Field(FieldBase):
-    __slots__ = ('name', 'type', 'def_num', 'scale', 'offset', 'units', 'components', 'subfields')
-    field_type = 'field'
-
-
 # The default base type
-BASE_TYPE_BYTE = BaseType(name='byte', num=0x0D, fmt='B', parse=lambda x: None if all(b == 0xFF for b in x) else x)
+BASE_TYPE_BYTE = BaseType(name='byte', identifier=0x0D, fmt='B', parse=lambda x: None if all(b == 0xFF for b in x) else x)
 
 BASE_TYPES = {
-    0x00: BaseType(name='enum', num=0x00, fmt='B', parse=lambda x: None if x == 0xFF else x),
-    0x01: BaseType(name='sint8', num=0x01, fmt='b', parse=lambda x: None if x == 0x7F else x),
-    0x02: BaseType(name='uint8', num=0x02, fmt='B', parse=lambda x: None if x == 0xFF else x),
-    0x83: BaseType(name='sint16', num=0x83, fmt='h', parse=lambda x: None if x == 0x7FFF else x),
-    0x84: BaseType(name='uint16', num=0x84, fmt='H', parse=lambda x: None if x == 0xFFFF else x),
-    0x85: BaseType(name='sint32', num=0x85, fmt='i', parse=lambda x: None if x == 0x7FFFFFFF else x),
-    0x86: BaseType(name='uint32', num=0x86, fmt='I', parse=lambda x: None if x == 0xFFFFFFFF else x),
-    0x07: BaseType(name='string', num=0x07, fmt='s', parse=lambda x: x.split('\x00')[0] or None),
-    0x88: BaseType(name='float32', num=0x88, fmt='f', parse=lambda x: None if math.isnan(x) else x),
-    0x89: BaseType(name='float64', num=0x89, fmt='d', parse=lambda x: None if math.isnan(x) else x),
-    0x0A: BaseType(name='uint8z', num=0x0A, fmt='B', parse=lambda x: None if x == 0x0 else x),
-    0x8B: BaseType(name='uint16z', num=0x8B, fmt='H', parse=lambda x: None if x == 0x0 else x),
-    0x8C: BaseType(name='uint32z', num=0x8C, fmt='I', parse=lambda x: None if x == 0x0 else x),
+    0x00: BaseType(name='enum', identifier=0x00, fmt='B', parse=lambda x: None if x == 0xFF else x),
+    0x01: BaseType(name='sint8', identifier=0x01, fmt='b', parse=lambda x: None if x == 0x7F else x),
+    0x02: BaseType(name='uint8', identifier=0x02, fmt='B', parse=lambda x: None if x == 0xFF else x),
+    0x83: BaseType(name='sint16', identifier=0x83, fmt='h', parse=lambda x: None if x == 0x7FFF else x),
+    0x84: BaseType(name='uint16', identifier=0x84, fmt='H', parse=lambda x: None if x == 0xFFFF else x),
+    0x85: BaseType(name='sint32', identifier=0x85, fmt='i', parse=lambda x: None if x == 0x7FFFFFFF else x),
+    0x86: BaseType(name='uint32', identifier=0x86, fmt='I', parse=lambda x: None if x == 0xFFFFFFFF else x),
+    0x07: BaseType(name='string', identifier=0x07, fmt='s', parse=lambda x: x.split('\x00')[0] or None),
+    0x88: BaseType(name='float32', identifier=0x88, fmt='f', parse=lambda x: None if math.isnan(x) else x),
+    0x89: BaseType(name='float64', identifier=0x89, fmt='d', parse=lambda x: None if math.isnan(x) else x),
+    0x0A: BaseType(name='uint8z', identifier=0x0A, fmt='B', parse=lambda x: None if x == 0x0 else x),
+    0x8B: BaseType(name='uint16z', identifier=0x8B, fmt='H', parse=lambda x: None if x == 0x0 else x),
+    0x8C: BaseType(name='uint32z', identifier=0x8C, fmt='I', parse=lambda x: None if x == 0x0 else x),
     0x0D: BASE_TYPE_BYTE,
 }

@@ -150,13 +150,13 @@ class FitFile(object):
         if header & 0x80:  # bit 7: Is this record a compressed timestamp?
             return MessageHeader(
                 is_definition=False,
-                local_mesg_type=(header >> 5) & 0x3,  # bits 5-6
+                local_mesg_num=(header >> 5) & 0x3,  # bits 5-6
                 time_offset=header & 0x1F,  # bits 0-4
             )
         else:
             return MessageHeader(
                 is_definition=bool(header & 0x40),  # bit 6
-                local_mesg_type=header & 0xF,  # bits 0-3
+                local_mesg_num=header & 0xF,  # bits 0-3
                 time_offset=None,
             )
 
@@ -202,7 +202,7 @@ class FitFile(object):
             mesg_num=global_mesg_num,
             field_defs=field_defs,
         )
-        self._local_mesgs[header.local_mesg_type] = def_mesg
+        self._local_mesgs[header.local_mesg_num] = def_mesg
         return def_mesg
 
     def _parse_raw_values_from_data_message(self, def_mesg):
@@ -271,10 +271,10 @@ class FitFile(object):
         return base_value
 
     def _parse_data_message(self, header):
-        def_mesg = self._local_mesgs.get(header.local_mesg_type)
+        def_mesg = self._local_mesgs.get(header.local_mesg_num)
         if not def_mesg:
             raise FitParseError('Got data message with invalid local message type %d' % (
-                header.local_mesg_type))
+                header.local_mesg_num))
 
         raw_values = self._parse_raw_values_from_data_message(def_mesg)
         field_datas = []  # TODO: I don't love this name, update on DataMessage too
