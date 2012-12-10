@@ -9,5 +9,5 @@ setup(
     url='http://www.github.com/dtcooper/python-fitparse',
     license=open('LICENSE').read(),
     packages=['fitparse'],
-    data_files=[("", ["LICENSE"])],
+    scripts=['scripts/fitdump'],  # Don't include generate_profile.py
 )

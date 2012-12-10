@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+from fitparse import FitFile, FitParseError
+
+
+def dump(filename):
+    try:
+        fitfile = FitFile(filename)
+
+        for data_message in fitfile:
+            print "%s (mesg num: #%d)" % (data_message.name, data_message.mesg_num)
+            for field_data in sorted(
+                data_message,
+                key=lambda fd: (
+                    # Sort by known fields first
+                    int(fd.name.startswith('unknown')),
+                    # Then by def num if known, otherwise name
+                    fd.def_num if fd.name.startswith('unknown') else fd.name,
+                ),
+            ):
+                print " * %s" % field_data
+            print
+
+    except FitParseError, e:
+        print "Error parsing %s: %s" % (filename, e)
+
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print "Usage: %s <file.fit> [<file2.fit> ...]" % os.path.basename(__file__)
+        sys.exit(0)
+
+    for filename in sys.argv[1:]:
+        print "%(hashes)s\n# %(filename)s #\n%(hashes)s\n" % {
+            'filename': filename, 'hashes': '#' * (len(filename) + 4),
+        }
+        dump(filename)
+        print

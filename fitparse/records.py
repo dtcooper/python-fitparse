@@ -102,6 +102,9 @@ class DataMessage(RecordBase):
             'fields': [f.as_dict() for f in self.fields],
         }
 
+    def __iter__(self):
+        return iter(self.fields)
+
     def __repr__(self):
         return '<DataMessage: %s (#%d) -- local mesg: #%d, fields: [%s]>' % (
             self.name, self.mesg_num, self.local_mesg_num,
@@ -165,14 +168,7 @@ class FieldData(RecordBase):
             'raw_value': self.raw_value,
         }
 
-    def __iter__(self):
-        for field in sorted(
-            self.fields, key=lambda f: (int(f.name is None), f.name, f.def_num),
-        ):
-            if not field.components:
-                yield field
-
-    def __str__(self):
+    def __str__(self):  # TODO: not sure I like this
         return '%s: %s%s' % (
             self.name if self.name else 'unknown-%d' % self.def_num,
             self.value, ' [%s]' % self.units if self.units else '',
