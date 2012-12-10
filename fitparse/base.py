@@ -51,8 +51,7 @@ class FitFile(object):
         self._accumulators = {}
         self._compressed_ts_accumulator = 0
         self._complete = False
-        self.all_messages = []  # All messages including definitions
-        self.messages = []  # Just data messages
+        self._messages = []
 
         # Start off by parsing the file header (makes self._data_bytes_left valid)
         self._parse_file_header()
@@ -135,13 +134,13 @@ class FitFile(object):
             return None
 
         header = self._parse_message_header()
+
         if header.is_definition:
             message = self._parse_definition_message(header)
         else:
             message = self._parse_data_message(header)
-            self.messages.append(message)
-        self.all_messages.append(message)
 
+        self._messages.append(message)
         return message
 
     def _parse_message_header(self):
@@ -359,40 +358,48 @@ class FitFile(object):
     ##########
     # Public API
 
-    def parse_one(self, as_dict=True, with_definitions=False):
-        if with_definitions:
+    def get_messages(
+        self, name=None, mesg_num=None, has_field=None,
+        with_definitions=False, as_dict=False,
+    ):
+        # TODO: Implement the query arguments, also let them be tuples, ie name=('record', 'event')
+
+        if with_definitions:  # with_definitions implies as_dict=False
             as_dict = False
 
+        def should_yield(message):
+            if message and (with_definitions or message.type == 'data'):
+                # If both args are None, then we return all
+                if (name is None) and (mesg_num is None):
+                    return True
+                if (name is not None) and name in (message.name, message.mesg_num):
+                    return True
+                if (mesg_num is not None) and mesg_num == message.mesg_num:
+                    return True
+            return False
+
+        # Yield all parsed messages first
+        for message in self._messages:
+            if should_yield(message):
+                yield message.as_dict() if as_dict else message
+
+        # If there are unparsed messages, yield those too
         while not self._complete:
             message = self._parse_message()
-            if message:
-                if with_definitions or not message.header.is_definition:
-                    return message.as_dict() if as_dict else message
+            if message and should_yield(message):
+                yield message.as_dict() if as_dict else message
 
-        return None
+    @property
+    def messages(self):
+        # TODO: could this be more efficient?
+        return list(self.get_messages())
 
-    def parse(self, as_dict=True, with_definitions=False):
-        # if with_definitions:
-        #     as_dict = False
-
+    def parse(self):
         while self._parse_message():
             pass
 
-        # TODO: abstract
-        # return (
-        #     (msg.as_dict() if as_dict else msg)
-        #     for msg in self.messages
-        #     if with_definitions or msg.header.is_data
-        # )
-
     def __iter__(self):
-        for message in self.messages:
-            yield message
-
-    def get_messages_by_name(self, name, as_dict=True):
-        for message in self.messages:
-            if message.name == name:
-                yield message.as_dict() if as_dict else message
+        return self.get_messages()
 
 
 # TODO: Create subclasses like Activity and do per-value monkey patching

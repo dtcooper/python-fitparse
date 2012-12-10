@@ -112,7 +112,7 @@ class FitFileTestCase(unittest.TestCase):
         f = FitFile(testfile('compressed-speed-distance.fit'))
         f.parse()
 
-        records = f.get_messages_by_name('record', as_dict=False)
+        records = f.get_messages(name='record')
         empty_record = records.next()  # Skip empty record for now (sets timestamp via header)
 
         # File's timestamp record is < 0x10000000, so field returns seconds
