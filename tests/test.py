@@ -162,6 +162,63 @@ class FitFileTestCase(unittest.TestCase):
         for field in ('data16', 2):
             self.assertEqual(event.get_value(field), 2)
 
+    def test_parsing_edge_500_fit_file(self):
+        csv_messages = csv.reader(open(testfile('garmin-edge-500-activitiy-records.csv'), 'rb'))
+        field_names = csv_messages.next()  # Consume header
+
+        f = FitFile(testfile('garmin-edge-500-activitiy.fit'))
+        messages = f.get_messages(name='record')
+
+        # For fixups
+        last_valid_lat, last_valid_long = None, None
+
+        for message, csv_message in zip(messages, csv_messages):
+            for csv_index, field_name in enumerate(field_names):
+                fit_value, csv_value = message.get_value(field_name), csv_message[csv_index]
+                if field_name == 'timestamp':
+                    # Adjust GMT to PDT and format
+                    fit_value = (fit_value - datetime.timedelta(hours=7)).strftime("%a %b %d %H:%M:%S PDT %Y")
+
+                # Track last valid lat/longs
+                if field_name == 'position_lat':
+                    if fit_value is not None:
+                        last_valid_lat = fit_value
+                if field_name == 'position_long':
+                    if fit_value is not None:
+                        last_valid_long = fit_value
+
+                # ANT FIT SDK Dump tool does a bad job of logging invalids, so fix them
+                if fit_value is None:
+                    # ANT FIT SDK Dump tool cadence reports invalid as 0
+                    if field_name == 'cadence' and csv_value == '0':
+                        csv_value = None
+                    # ANT FIT SDK Dump tool invalid lat/lng reports as last valid
+                    if field_name == 'position_lat':
+                        fit_value = last_valid_lat
+                    if field_name == 'position_long':
+                        fit_value = last_valid_long
+
+                if isinstance(fit_value, (int, long)):
+                    csv_value = int(csv_value)
+
+                if isinstance(fit_value, float):
+                    # Float comparison
+                    self.assertAlmostEqual(fit_value, float(csv_value))
+                else:
+                    self.assertEqual(fit_value, csv_value)
+
+        try:
+            messages.next()
+            self.fail(".FIT file had more than csv file")
+        except StopIteration:
+            pass
+
+        try:
+            csv_messages.next()
+            self.fail(".CSV file had more messages than .FIT file")
+        except StopIteration:
+            pass
+
 
 if __name__ == '__main__':
     unittest.main()
