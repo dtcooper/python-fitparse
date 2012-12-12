@@ -42,6 +42,8 @@ IMPORT_HEADER = '''from fitparse.records import (
     BASE_TYPES,
 )'''
 
+SPECIAL_FIELD_DECLARTIONS = "FIELD_TYPE_TIMESTAMP = Field(name='timestamp', type=FIELD_TYPES['date_time'], def_num=253, units='s')"
+
 IGNORE_TYPE_VALUES = (
     # of the form 'type_name:value_name'
     'mesg_num:mfg_range_min',
@@ -106,14 +108,11 @@ class TypeInfo(namedtuple('TypeInfo', ('name', 'base_type', 'values', 'comment')
         s += "    base_type=BASE_TYPES[%s],  # %s\n" % (
             BASE_TYPES[self.base_type], self.base_type,
         )
-        s += "    values="
         if self.values:
-            s += "{\n"
+            s += "    values={\n"
             for value in sorted(self.values, key=lambda x: x.value):
                 s += "        %s\n" % (value,)
             s += "    },\n"
-        else:
-            s += "None,\n"
         s += ")"
         return s
 
@@ -156,45 +155,43 @@ class MessageInfo(namedtuple('MessageInfo', ('name', 'num', 'group_name', 'field
         s = "MessageType(%s\n" % render_comment(self.comment)
         s += "    name='%s',\n" % self.name
         s += "    mesg_num=%d,\n" % self.num
-        s += "    fields="
-        if self.fields:
-            s += "{\n"
-            for field in sorted(self.fields, key=lambda fi: fi.num):
-                s += "        %d: %s,\n" % (field.num, indent(field, 2))
-            s += "    },\n"
-        else:
-            s += "None,\n"
+        s += "    fields={\n"
+        for field in sorted(self.fields, key=lambda fi: fi.num):
+            # Don't include trailing comma for fields
+            s += "        %d: %s\n" % (field.num, indent(field, 2))
+        s += "    },\n"
         s += ")"
         return s
 
 
 class FieldInfo(namedtuple('FieldInfo', ('name', 'type', 'num', 'scale', 'offset', 'units', 'components', 'subfields', 'comment'))):
     def __str__(self):
+        if self.num == 253:
+            # Add trailing comma here because of comment
+            assert not self.components and not self.subfields
+            return 'FIELD_TYPE_TIMESTAMP,%s' % render_comment(self.comment)
         s = "Field(%s\n" % render_comment(self.comment)
         s += "    name='%s',\n" % self.name
         s += "    type=%s\n" % render_type(self.type)
         s += "    def_num=%d,\n" % self.num
-        s += "    scale=%s,\n" % self.scale
-        s += "    offset=%s,\n" % self.offset
-        s += "    units=%s,\n" % repr(self.units)
-        s += "    components="
+        if self.scale:
+            s += "    scale=%s,\n" % self.scale
+        if self.offset:
+            s += "    offset=%s,\n" % self.offset
+        if self.units:
+            s += "    units=%s,\n" % repr(self.units)
         if self.components:
-            s += '(\n'
+            s += '    components=(\n'
             # Leave components sorted as is (order matters because of bit layout)
             for component in self.components:
                 s += "        %s,\n" % indent(component, 2)
             s += "    ),\n"
-        else:
-            s += "None,\n"
-        s += "    subfields="
         if self.subfields:
-            s += "(\n"
+            s += "    subfields=(\n"
             for subfield in sorted(self.subfields, key=lambda si: si.name):
                 s += "        %s,\n" % indent(subfield, 2)
             s += "    ),\n"
-        else:
-            s += "None,\n"
-        s += ")"
+        s += "),"
         return s
 
 
@@ -203,9 +200,12 @@ class ComponentFieldInfo(namedtuple('ComponentFieldInfo', ('name', 'num', 'scale
         s = "ComponentField(\n"
         s += "    name='%s',\n" % self.name
         s += "    def_num=%d,\n" % self.num
-        s += "    scale=%s,\n" % self.scale
-        s += "    offset=%s,\n" % self.offset
-        s += "    units=%s,\n" % repr(self.units)
+        if self.scale:
+            s += "    scale=%s,\n" % self.scale
+        if self.offset:
+            s += "    offset=%s,\n" % self.offset
+        if self.units:
+            s += "    units=%s,\n" % repr(self.units)
         s += "    accumulate=%s,\n" % self.accumulate
         s += "    bits=%s,\n" % self.bits
         s += "    bit_offset=%s,\n" % self.bit_offset
@@ -219,9 +219,12 @@ class SubFieldInfo(namedtuple('SubFieldInfo', ('name', 'num', 'type', 'scale', '
         s += "    name='%s',\n" % self.name
         s += "    def_num=%s,\n" % self.num
         s += "    type=%s\n" % render_type(self.type)
-        s += "    scale=%s,\n" % self.scale
-        s += "    offset=%s,\n" % self.offset
-        s += "    units=%s,\n" % repr(self.units)
+        if self.scale:
+            s += "    scale=%s,\n" % self.scale
+        if self.offset:
+            s += "    offset=%s,\n" % self.offset
+        if self.units:
+            s += "    units=%s,\n" % repr(self.units)
         s += "    ref_fields=(\n"
         for ref_field in self.ref_fields:  # sorted(self.ref_fields, key=lambda rf: (rf.name, rf.value)):
             s += "        %s,\n" % indent(ref_field, 2)
@@ -481,6 +484,7 @@ def main(input_xls_or_zip, output_py_path=None):
         )),
         '', IMPORT_HEADER, '\n',
         str(type_list), '\n',
+        SPECIAL_FIELD_DECLARTIONS, '\n',
         str(message_list), ''
     ])
 

@@ -1,4 +1,3 @@
-import datetime
 import math
 import struct
 
@@ -12,6 +11,9 @@ class RecordBase(object):
             setattr(self, slot_name, value)
         for slot_name, value in kwargs.iteritems():
             setattr(self, slot_name, value)
+        for slot_name in self.__slots__:
+            if not hasattr(self, slot_name):
+                setattr(self, slot_name, None)
 
 
 class MessageHeader(RecordBase):
@@ -31,7 +33,7 @@ class DefinitionMessage(RecordBase):
 
     @property
     def name(self):
-        return self.mesg_type.name if self.mesg_type else 'unknown-%d' % self.mesg_num
+        return self.mesg_type.name if self.mesg_type else 'unknown_%d' % self.mesg_num
 
     @property
     def local_mesg_num(self):
@@ -51,18 +53,17 @@ class FieldDefinition(RecordBase):
 
     @property
     def name(self):
-        return self.field.name if self.field else 'unknown-%d' % self.def_num
+        return self.field.name if self.field else 'unknown_%d' % self.def_num
 
     @property
     def type(self):
         return self.field.type if self.field else self.base_type
 
     def __repr__(self):
-        return '<FieldDefinition: %s (#%d) -- type: %s, size: %d byte%s>' % (
+        return '<FieldDefinition: %s (#%d) -- type: %s (%s), size: %d byte%s>' % (
             self.name,
             self.def_num,
-            '%s (%s)' % (self.type.name, self.base_type.name)
-            if self.type.name != self.base_type.name else self.base_type.name,
+            self.type.name, self.base_type.name,
             self.size, 's' if self.size != 1 else '',
         )
 
@@ -71,13 +72,13 @@ class DataMessage(RecordBase):
     __slots__ = ('header', 'def_mesg', 'fields')
     type = 'data'
 
-    def get(self, field_name, as_dict=True):
+    def get(self, field_name, as_dict=False):
         for field_data in self.fields:
             if field_data.is_named(field_name):
                 return field_data.as_dict() if as_dict else field_data
 
     def get_value(self, field_name):
-        field_data = self.get(field_name, as_dict=False)
+        field_data = self.get(field_name)
         if field_data:
             return field_data.value
 
@@ -93,6 +94,10 @@ class DataMessage(RecordBase):
         return self.def_mesg.mesg_num
 
     @property
+    def mesg_type(self):
+        return self.def_mesg.mesg_type
+
+    @property
     def local_mesg_num(self):
         return self.header.local_mesg_num
 
@@ -103,7 +108,8 @@ class DataMessage(RecordBase):
         }
 
     def __iter__(self):
-        return iter(self.fields)
+        # Sort by whether this is a known field, then its name
+        return iter(sorted(self.fields, key=lambda fd: (int(fd.field is None), fd.name)))
 
     def __repr__(self):
         return '<DataMessage: %s (#%d) -- local mesg: #%d, fields: [%s]>' % (
@@ -111,13 +117,23 @@ class DataMessage(RecordBase):
             ', '.join(["%s: %s" % (fd.name, fd.value) for fd in self.fields]),
         )
 
+    def __str__(self):
+        return '%s (#%d)' % (self.name, self.mesg_num)
+
 
 class FieldData(RecordBase):
-    __slots__ = ('field_def', 'field', 'parent_field', 'value', 'raw_value')
+    __slots__ = ('field_def', 'field', 'parent_field', 'value', 'raw_value', 'units')
+
+    def __init__(self, *args, **kwargs):
+        super(FieldData, self).__init__(self, *args, **kwargs)
+        if not self.units and self.field:
+            # Default to units on field, otherwise None.
+            # NOTE:Not a property since you may want to override this in a data processor
+            self.units = self.field.units
 
     @property
     def name(self):
-        return self.field.name if self.field else 'unknown-%d' % self.def_num
+        return self.field.name if self.field else 'unknown_%d' % self.def_num
 
     # TODO: Some notion of flags
 
@@ -157,10 +173,6 @@ class FieldData(RecordBase):
     def field_type(self):
         return self.field.field_type if self.field else 'field'
 
-    @property
-    def units(self):  # TODO: have this be set here, so we can make custom units for converters
-        return self.field.units if self.field else None
-
     def as_dict(self):
         return {
             'name': self.name, 'def_num': self.def_num, 'base_type': self.base_type.name,
@@ -168,10 +180,15 @@ class FieldData(RecordBase):
             'raw_value': self.raw_value,
         }
 
-    def __str__(self):  # TODO: not sure I like this
+    def __repr__(self):
+        return '<FieldData: %s: %s%s, def num: %d, type: %s (%s), raw value: %s>' % (
+            self.name, self.value, ' [%s]' % self.units if self.units else '',
+            self.def_num, self.type.name, self.base_type.name, self.raw_value,
+        )
+
+    def __str__(self):
         return '%s: %s%s' % (
-            self.name if self.name else 'unknown-%d' % self.def_num,
-            self.value, ' [%s]' % self.units if self.units else '',
+            self.name, self.value, ' [%s]' % self.units if self.units else '',
         )
 
 
@@ -221,35 +238,6 @@ class FieldAndSubFieldBase(RecordBase):
     def render(self, raw_value):
         if self.type.values and (raw_value in self.type.values):
             return self.type.values[raw_value]
-
-        # Apply custom rendering function
-        # TODO: This is the wrong place for this, do this in FitFile
-        # by making a FitFileUnitConverter standard class that is subclassable
-        # Then, have FieldData have a custom units field
-        render_type = getattr(self, "render_%s" % self.type.name, None)
-        if render_type:
-            raw_value = render_type(raw_value)
-
-        return raw_value
-
-    # Custom Field Rendering Functions
-
-    def render_bool(self, raw_value):
-        return bool(raw_value)
-
-    # TODO: maybe don't convert units for now
-
-    def render_date_time(self, raw_value):
-        if raw_value is not None and raw_value >= 0x10000000:
-            raw_value = datetime.datetime.utcfromtimestamp(631065600 + raw_value)
-        return raw_value
-    render_date_time.units = None  # TODO: propagate this
-    # Idea: have namedtuple have a field base_units, and have FieldData.units
-    # be a property to actually figure out what they should be
-
-    def render_local_date_time(self, raw_value):
-        if raw_value is not None:
-            raw_value = datetime.datetime.fromtimestamp(631065600 + raw_value)
         return raw_value
 
 

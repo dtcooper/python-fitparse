@@ -5,7 +5,8 @@ try:
 except ImportError:
     import StringIO
 
-from fitparse.profile import MESSAGE_TYPES
+from fitparse.processors import FitFileDataProcessor
+from fitparse.profile import FIELD_TYPE_TIMESTAMP, MESSAGE_TYPES
 from fitparse.records import (
     DataMessage, FieldData, FieldDefinition, DefinitionMessage, MessageHeader,
     BASE_TYPES, BASE_TYPE_BYTE
@@ -13,24 +14,12 @@ from fitparse.records import (
 from fitparse.utils import calc_crc
 
 
-# TODO: put in button of profile.py
-def get_timestamp_field():
-    for mesg_type in MESSAGE_TYPES.values():
-        field = mesg_type.fields.get(TIMESTAMP_DEF_NUM)
-        if field:
-            return field
-    raise Exception("TODO: no date_time")
-
-TIMESTAMP_DEF_NUM = 253
-DATE_TIME_FIELD = get_timestamp_field()
-
-
 class FitParseError(Exception):
     pass
 
 
 class FitFile(object):
-    def __init__(self, fileish, check_crc=True):
+    def __init__(self, fileish, check_crc=True, data_processor=None):
         if isinstance(fileish, basestring):
             try:
                 self._file = open(fileish, 'rb')
@@ -45,13 +34,14 @@ class FitFile(object):
 
         self.check_crc = check_crc
 
+        self._accumulators = {}
+        self._complete = False
+        self._compressed_ts_accumulator = 0
         self._crc = 0
         self._data_bytes_left = -1  # Not valid until after _parse_file_header()
         self._local_mesgs = {}
-        self._accumulators = {}
-        self._compressed_ts_accumulator = 0
-        self._complete = False
         self._messages = []
+        self._processor = data_processor or FitFileDataProcessor()
 
         # Start off by parsing the file header (makes self._data_bytes_left valid)
         self._parse_file_header()
@@ -325,7 +315,7 @@ class FitFile(object):
                 value = raw_value
 
             # Update compressed timestamp field
-            if (field_def.def_num == TIMESTAMP_DEF_NUM) and (raw_value is not None):
+            if (field_def.def_num == FIELD_TYPE_TIMESTAMP.def_num) and (raw_value is not None):
                 self._compressed_ts_accumulator = raw_value
 
             field_datas.append(
@@ -346,14 +336,31 @@ class FitFile(object):
             field_datas.append(
                 FieldData(
                     field_def=None,
-                    field=DATE_TIME_FIELD,
+                    field=FIELD_TYPE_TIMESTAMP,
                     parent_field=None,
-                    value=DATE_TIME_FIELD.render(ts_value),
+                    value=FIELD_TYPE_TIMESTAMP.render(ts_value),
                     raw_value=ts_value,
                 )
             )
 
-        return DataMessage(header=header, def_mesg=def_mesg, fields=field_datas)
+        # Apply data processors
+        for field_data in field_datas:
+            # Apply type processor
+            type_processor = getattr(self._processor, 'process_type_%s' % field_data.type.name, None)
+            if type_processor:
+                type_processor(field_data)
+
+            field_processor = getattr(self._processor, 'process_field_%s' % field_data.name, None)
+            if field_processor:
+                field_processor(field_data)
+
+        data_message = DataMessage(header=header, def_mesg=def_mesg, fields=field_datas)
+
+        mesg_processor = getattr(self._processor, 'process_message_%s' % def_mesg.name, None)
+        if mesg_processor:
+            mesg_processor(data_message)
+
+        return data_message
 
     ##########
     # Public API
@@ -363,6 +370,7 @@ class FitFile(object):
         with_definitions=False, as_dict=False,
     ):
         # TODO: Implement the query arguments, also let them be tuples, ie name=('record', 'event')
+        # TODO: maybe remove mesg_num since fields are predictably named "unknown_NN"
 
         if with_definitions:  # with_definitions implies as_dict=False
             as_dict = False
@@ -397,6 +405,14 @@ class FitFile(object):
     def parse(self):
         while self._parse_message():
             pass
+
+    def possible_field_names(self, name):
+        # XXX unused, only use me if fitdump/csv requires it
+        field_names = set()
+        for message in self.get_messages(name):
+            for record in message:
+                field_names.add(record.name)
+        return sorted(field_names)
 
     def __iter__(self):
         return self.get_messages()

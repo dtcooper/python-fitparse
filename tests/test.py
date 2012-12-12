@@ -86,18 +86,18 @@ class FitFileTestCase(unittest.TestCase):
 
         for field in ('type', 0):
             self.assertEqual(file_id.get_value(field), 'activity')
-            self.assertEqual(file_id.get(field)['raw_value'], 4)
+            self.assertEqual(file_id.get(field).raw_value, 4)
         for field in ('manufacturer', 1):
             self.assertEqual(file_id.get_value(field), 'garmin')
-            self.assertEqual(file_id.get(field)['raw_value'], 1)
+            self.assertEqual(file_id.get(field).raw_value, 1)
         for field in ('product', 'garmin_product', 2):
             self.assertEqual(file_id.get_value(field), 'edge500')
-            self.assertEqual(file_id.get(field)['raw_value'], 1036)
+            self.assertEqual(file_id.get(field).raw_value, 1036)
         for field in ('serial_number', 3):
             self.assertEqual(file_id.get_value(field), 558069241)
         for field in ('time_created', 4):
             self.assertEqual(file_id.get_value(field), secs_to_dt(723842606))
-            self.assertEqual(file_id.get(field)['raw_value'], 723842606)
+            self.assertEqual(file_id.get(field).raw_value, 723842606)
         for field in ('number', 5):
             self.assertEqual(file_id.get_value(field), None)
 
@@ -156,7 +156,7 @@ class FitFileTestCase(unittest.TestCase):
         # the original field and component field
         for field in ('timer_trigger', 'data', 3):
             self.assertEqual(event.get_value(field), 'fitness_equipment')
-            self.assertEqual(event.get(field)['raw_value'], 2)
+            self.assertEqual(event.get(field).raw_value, 2)
 
         # Component field should be left as is
         for field in ('data16', 2):

@@ -11,14 +11,14 @@ def dump(filename):
         fitfile = FitFile(filename)
 
         for data_message in fitfile:
-            print "%s (mesg num: #%d)" % (data_message.name, data_message.mesg_num)
+            print data_message
             for field_data in sorted(
                 data_message,
                 key=lambda fd: (
                     # Sort by known fields first
                     int(fd.name.startswith('unknown')),
-                    # Then by def num if known, otherwise name
-                    fd.def_num if fd.name.startswith('unknown') else fd.name,
+                    # Then by name
+                    fd.name,
                 ),
             ):
                 print " * %s" % field_data
