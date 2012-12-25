@@ -14,7 +14,8 @@ Major Changes
   * New, hopefully cleaner public API with a clear division between accessible
     and internal parts. (Still unstable and partially complete.)
 
-  * Proper documentation! Going to use [Sphinx](http://sphinx-doc.org/).
+  * Proper documentation!
+    [Available here](http://dtcooper.github.com/python-fitparse/).
 
   * Unit tests and example programs.
 
