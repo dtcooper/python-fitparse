@@ -54,7 +54,7 @@ License
 This software is offered under a *slightly* modified ISC-style license.
 
 
-    Copyright (c) 2011-2012, David Cooper <dave@kupesoft.com>
+    Copyright (c) 2011-2013, David Cooper <dave@kupesoft.com>
     All rights reserved.
 
     Dedicated to Kate Lacey
