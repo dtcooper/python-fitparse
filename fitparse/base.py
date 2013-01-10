@@ -20,30 +20,31 @@ class FitParseError(Exception):
 
 class FitFile(object):
     def __init__(self, fileish, check_crc=True, data_processor=None):
-        if isinstance(fileish, basestring):
+        if hasattr(fileish, 'read'):
+            self._file = fileish
+        else:
             try:
                 self._file = open(fileish, 'rb')
             except:
-                # If the header smells a string containing a fit file, we'll
-                # wrap it with StringIO
-                if fileish[8:12] != '.FIT':
+                # If the header smells like a string containing a fit file's
+                # data, we wrap it with StringIO
+                if isinstance(fileish, basestring) and fileish[8:12] == '.FIT':
+                    self._file = StringIO.StringIO(fileish)
+                else:
                     raise
-                self._file = StringIO.StringIO(fileish)
-        else:
-            self._file = fileish
 
         self.check_crc = check_crc
 
         self._accumulators = {}
+        self._bytes_left = -1  # Not valid until after _parse_file_header()
         self._complete = False
         self._compressed_ts_accumulator = 0
         self._crc = 0
-        self._data_bytes_left = -1  # Not valid until after _parse_file_header()
         self._local_mesgs = {}
         self._messages = []
         self._processor = data_processor or FitFileDataProcessor()
 
-        # Start off by parsing the file header (makes self._data_bytes_left valid)
+        # Start off by parsing the file header (makes self._bytes_left valid)
         self._parse_file_header()
 
     ##########
@@ -54,7 +55,7 @@ class FitFile(object):
             return ''
         data = self._file.read(size)
         self._crc = calc_crc(data, self._crc)
-        self._data_bytes_left -= len(data)
+        self._bytes_left -= len(data)
         return data
 
     def _read_struct(self, fmt, endian='<', data=None, always_tuple=False):
@@ -109,11 +110,11 @@ class FitFile(object):
             self._read(extra_header_size - 2)
 
         # After we've consumed the header, set the bytes left to be read
-        self._data_bytes_left = data_size
+        self._bytes_left = data_size
 
     def _parse_message(self):
         # When done, calculate the CRC and return None
-        if self._data_bytes_left <= 0:
+        if self._bytes_left <= 0:
             if not self._complete:
                 self._read_and_assert_crc()
 
@@ -376,7 +377,7 @@ class FitFile(object):
             as_dict = False
 
         def should_yield(message):
-            if message and (with_definitions or message.type == 'data'):
+            if with_definitions or message.type == 'data':
                 # If both args are None, then we return all
                 if (name is None) and (mesg_num is None):
                     return True

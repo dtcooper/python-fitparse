@@ -35,8 +35,8 @@ class StandardUnitsDataProcessor(FitFileDataProcessor):
             field_data.value *= 60.0 * 60.0 / 1000.0
         field_data.units = 'km/h'
 
-    def process_field_position_lat(self, field_data):
+    def _latlng_fixer(self, field_data):
         if field_data.value is not None:
             field_data.value *= 180.0 / (2 ** 31)
         field_data.units = 'deg'
-    process_field_position_long = process_field_position_lat
+    process_field_position_long = process_field_position_lat = _latlng_fixer
