@@ -5,6 +5,8 @@ python-fitparse Documention
 .. toctree::
    :maxdepth: 2
 
+   api
+
 
 Introduction
 ============
@@ -17,6 +19,12 @@ The FIT (Flexible and Interoperable Data Transfer) file protocol is specified
 by `ANT <http://www.thisisant.com>`_ in its FIT SDK. It's a common file format
 used internally on embedded fitness computers, for example on the Edge and
 Forerunner series of `Garmin <http://www.garmin.com>`_ products.
+
+
+Quickstart Guide
+----------------
+
+TODO
 
 
 Installation
@@ -39,6 +47,8 @@ Navigate to `dtcooper/python-fitparse <https://github.com/dtcooper/python-fitpar
 on github and clone the latest version::
 
     $ git clone git@github.com:dtcooper/python-fitparse.git
+    $ cd python-fitparse
+    $ python setup.py install
 
 
 Requirements
@@ -46,13 +56,26 @@ Requirements
 
 The following are required to install :mod:`fitparse`,
 
-* `Python <http://python.org/>`_ 2.5 and above (Python 3 is currently not
+* `Python <http://www.python.org/>`_ 2.5 and above (Python 3 is currently not
   supported)
 
 * The `argparse <https://code.google.com/p/argparse/>`_ is required for the
   :command:`fitdump` command, but it is included in the Python standard library
   as of version 2.7. Using ``pip`` to install the package will install this if
   needed.
+
+
+API Documentation
+-----------------
+
+If you are looking for information on a specific function, class or method,
+this part of the documentation is for you.
+
+.. toctree::
+   :maxdepth: 2
+
+   api
+
 
 
 Usage Examples
