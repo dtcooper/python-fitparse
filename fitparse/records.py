@@ -7,13 +7,11 @@ class RecordBase(object):
     __slots__ = ()
 
     def __init__(self, *args, **kwargs):
-        for slot_name, value in zip(self.__slots__, args):
+        # WARNING: use of map(None, l1, l2) equivalent to zip_longest in py3k
+        for slot_name, value in map(None, self.__slots__, args):
             setattr(self, slot_name, value)
         for slot_name, value in kwargs.iteritems():
             setattr(self, slot_name, value)
-        for slot_name in self.__slots__:
-            if not hasattr(self, slot_name):
-                setattr(self, slot_name, None)
 
 
 class MessageHeader(RecordBase):
