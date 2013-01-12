@@ -6,6 +6,9 @@ class RecordBase(object):
     # namedtuple-like base class. Subclasses should must __slots__
     __slots__ = ()
 
+    # TODO: switch back to namedtuple, and don't use default arguments as None
+    #       and see if that gives us any performance improvements
+
     def __init__(self, *args, **kwargs):
         # WARNING: use of map(None, l1, l2) equivalent to zip_longest in py3k
         for slot_name, value in map(None, self.__slots__, args):
@@ -33,15 +36,11 @@ class DefinitionMessage(RecordBase):
     def name(self):
         return self.mesg_type.name if self.mesg_type else 'unknown_%d' % self.mesg_num
 
-    @property
-    def local_mesg_num(self):
-        return self.header.local_mesg_num
-
     def __repr__(self):
         return '<DefinitionMessage: %s (#%d) -- local mesg: #%d, field defs: [%s]>' % (
             self.name,
             self.mesg_num,
-            self.local_mesg_num,
+            self.header.local_mesg_num,
             ', '.join([fd.name for fd in self.field_defs]),
         )
 
@@ -71,16 +70,19 @@ class DataMessage(RecordBase):
     type = 'data'
 
     def get(self, field_name, as_dict=False):
+        # SIMPLIFY: get rid of as_dict
         for field_data in self.fields:
             if field_data.is_named(field_name):
                 return field_data.as_dict() if as_dict else field_data
 
     def get_value(self, field_name):
+        # SIMPLIFY: get rid of this completely
         field_data = self.get(field_name)
         if field_data:
             return field_data.value
 
     def get_values(self):
+        # SIMPLIFY: get rid of this completely
         return dict((f.name if f.name else f.def_num, f.value) for f in self.fields)
 
     @property
@@ -89,17 +91,16 @@ class DataMessage(RecordBase):
 
     @property
     def mesg_num(self):
+        # SIMPLIFY: get rid of this
         return self.def_mesg.mesg_num
 
     @property
     def mesg_type(self):
+        # SIMPLIFY: get rid of this
         return self.def_mesg.mesg_type
 
-    @property
-    def local_mesg_num(self):
-        return self.header.local_mesg_num
-
     def as_dict(self):
+        # TODO: rethink this format
         return {
             'name': self.name,
             'fields': [f.as_dict() for f in self.fields],
@@ -111,11 +112,12 @@ class DataMessage(RecordBase):
 
     def __repr__(self):
         return '<DataMessage: %s (#%d) -- local mesg: #%d, fields: [%s]>' % (
-            self.name, self.mesg_num, self.local_mesg_num,
+            self.name, self.mesg_num, self.header.local_mesg_num,
             ', '.join(["%s: %s" % (fd.name, fd.value) for fd in self.fields]),
         )
 
     def __str__(self):
+        # SIMPLIFY: get rid of this
         return '%s (#%d)' % (self.name, self.mesg_num)
 
 
