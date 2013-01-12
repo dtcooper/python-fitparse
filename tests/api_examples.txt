@@ -1,0 +1,37 @@
+Imports
+
+    >>> import os
+    >>> from fitparse import FitFile
+
+Read .FIT file and parse
+
+    >>> fitfile_path = os.path.join('files', 'garmin-edge-500-activitiy.fit')
+    >>> fitfile = FitFile(fitfile_path)
+    >>> fitfile.parse()
+
+Test get_messages()
+
+    >>> records = list(fitfile.get_messages(name='record'))
+    >>> print len(records)
+    10686
+
+Test API on an arbitrary DataMessage
+
+
+    >>> record = records[1234]
+    >>> for field in record:
+    ...     print (field.name, field.value, field.units)
+    ('altitude', 128.0, 'm')
+    ('cadence', 0, 'rpm')
+    ('distance', 9027.49, 'm')
+    ('grade', None, '%')
+    ('heart_rate', 147, 'bpm')
+    ('position_lat', 522265991, 'semicircles')
+    ('position_long', -947288309, 'semicircles')
+    ('power', None, 'watts')
+    ('resistance', None, None)
+    ('speed', 8.431, 'm/s')
+    ('temperature', 19, 'C')
+    ('time_from_course', None, 's')
+    ('timestamp', datetime.datetime(2011, 9, 25, 13, 21, 29), None)
+
