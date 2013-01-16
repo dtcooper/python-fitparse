@@ -59,7 +59,7 @@ class FitFile(object):
 
     def _read_struct(self, fmt, endian='<', data=None, always_tuple=False):
         fmt_with_endian = "%s%s" % (endian, fmt)
-        size = struct.calcsize(fmt)
+        size = struct.calcsize(fmt_with_endian)
         if data is None:
             data = self._read(size)
 
