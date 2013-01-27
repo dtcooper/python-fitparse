@@ -19,6 +19,14 @@ class FitParseError(Exception):
 
 
 class FitFile(object):
+    # TODO: unit test to make sure that all units in profile.py convert to
+    #       sane function names after applying replacements (and there are no
+    #       no regressions)
+    UNIT_NAME_TO_FUNC_REPLACEMENTS = (
+        ('/', 'per'),
+        ('%', 'percent'),
+    )
+
     def __init__(self, fileish, check_crc=True, data_processor=None):
         if hasattr(fileish, 'read'):
             self._file = fileish
@@ -269,6 +277,8 @@ class FitFile(object):
         raw_values = self._parse_raw_values_from_data_message(def_mesg)
         field_datas = []  # TODO: I don't love this name, update on DataMessage too
 
+        # TODO: Maybe refactor this and make it simpler (or at least broken
+        #       up into sub-functions)
         for field_def, raw_value in zip(def_mesg.field_defs, raw_values):
             field, parent_field = field_def.field, None
             if field:
@@ -346,14 +356,29 @@ class FitFile(object):
 
         # Apply data processors
         for field_data in field_datas:
-            # Apply type processor
+            # Apply type name processor
             type_processor = getattr(self._processor, 'process_type_%s' % field_data.type.name, None)
             if type_processor:
                 type_processor(field_data)
 
+            # Apply field name processor
             field_processor = getattr(self._processor, 'process_field_%s' % field_data.name, None)
             if field_processor:
                 field_processor(field_data)
+
+            # Apply units name processor
+            if field_data.units:
+                process_func_name = 'process_units_%s' % field_data.units
+                # Do unit name replacements padded with spaces
+                for replace_from, replace_to in self.UNIT_NAME_TO_FUNC_REPLACEMENTS:
+                    process_func_name = process_func_name.replace(
+                        replace_from, ' %s ' % replace_to,
+                    )
+                # Then strip and convert spaces to underscores
+                process_func_name = process_func_name.strip().replace(' ', '_')
+                units_processor = getattr(self._processor, process_func_name, None)
+                if units_processor:
+                    units_processor(field_data)
 
         data_message = DataMessage(header=header, def_mesg=def_mesg, fields=field_datas)
 

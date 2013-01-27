@@ -258,8 +258,8 @@ def fix_scale(data):
 
 def fix_units(data):
     if data == 'kcal / min':
-        return 'kcal/min'
-    return data
+        data = 'kcal/min'
+    return data.strip()
 
 
 def parse_csv_fields(data, num_expected_if_empty):
