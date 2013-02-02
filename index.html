@@ -10,8 +10,8 @@
     
     <title>python-fitparse Documention &mdash; python-fitparse 0.0.1-dev documentation</title>
     
-    <link rel="stylesheet" href="static/default.css" type="text/css" />
-    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -22,10 +22,11 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="static/jquery.js"></script>
-    <script type="text/javascript" src="static/underscore.js"></script>
-    <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="python-fitparse 0.0.1-dev documentation" href="#" /> 
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="python-fitparse 0.0.1-dev documentation" href="#" />
+    <link rel="next" title="The fitparse API Documentation" href="api.html" /> 
   </head>
   <body>
     <div class="related">
@@ -34,6 +35,12 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="The fitparse API Documentation"
+             accesskey="N">next</a> |</li>
         <li><a href="#">python-fitparse 0.0.1-dev documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -46,23 +53,32 @@
   <div class="section" id="python-fitparse-documention">
 <h1>python-fitparse Documention<a class="headerlink" href="#python-fitparse-documention" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
-<ul class="simple">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">The <tt class="docutils literal"><span class="pre">fitparse</span></tt> API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#the-fitfile-object">The <tt class="docutils literal"><span class="pre">FitFile</span></tt> Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#record-objects">Record Objects</a></li>
+</ul>
+</li>
 </ul>
 </div>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>The <tt class="xref py py-mod docutils literal"><span class="pre">fitparse</span></tt> module is a Python library for parsing
+<p>The <a class="reference internal" href="api.html#module-fitparse" title="fitparse"><tt class="xref py py-mod docutils literal"><span class="pre">fitparse</span></tt></a> module is a Python library for parsing
 <a class="reference external" href="http://www.thisisant.com">ANT</a>/<a class="reference external" href="http://www.garmin.com">Garmin</a> <tt class="docutils literal"><span class="pre">.FIT</span></tt>
 files.</p>
 <p>The FIT (Flexible and Interoperable Data Transfer) file protocol is specified
 by <a class="reference external" href="http://www.thisisant.com">ANT</a> in its FIT SDK. It&#8217;s a common file format
 used internally on embedded fitness computers, for example on the Edge and
 Forerunner series of <a class="reference external" href="http://www.garmin.com">Garmin</a> products.</p>
+<div class="section" id="quickstart-guide">
+<h3>Quickstart Guide<a class="headerlink" href="#quickstart-guide" title="Permalink to this headline">¶</a></h3>
+<p>TODO</p>
+</div>
 <div class="section" id="installation">
 <h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="using-pip">
 <h4>Using <tt class="docutils literal"><span class="pre">pip</span></tt><a class="headerlink" href="#using-pip" title="Permalink to this headline">¶</a></h4>
-<p>The easiest way to grab <tt class="xref py py-mod docutils literal"><span class="pre">fitparse</span></tt> is using <tt class="docutils literal"><span class="pre">pip</span></tt>,</p>
+<p>The easiest way to grab <a class="reference internal" href="api.html#module-fitparse" title="fitparse"><tt class="xref py py-mod docutils literal"><span class="pre">fitparse</span></tt></a> is using <tt class="docutils literal"><span class="pre">pip</span></tt>,</p>
 <div class="highlight-python"><pre>$ pip install python-fitparse</pre>
 </div>
 </div>
@@ -70,19 +86,35 @@ Forerunner series of <a class="reference external" href="http://www.garmin.com">
 <h4>From github<a class="headerlink" href="#from-github" title="Permalink to this headline">¶</a></h4>
 <p>Navigate to <a class="reference external" href="https://github.com/dtcooper/python-fitparse">dtcooper/python-fitparse</a>
 on github and clone the latest version:</p>
-<div class="highlight-python"><pre>$ git clone git@github.com:dtcooper/python-fitparse.git</pre>
+<div class="highlight-python"><pre>$ git clone git@github.com:dtcooper/python-fitparse.git
+$ cd python-fitparse
+$ python setup.py install</pre>
 </div>
 </div>
 <div class="section" id="requirements">
 <h4>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h4>
-<p>The following are required to install <tt class="xref py py-mod docutils literal"><span class="pre">fitparse</span></tt>,</p>
+<p>The following are required to install <a class="reference internal" href="api.html#module-fitparse" title="fitparse"><tt class="xref py py-mod docutils literal"><span class="pre">fitparse</span></tt></a>,</p>
 <ul class="simple">
-<li><a class="reference external" href="http://python.org/">Python</a> 2.5 and above (Python 3 is currently not
+<li><a class="reference external" href="http://www.python.org/">Python</a> 2.5 and above (Python 3 is currently not
 supported)</li>
 <li>The <a class="reference external" href="https://code.google.com/p/argparse/">argparse</a> is required for the
 <strong class="command">fitdump</strong> command, but it is included in the Python standard library
 as of version 2.7. Using <tt class="docutils literal"><span class="pre">pip</span></tt> to install the package will install this if
 needed.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="api-documentation">
+<h3>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h3>
+<p>If you are looking for information on a specific function, class or method,
+this part of the documentation is for you.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">The <tt class="docutils literal"><span class="pre">fitparse</span></tt> API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#the-fitfile-object">The <tt class="docutils literal"><span class="pre">FitFile</span></tt> Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#record-objects">Record Objects</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -113,7 +145,7 @@ needed.</li>
 </div>
 <div class="section" id="license">
 <h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><pre>Copyright (c) 2011-2012, David Cooper &lt;dave@kupesoft.com&gt;
+<div class="highlight-python"><pre>Copyright (c) 2011-2013, David Cooper &lt;dave@kupesoft.com&gt;
 All rights reserved.
 
 Dedicated to Kate Lacey
@@ -147,10 +179,14 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
   <ul>
 <li><a class="reference internal" href="#">python-fitparse Documention</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a><ul>
+<li><a class="reference internal" href="#quickstart-guide">Quickstart Guide</a></li>
 <li><a class="reference internal" href="#installation">Installation</a><ul>
 <li><a class="reference internal" href="#using-pip">Using <tt class="docutils literal"><span class="pre">pip</span></tt></a></li>
 <li><a class="reference internal" href="#from-github">From github</a></li>
 <li><a class="reference internal" href="#requirements">Requirements</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#api-documentation">API Documentation</a><ul>
 </ul>
 </li>
 <li><a class="reference internal" href="#usage-examples">Usage Examples</a></li>
@@ -161,9 +197,12 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 </li>
 </ul>
 
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="next chapter">The <tt class="docutils literal docutils literal docutils literal"><span class="pre">fitparse</span></tt> API Documentation</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="sources/index.txt"
+    <li><a href="_sources/index.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -189,11 +228,17 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="The fitparse API Documentation"
+             >next</a> |</li>
         <li><a href="#">python-fitparse 0.0.1-dev documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2012, David Cooper.
+        &copy; Copyright 2011-2013, David Cooper.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
