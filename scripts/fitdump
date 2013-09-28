@@ -43,6 +43,9 @@ def parse_args(args=None):
         'infile', metavar='FITFILE', type=argparse.FileType(mode='rb'),
         help='Input .FIT file (Use - for stdin)',
     )
+    parser.add_argument(
+        '--ignore-crc', action='store_const', const=True, help='Some devices seem to write invalid crc\'s, ignore these.'
+    )
 
     options = parser.parse_args(args)
 
@@ -66,6 +69,7 @@ def main(args=None):
     fitfile = fitparse.FitFile(
         options.infile,
         data_processor=fitparse.StandardUnitsDataProcessor(),
+        check_crc = not(options.ignore_crc),
     )
     messages = fitfile.get_messages(
         name=options.name,
