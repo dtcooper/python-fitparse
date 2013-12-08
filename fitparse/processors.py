@@ -7,6 +7,10 @@ class FitFileDataProcessor(object):
     #def process_field_<field_name> (field_data) -- can be unknown_DD but NOT recommended
     #def process_message_<mesg_name / mesg_type_num> (data_message)
 
+    # the FIT "epoch" starts at 00:00 Dec 31 1989, this is the offset to
+    # POSIX epoch which start at 00:00 Jan 1 1970
+    POSIX_OFFSET = 631065600
+
     def process_type_bool(self, field_data):
         if field_data.value is not None:
             field_data.value = bool(field_data.value)
@@ -14,12 +18,14 @@ class FitFileDataProcessor(object):
     def process_type_date_time(self, field_data):
         value = field_data.value
         if value is not None and value >= 0x10000000:
-            field_data.value = datetime.datetime.utcfromtimestamp(631065600 + value)
+            field_data.value = datetime.datetime.utcfromtimestamp(FitFileDataProcessor.POSIX_OFFSET
+                                                                  + value)
             field_data.units = None  # Units were 's', set to None
 
     def process_type_local_date_time(self, field_data):
         if field_data.value is not None:
-            field_data.value = datetime.datetime.fromtimestamp(631065600 + field_data.value)
+            field_data.value = datetime.datetime.utcfromtimestamp(FitFileDataProcessor.POSIX_OFFSET
+                                                                  + field_data.value)
             field_data.units = None
 
 
