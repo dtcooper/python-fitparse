@@ -269,10 +269,10 @@ FieldTypeBase(13, 'byte', lambda x: all([ord(c) == '\xFF' for c in x]), '%ds', T
 # TODO:
 #   "0x10000000: if date_time is < 0x10000000 then it is system time (seconds
 #   from device power on)" -- not ofr local_date_time
-_convert_date_time = lambda x: datetime.datetime.fromtimestamp(631065600 + x)
+_convert_date_time = lambda x: datetime.datetime.utcfromtimestamp(631065600 + x)
 
 # TODO: Handle local tz conversion
-_convert_local_date_time = lambda x: datetime.datetime.fromtimestamp(631065600 + x)
+_convert_local_date_time = lambda x: datetime.datetime.utcfromtimestamp(631065600 + x)
 
 _convert_bool = lambda x: bool(x)
 
