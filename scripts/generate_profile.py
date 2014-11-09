@@ -264,8 +264,9 @@ def fix_scale(data):
 
 def fix_units(data):
     if isinstance(data, basestring):
-        if data == 'kcal / min':
-            data = 'kcal/min'
+        data = data.replace(' / ', '/')
+        data = data.replace(' * ', '*')
+        data = data.replace('(steps)', 'or steps')
         data = data.strip()
     return data
 

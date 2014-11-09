@@ -219,6 +219,11 @@ class FitFileTestCase(unittest.TestCase):
         except StopIteration:
             pass
 
+    # TODO:
+    #  * Test Processors:
+    #    - process_type_<>, process_field_<>, process_units_<>, process_message_<>
+    #  * Test subfield components (have to create a sample fit file)
+
 
 if __name__ == '__main__':
     unittest.main()

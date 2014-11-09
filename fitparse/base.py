@@ -11,7 +11,7 @@ from fitparse.records import (
     DataMessage, FieldData, FieldDefinition, DefinitionMessage, MessageHeader,
     BASE_TYPES, BASE_TYPE_BYTE
 )
-from fitparse.utils import calc_crc
+from fitparse.utils import calc_crc, scrub_method_name
 
 
 class FitParseError(Exception):
@@ -19,14 +19,6 @@ class FitParseError(Exception):
 
 
 class FitFile(object):
-    # TODO: unit test to make sure that all units in profile.py convert to
-    #       sane function names after applying replacements (and there are no
-    #       no regressions)
-    UNIT_NAME_TO_FUNC_REPLACEMENTS = (
-        ('/', 'per'),
-        ('%', 'percent'),
-    )
-
     def __init__(self, fileish, check_crc=True, data_processor=None):
         if hasattr(fileish, 'read'):
             self._file = fileish
@@ -287,9 +279,10 @@ class FitFile(object):
                 # Resolve component fields
                 if field.components:
                     for component in field.components:
-                        # Render it's raw value
+                        # Render its raw value
                         cmp_raw_value = component.render(raw_value)
 
+                        # Apply accumulated value
                         if component.accumulate:
                             accumulator = self._accumulators[def_mesg.mesg_num]
                             cmp_raw_value = self._apply_compressed_accumulation(
@@ -303,6 +296,7 @@ class FitFile(object):
 
                         # Extract the component's dynamic field from def_mesg
                         cmp_field = def_mesg.mesg_type.fields[component.def_num]
+
                         # Resolve a possible subfield
                         cmp_field, cmp_parent_field = self._resolve_subfield(cmp_field, def_mesg, raw_values)
                         cmp_value = cmp_field.render(cmp_raw_value)
@@ -356,32 +350,28 @@ class FitFile(object):
         # Apply data processors
         for field_data in field_datas:
             # Apply type name processor
-            type_processor = getattr(self._processor, 'process_type_%s' % field_data.type.name, None)
+            process_method_name = scrub_method_name('process_type_%s' % field_data.type.name)
+            type_processor = getattr(self._processor, process_method_name, None)
             if type_processor:
                 type_processor(field_data)
 
             # Apply field name processor
-            field_processor = getattr(self._processor, 'process_field_%s' % field_data.name, None)
+            process_method_name = scrub_method_name('process_field_%s' % field_data.name)
+            field_processor = getattr(self._processor, process_method_name, None)
             if field_processor:
                 field_processor(field_data)
 
             # Apply units name processor
             if field_data.units:
-                process_func_name = 'process_units_%s' % field_data.units
-                # Do unit name replacements padded with spaces
-                for replace_from, replace_to in self.UNIT_NAME_TO_FUNC_REPLACEMENTS:
-                    process_func_name = process_func_name.replace(
-                        replace_from, ' %s ' % replace_to,
-                    )
-                # Then strip and convert spaces to underscores
-                process_func_name = process_func_name.strip().replace(' ', '_')
-                units_processor = getattr(self._processor, process_func_name, None)
+                process_method_name = scrub_method_name('process_units_%s' % field_data.units, convert_units=True)
+                units_processor = getattr(self._processor, process_method_name, None)
                 if units_processor:
                     units_processor(field_data)
 
         data_message = DataMessage(header=header, def_mesg=def_mesg, fields=field_datas)
 
-        mesg_processor = getattr(self._processor, 'process_message_%s' % def_mesg.name, None)
+        process_method_name = scrub_method_name('process_message_%s' % def_mesg.name)
+        mesg_processor = getattr(self._processor, process_method_name, None)
         if mesg_processor:
             mesg_processor(data_message)
 
