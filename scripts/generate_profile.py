@@ -213,7 +213,7 @@ class ComponentFieldInfo(namedtuple('ComponentFieldInfo', ('name', 'num', 'scale
         return s
 
 
-class SubFieldInfo(namedtuple('SubFieldInfo', ('name', 'num', 'type', 'scale', 'offset', 'units', 'ref_fields', 'comment'))):
+class SubFieldInfo(namedtuple('SubFieldInfo', ('name', 'num', 'type', 'scale', 'offset', 'units', 'ref_fields', 'components', 'comment'))):
     def __str__(self):
         s = "SubField(%s\n" % render_comment(self.comment)
         s += "    name='%s',\n" % self.name
@@ -229,6 +229,12 @@ class SubFieldInfo(namedtuple('SubFieldInfo', ('name', 'num', 'type', 'scale', '
         for ref_field in self.ref_fields:  # sorted(self.ref_fields, key=lambda rf: (rf.name, rf.value)):
             s += "        %s,\n" % indent(ref_field, 2)
         s += "    ),\n"
+        if self.components:
+            s += '    components=(\n'
+            # Leave components sorted as is (order matters because of bit layout)
+            for component in self.components:
+                s += "        %s,\n" % indent(component, 2)
+            s += "    ),\n"
         s += ")"
         return s
 
@@ -257,9 +263,11 @@ def fix_scale(data):
 
 
 def fix_units(data):
-    if data == 'kcal / min':
-        data = 'kcal/min'
-    return data.strip()
+    if isinstance(data, basestring):
+        if data == 'kcal / min':
+            data = 'kcal/min'
+        data = data.strip()
+    return data
 
 
 def parse_csv_fields(data, num_expected_if_empty):
@@ -357,6 +365,32 @@ def parse_messages(messages_rows, type_list):
             )
             message_list.messages.append(message)
         else:
+            # Get components if they exist
+            components = []
+            component_names = parse_csv_fields(row[5], 0)
+            if component_names:
+                num_components = len(component_names)
+                components.extend(
+                    ComponentFieldInfo(
+                        name=cmp_name, num=None, scale=fix_scale(cmp_scale),
+                        offset=cmp_offset, units=fix_units(cmp_units),
+                        bits=cmp_bits, bit_offset=None, accumulate=bool(cmp_accumulate),
+                    )
+                    for cmp_name, cmp_scale, cmp_offset, cmp_units, cmp_bits, cmp_accumulate in zip(
+                        component_names,  # name
+                        parse_csv_fields(row[6], num_components),  # scale
+                        parse_csv_fields(row[7], num_components),  # offset
+                        parse_csv_fields(row[8], num_components),  # units
+                        parse_csv_fields(row[9], num_components),  # bits
+                        parse_csv_fields(row[10], num_components),  # accumulate
+                    )
+                )
+
+                assert len(components) == num_components
+                for component in components:
+                    assert component.name
+                    assert component.bits
+
             # Otherwise a field
             # Not a subfield if first row has definition num
             if row[1] is not None:
@@ -370,30 +404,8 @@ def parse_messages(messages_rows, type_list):
                 assert field.type
 
                 # Add components if they exist
-                component_names = parse_csv_fields(row[5], 0)
-                if component_names:
-                    num_components = len(component_names)
-                    field.components.extend(
-                        ComponentFieldInfo(
-                            name=cmp_name, num=None, scale=fix_scale(cmp_scale),
-                            offset=cmp_offset, units=fix_units(cmp_units),
-                            bits=cmp_bits, bit_offset=None, accumulate=bool(cmp_accumulate),
-                        )
-                        for cmp_name, cmp_scale, cmp_offset, cmp_units, cmp_bits, cmp_accumulate in zip(
-                            component_names,  # name
-                            parse_csv_fields(row[6], num_components),  # scale
-                            parse_csv_fields(row[7], num_components),  # offset
-                            parse_csv_fields(row[8], num_components),  # units
-                            parse_csv_fields(row[9], num_components),  # bits
-                            parse_csv_fields(row[10], num_components),  # accumulate
-                        )
-                    )
-
-                    assert len(field.components) == num_components
-                    for component in field.components:
-                        assert component.name
-                        assert component.bits
-
+                if components:
+                    field.components.extend(components)
                     # Wipe out scale, units, offset from field since it's a component
                     field = field._replace(scale=None, offset=None, units=None)
 
@@ -403,14 +415,17 @@ def parse_messages(messages_rows, type_list):
                 subfield = SubFieldInfo(
                     name=row[2], num=field.num, type=row[3], scale=fix_scale(row[6]),
                     offset=row[7], units=fix_units(row[8]), ref_fields=[],
-                    comment=row[13],
+                    components=[], comment=row[13],
                 )
-                field.subfields.append(subfield)
 
                 ref_field_names = parse_csv_fields(row[11], 0)
                 assert ref_field_names
 
-                # Fixup ReferenceFieldInfos below
+                if components:
+                    subfield.components.extend(components)
+                    # Wipe out scale, units, offset from field since it's a component
+                    subfield = subfield._replace(scale=None, offset=None, units=None)
+
                 subfield.ref_fields.extend(
                     ReferenceFieldInfo(
                         name=ref_field_name, value=ref_field_value,
@@ -421,6 +436,7 @@ def parse_messages(messages_rows, type_list):
                 )
 
                 assert len(subfield.ref_fields) == len(ref_field_names)
+                field.subfields.append(subfield)
 
     # Resolve reference fields for subfields and components
     for message in message_list.messages:
@@ -433,6 +449,12 @@ def parse_messages(messages_rows, type_list):
                         # Get the type of the reference field, then get its numeric value
                         raw_value=type_list.get(ref_field.type).get(ref_field_info.value).value,
                     )
+                bit_offset = 0
+                for n, component in enumerate(sub_field.components[:]):
+                    sub_field.components[n] = component._replace(
+                        num=message.get(component.name).num, bit_offset=bit_offset
+                    )
+                    bit_offset += component.bits
             bit_offset = 0
             for n, component in enumerate(field.components[:]):
                 field.components[n] = component._replace(

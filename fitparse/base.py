@@ -282,6 +282,9 @@ class FitFile(object):
         for field_def, raw_value in zip(def_mesg.field_defs, raw_values):
             field, parent_field = field_def.field, None
             if field:
+                field, parent_field = self._resolve_subfield(field, def_mesg, raw_values)
+
+                # Resolve component fields
                 if field.components:
                     for component in field.components:
                         # Render it's raw value
@@ -314,10 +317,6 @@ class FitFile(object):
                                 raw_value=cmp_raw_value,
                             )
                         )
-
-                else:
-                    # Component fields shouldn't also have subfields
-                    field, parent_field = self._resolve_subfield(field, def_mesg, raw_values)
 
                 # TODO: Do we care about a base_type and a resolved field mismatch?
                 # My hunch is we don't

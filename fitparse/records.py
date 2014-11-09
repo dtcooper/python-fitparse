@@ -247,7 +247,7 @@ class Field(FieldAndSubFieldBase):
 
 
 class SubField(FieldAndSubFieldBase):
-    __slots__ = ('name', 'def_num', 'type', 'scale', 'offset', 'units', 'ref_fields')
+    __slots__ = ('name', 'def_num', 'type', 'scale', 'offset', 'units', 'components', 'ref_fields')
     field_type = 'subfield'
 
 
