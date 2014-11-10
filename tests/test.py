@@ -151,6 +151,13 @@ class FitFileTestCase(unittest.TestCase):
 
         event = f.messages[1]
         self.assertEqual(event.name, 'event')
+        for field in ('event', 0):
+            self.assertEqual(event.get_value(field), 'timer')
+            self.assertEqual(event.get(field).raw_value, 0)
+        for field in ('event_type', 1):
+            self.assertEqual(event.get_value(field), 'start')
+            self.assertEqual(event.get(field).raw_value, 0)
+
         # Should be able to reference by original field name,
         # component field name, subfield name, and then the field def_num of both
         # the original field and component field
@@ -161,6 +168,61 @@ class FitFileTestCase(unittest.TestCase):
         # Component field should be left as is
         for field in ('data16', 2):
             self.assertEqual(event.get_value(field), 2)
+
+    def test_subfield_components(self):
+        # sore = 123, opponent_score = 456, total = 29884539
+        sport_point_value = 123 + (456 << 16)
+        # rear_gear_num = 4, rear_gear, = 20, front_gear_num = 2, front_gear = 34
+        gear_chance_value = 4 + (20 << 8) + (2 << 16) + (34 << 24)
+
+        fit_data = generate_fitfile(
+            generate_messages(
+                # event (21), local message 1
+                mesg_num=21, local_mesg_num=1, field_defs=[
+                    # event, data
+                    (0, 'enum'), (3, 'uint32'),
+                ],
+                data=[
+                    # sport point
+                    [33, sport_point_value],
+                    # front gear change
+                    [42, gear_chance_value],
+                ],
+            )
+        )
+
+        f = FitFile(fit_data)
+        f.parse()
+
+        sport_point = f.messages[1]
+        self.assertEqual(sport_point.name, 'event')
+        for field in ('event', 0):
+            self.assertEqual(sport_point.get_value(field), 'sport_point')
+            self.assertEqual(sport_point.get(field).raw_value, 33)
+        for field in ('sport_point', 'data', 3):
+            # Verify raw numeric value
+            self.assertEqual(sport_point.get_value(field), sport_point_value)
+        for field in ('score', 7):
+            self.assertEqual(sport_point.get_value(field), 123)
+        for field in ('opponent_score', 8):
+            self.assertEqual(sport_point.get_value(field), 456)
+
+        gear_change = f.messages[2]
+        self.assertEqual(gear_change.name, 'event')
+        for field in ('event', 0):
+            self.assertEqual(gear_change.get_value(field), 'front_gear_change')
+            self.assertEqual(gear_change.get(field).raw_value, 42)
+        for field in ('gear_change_data', 'data', 3):
+            # Verify raw numeric value
+            self.assertEqual(gear_change.get_value(field), gear_chance_value)
+        for field in ('front_gear_num', 9):
+            self.assertEqual(gear_change.get_value(field), 2)
+        for field in ('front_gear', 10):
+            self.assertEqual(gear_change.get_value(field), 34)
+        for field in ('rear_gear_num', 11):
+            self.assertEqual(gear_change.get_value(field), 4)
+        for field in ('rear_gear', 12):
+            self.assertEqual(gear_change.get_value(field), 20)
 
     def test_parsing_edge_500_fit_file(self):
         csv_messages = csv.reader(open(testfile('garmin-edge-500-activitiy-records.csv'), 'rb'))
@@ -222,7 +284,6 @@ class FitFileTestCase(unittest.TestCase):
     # TODO:
     #  * Test Processors:
     #    - process_type_<>, process_field_<>, process_units_<>, process_message_<>
-    #  * Test subfield components (have to create a sample fit file)
 
 
 if __name__ == '__main__':
