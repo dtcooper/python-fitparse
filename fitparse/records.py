@@ -267,11 +267,16 @@ class ComponentField(RecordBase):
         # (only type that uses this is compressed speed/distance)
         if isinstance(raw_value, tuple):
             unpacked_num = 0
+
             # Unpack byte array as little endian
             for value in reversed(raw_value):
                 unpacked_num = (unpacked_num << 8) + value
-            # Shift according to bit offset, mask according to bits
-            raw_value = (unpacked_num >> self.bit_offset) & ((1 << self.bits) - 1)
+
+            raw_value = unpacked_num
+
+        # Mask and shift like a normal number
+        if isinstance(raw_value, (int, long)):
+            raw_value = (raw_value >> self.bit_offset) & ((1 << self.bits) - 1)
 
         return raw_value
 
