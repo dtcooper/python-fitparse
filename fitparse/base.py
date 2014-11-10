@@ -380,25 +380,30 @@ class FitFile(object):
     ##########
     # Public API
 
-    def get_messages(
-        self, name=None, mesg_num=None, has_field=None,
-        with_definitions=False, as_dict=False,
-    ):
-        # TODO: Implement the query arguments, also let them be tuples, ie name=('record', 'event')
-        # TODO: maybe remove mesg_num since fields are predictably named "unknown_NN"
-
+    def get_messages(self, name=None, with_definitions=False, as_dict=False):
         if with_definitions:  # with_definitions implies as_dict=False
             as_dict = False
 
+        if name is not None:
+            if isinstance(name, (tuple, list)):
+                names = name
+            else:
+                names = [name]
+
+            # Convert any string numbers in names to ints
+            names = set([
+                int(n) if (isinstance(n, basestring) and n.isdigit()) else n
+                for n in names
+            ])
+
         def should_yield(message):
             if with_definitions or message.type == 'data':
-                # If both args are None, then we return all
-                if (name is None) and (mesg_num is None):
+                # name arg is None we return all
+                if name is None:
                     return True
-                if (name is not None) and name in (message.name, message.mesg_num):
-                    return True
-                if (mesg_num is not None) and mesg_num == message.mesg_num:
-                    return True
+                else:
+                    if (message.name in names) or (message.mesg_num in names):
+                        return True
             return False
 
         # Yield all parsed messages first
@@ -420,14 +425,6 @@ class FitFile(object):
     def parse(self):
         while self._parse_message():
             pass
-
-    def possible_field_names(self, name):
-        # XXX unused, only use me if fitdump/csv requires it
-        field_names = set()
-        for message in self.get_messages(name):
-            for record in message:
-                field_names.add(record.name)
-        return sorted(field_names)
 
     def __iter__(self):
         return self.get_messages()

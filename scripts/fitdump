@@ -37,7 +37,7 @@ def parse_args(args=None):
         help='File type to output. (DEFAULT: %(default)s)',
     )
     parser.add_argument(
-        '-n', '--name', help='Message name (or number) to filter',
+        '-n', '--name', action='append', help='Message name (or number) to filter',
     )
     parser.add_argument(
         'infile', metavar='FITFILE', type=argparse.FileType(mode='rb'),
