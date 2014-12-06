@@ -1,8 +1,13 @@
 python-fitparse
 ===============
 
+Important Note
+--------------
 
-*This library is in active development and is very turbulent right now.*
+This version of the library is **deprecated** and it is currently being
+rewritten on the ng branch.
+
+For now, the master branch can still be considered stable. Updates to come.
 
 
 About
@@ -77,10 +82,10 @@ License
     that the above copyright notice, the above dedication, and this
     permission notice appear in all copies.
 
-    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHORS DISCLAIMS ALL
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
     WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
     WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL
-    THE AUTHORS BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR
+    THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR
     CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
     LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
     NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
