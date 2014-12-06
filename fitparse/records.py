@@ -288,7 +288,7 @@ def _convert_record_compressed_speed_distance(raw_data):
 
 
 class MessageIndexValue(int):
-    __slots__ = ('selected',)
+    selected = False
 
 
 def _convert_message_index(raw_data):
@@ -298,7 +298,7 @@ def _convert_message_index(raw_data):
 
 
 class ActivityClassValue(int):
-    __slots__ = ('athlete',)
+    athlete = False
 
 
 def _convert_activity_class(raw_data):

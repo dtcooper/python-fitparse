@@ -226,7 +226,7 @@ class FitFile(object):
         self._data_read += size
 
         for byte in data:
-            self._calc_crc(ord(byte))
+            self._calc_crc(byte)
 
         return data
 
@@ -273,7 +273,7 @@ class FitFile(object):
             num_extra_bytes = header_size - 12
             self._read(num_extra_bytes)
 
-        if data_type != '.FIT':
+        if data_type != b'.FIT':
             throw_exception('Data type not ".FIT"')
 
         # 12 byte header + 2 byte CRC = 14 bytes not included in that
