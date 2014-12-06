@@ -25,7 +25,7 @@ class FitFile(object):
         '''
         Create a fit file. Argument f can be an open file-like object or a filename
         '''
-        if isinstance(f, basestring):
+        if isinstance(f, str):
             f = open(f, 'rb')
 
         # Private: call FitFile._read(), don't read from this. Important for CRC.
@@ -69,7 +69,7 @@ class FitFile(object):
                         hook_func(record)
         except FitParseComplete:
             pass
-        except Exception, e:
+        except Exception as e:
             self._file.close()
             raise FitParseError("Unexpected exception while parsing (%s: %s)" % (
                 e.__class__.__name__, e,
@@ -172,9 +172,9 @@ class FitFile(object):
         # XXX -- This could probably be refactored heavily. It's slow and a bit unclear.
         # Go through already bound fields that are dynamic fields
         if dynamic_fields:
-            for dynamic_field_index, bound_field in dynamic_fields.iteritems():
+            for dynamic_field_index, bound_field in dynamic_fields.items():
                 # Go by the reference field name and possible values
-                for ref_field_name, possible_values in bound_field.field.possibilities.iteritems():
+                for ref_field_name, possible_values in bound_field.field.possibilities.items():
                     # Go through the definitions fields looking for the reference field
                     for field_index, (field, f_size) in enumerate(definition.fields):
                         # Did we find the refence field in the definition?

@@ -2,6 +2,7 @@ from collections import namedtuple
 import datetime
 import math
 import os
+import collections
 
 
 RECORD_HEADER_NORMAL = 0
@@ -53,7 +54,7 @@ class FieldTypeBase(namedtuple('FieldTypeBase', ('num', 'name', 'invalid', 'stru
             return self.struct_fmt
 
     def convert(self, raw_data):
-        if callable(self.invalid):
+        if isinstance(self.invalid, collections.Callable):
             if self.invalid(raw_data):
                 return None
         else:
@@ -98,7 +99,7 @@ class FieldType(namedtuple('FieldType', ('name', 'base', 'converter'))):
             #if self.base.name in ('uint8z', 'uint16z', 'uint32z'):
             #    XXX -- handle this condition, ie return a list of properties
             return self.converter.get(raw_data, raw_data)
-        elif callable(self.converter):
+        elif isinstance(self.converter, collections.Callable):
             return self.converter(raw_data)
         else:
             return raw_data
@@ -186,7 +187,7 @@ class MessageType(namedtuple('MessageType', ('num', 'name', 'fields'))):
 
     @property
     def field_names(self):
-        return [f.name for f in self.fields.values()]
+        return [f.name for f in list(self.fields.values())]
 
 
 class DefinitionRecord(namedtuple('DefinitionRecord', ('header', 'type', 'arch', 'fields'))):
@@ -221,10 +222,10 @@ class DataRecord(namedtuple('DataRecord', ('header', 'definition', 'fields'))):
         return self.definition.num
 
     def iteritems(self):
-        return (f.items() for f in self.fields)
+        return (list(f.items()) for f in self.fields)
 
     def as_dict(self, with_ommited_fields=False):
-        d = dict((k, v) for k, v in self.iteritems() if k != UNKNOWN_FIELD_NAME)
+        d = dict((k, v) for k, v in self.items() if k != UNKNOWN_FIELD_NAME)
         if with_ommited_fields:
             for k in self.type.field_names:
                 d.setdefault(k, None)
@@ -310,6 +311,6 @@ def _convert_activity_class(raw_data):
 
 # XXX -- we do this so ipython doesn't throw an error on __file__.
 try:
-    execfile('profile.def')
+    exec(compile(open('profile.def').read(), 'profile.def', 'exec'))
 except IOError:
-    execfile(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'profile.def'))
+    exec(compile(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'profile.def')).read(), os.path.join(os.path.dirname(os.path.abspath(__file__)), 'profile.def'), 'exec'))
