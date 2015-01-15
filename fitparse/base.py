@@ -18,16 +18,10 @@ class FitFile(object):
     def __init__(self, fileish, check_crc=True, data_processor=None):
         if hasattr(fileish, 'read'):
             self._file = fileish
+        elif isinstance(fileish, bytes) and fileish[8:12] == b'.FIT':
+            self._file = io.BytesIO(fileish)
         else:
-            try:
-                self._file = open(fileish, 'rb')
-            except:
-                # If the header smells like a string containing a fit file's
-                # data, we wrap it with StringIO
-                if isinstance(fileish, bytes) and fileish[8:12] == '.FIT':
-                    self._file = io.BytesIO(fileish)
-                else:
-                    raise
+            self._file = open(fileish, 'rb')
 
         self.check_crc = check_crc
 
