@@ -74,9 +74,7 @@ def main(args=None):
 
     for n, message in enumerate(messages, 1):
         if options.print_messages:
-            print >> options.print_stream, '%d. %s' % (
-                n, format_message(message, options),
-            )
+            print('{}. {}'.format(n, format_message(message, options), file=options.print_stream))
 
 if __name__ == '__main__':
     main()
