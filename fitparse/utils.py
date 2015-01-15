@@ -9,7 +9,7 @@ CRC_TABLE = (
 
 def calc_crc(bytes, crc=0):
     for byte in bytes:
-        byte_char = ord(byte)
+        byte_char = byte
         # Taken verbatim from FIT SDK docs
         tmp = CRC_TABLE[crc & 0xF]
         crc = (crc >> 4) & 0x0FFF
