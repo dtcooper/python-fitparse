@@ -9,7 +9,10 @@ CRC_TABLE = (
 
 def calc_crc(bytes, crc=0):
     for byte in bytes:
-        byte_char = ord(byte)
+        if isinstance(byte, int):
+            byte_char = byte
+        else:
+            byte_char = ord(byte)
         # Taken verbatim from FIT SDK docs
         tmp = CRC_TABLE[crc & 0xF]
         crc = (crc >> 4) & 0x0FFF
@@ -27,6 +30,7 @@ UNIT_NAME_TO_FUNC_REPLACEMENTS = (
     ('%', 'percent'),
     ('*', ' times '),
 )
+
 
 def scrub_method_name(method_name, convert_units=False):
     if convert_units:

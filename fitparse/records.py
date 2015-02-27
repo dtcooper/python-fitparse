@@ -1,5 +1,6 @@
 import math
 import struct
+import six
 
 
 class RecordBase(object):
@@ -11,9 +12,14 @@ class RecordBase(object):
 
     def __init__(self, *args, **kwargs):
         # WARNING: use of map(None, l1, l2) equivalent to zip_longest in py3k
-        for slot_name, value in map(None, self.__slots__, args):
-            setattr(self, slot_name, value)
-        for slot_name, value in kwargs.iteritems():
+        if six.PY2:
+            for slot_name, value in map(None, self.__slots__, args):
+                setattr(self, slot_name, value)
+        else:
+            from itertools import zip_longest
+            for slot_name, value in zip_longest(self.__slots__, args):
+                setattr(self, slot_name, value)
+        for slot_name, value in kwargs.items():
             setattr(self, slot_name, value)
 
 
@@ -245,6 +251,9 @@ class Field(FieldAndSubFieldBase):
     __slots__ = ('name', 'type', 'def_num', 'scale', 'offset', 'units', 'components', 'subfields')
     field_type = 'field'
 
+    def __init__(self, *args, **kwargs):
+        super(Field, self).__init__(self, *args, **kwargs)
+
 
 class SubField(FieldAndSubFieldBase):
     __slots__ = ('name', 'def_num', 'type', 'scale', 'offset', 'units', 'components', 'ref_fields')
@@ -275,7 +284,7 @@ class ComponentField(RecordBase):
             raw_value = unpacked_num
 
         # Mask and shift like a normal number
-        if isinstance(raw_value, (int, long)):
+        if isinstance(raw_value, int):
             raw_value = (raw_value >> self.bit_offset) & ((1 << self.bits) - 1)
 
         return raw_value
