@@ -301,7 +301,7 @@ BASE_TYPES = {
     0x84: BaseType(name='uint16', identifier=0x84, fmt='H', parse=lambda x: None if x == 0xFFFF else x),
     0x85: BaseType(name='sint32', identifier=0x85, fmt='i', parse=lambda x: None if x == 0x7FFFFFFF else x),
     0x86: BaseType(name='uint32', identifier=0x86, fmt='I', parse=lambda x: None if x == 0xFFFFFFFF else x),
-    0x07: BaseType(name='string', identifier=0x07, fmt='s', parse=lambda x: x.split('\x00')[0] or None),
+    0x07: BaseType(name='string', identifier=0x07, fmt='s', parse=lambda x: x.split(b'\x00')[0] or None),
     0x88: BaseType(name='float32', identifier=0x88, fmt='f', parse=lambda x: None if math.isnan(x) else x),
     0x89: BaseType(name='float64', identifier=0x89, fmt='d', parse=lambda x: None if math.isnan(x) else x),
     0x0A: BaseType(name='uint8z', identifier=0x0A, fmt='B', parse=lambda x: None if x == 0x0 else x),
