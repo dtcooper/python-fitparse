@@ -4,14 +4,15 @@ import os
 from struct import pack
 import sys
 
+from fitparse import FitFile
+from fitparse.records import BASE_TYPES
+from fitparse.utils import calc_crc
+from fitparse.processors import UTC_REFERENCE
+
 if sys.version_info >= (2, 7):
     import unittest
 else:
     import unittest2 as unittest
-
-from fitparse import FitFile
-from fitparse.records import BASE_TYPES
-from fitparse.utils import calc_crc
 
 
 def generate_messages(mesg_num, local_mesg_num, field_defs, endian='<', data=None):
@@ -66,7 +67,7 @@ def generate_fitfile(data=None, endian='<'):
 
 
 def secs_to_dt(secs):
-    return datetime.datetime.utcfromtimestamp(secs + 631065600)
+    return datetime.datetime.utcfromtimestamp(secs + UTC_REFERENCE)
 
 
 def testfile(filename):

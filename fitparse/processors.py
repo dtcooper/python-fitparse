@@ -2,6 +2,9 @@ import contextlib
 import datetime
 from fitparse.utils import scrub_method_name
 
+# Datetimes (uint32) represent seconds since this UTC_REFERENCE
+UTC_REFERENCE = 631065600  # timestamp for UTC 00:00 Dec 31 1989
+
 
 class FitFileDataProcessor(object):
     # TODO: Document API
@@ -41,12 +44,12 @@ class FitFileDataProcessor(object):
     def process_type_date_time(self, field_data):
         value = field_data.value
         if value is not None and value >= 0x10000000:
-            field_data.value = datetime.datetime.utcfromtimestamp(631065600 + value)
+            field_data.value = datetime.datetime.utcfromtimestamp(UTC_REFERENCE + value)
             field_data.units = None  # Units were 's', set to None
 
     def process_type_local_date_time(self, field_data):
         if field_data.value is not None:
-            field_data.value = datetime.datetime.fromtimestamp(631065600 + field_data.value)
+            field_data.value = datetime.datetime.fromtimestamp(UTC_REFERENCE + field_data.value)
             field_data.units = None
 
     def process_type_localtime_into_day(self, field_data):
