@@ -130,8 +130,11 @@ class FitFile(object):
             message = self._parse_definition_message(header)
         else:
             message = self._parse_data_message(header)
+        if message:
+            self._messages.append(message)
+        else:
+            pass
 
-        self._messages.append(message)
         return message
 
     def _parse_message_header(self):
@@ -263,8 +266,9 @@ class FitFile(object):
     def _parse_data_message(self, header):
         def_mesg = self._local_mesgs.get(header.local_mesg_num)
         if not def_mesg:
-            raise FitParseError('Got data message with invalid local message type %d' % (
-                header.local_mesg_num))
+            return None
+            # raise FitParseError('Got data message with invalid local message type %d' % (
+            #     header.local_mesg_num))
 
         raw_values = self._parse_raw_values_from_data_message(def_mesg)
         field_datas = []  # TODO: I don't love this name, update on DataMessage too
