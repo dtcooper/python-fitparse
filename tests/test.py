@@ -262,7 +262,7 @@ class FitFileTestCase(unittest.TestCase):
                         fit_value = last_valid_long
 
                 if isinstance(fit_value, int):
-                    csv_value = int(csv_value)
+                    csv_value = int(fit_value)
 
                 if isinstance(fit_value, float):
                     # Float comparison
