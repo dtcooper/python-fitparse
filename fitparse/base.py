@@ -4,8 +4,9 @@ import struct
 from fitparse.processors import FitFileDataProcessor
 from fitparse.profile import FIELD_TYPE_TIMESTAMP, MESSAGE_TYPES
 from fitparse.records import (
-    DataMessage, FieldData, FieldDefinition, DefinitionMessage, MessageHeader,
-    BASE_TYPES, BASE_TYPE_BYTE
+    DataMessage, FieldData, FieldDefinition, DevFieldDefinition, DefinitionMessage, MessageHeader,
+    BASE_TYPES, BASE_TYPE_BYTE, DevField,
+    add_dev_data_id, add_dev_field_description, get_dev_type
 )
 from fitparse.utils import calc_crc
 
@@ -120,6 +121,11 @@ class FitFile(object):
             message = self._parse_definition_message(header)
         else:
             message = self._parse_data_message(header)
+            if message.mesg_type is not None:
+                if message.mesg_type.name == 'developer_data_id':
+                    add_dev_data_id(message)
+                elif message.mesg_type.name == 'field_description':
+                    add_dev_field_description(message)
 
         self._messages.append(message)
         return message
@@ -130,12 +136,14 @@ class FitFile(object):
         if header & 0x80:  # bit 7: Is this record a compressed timestamp?
             return MessageHeader(
                 is_definition=False,
+                is_developer_data=False,
                 local_mesg_num=(header >> 5) & 0x3,  # bits 5-6
                 time_offset=header & 0x1F,  # bits 0-4
             )
         else:
             return MessageHeader(
                 is_definition=bool(header & 0x40),  # bit 6
+                is_developer_data=bool(header & 0x20), # bit 5
                 local_mesg_num=header & 0xF,  # bits 0-3
                 time_offset=None,
             )
@@ -175,12 +183,26 @@ class FitFile(object):
                 size=field_size,
             ))
 
+        dev_field_defs = []
+        if header.is_developer_data:
+            num_dev_fields = self._read_struct('B', endian=endian)
+            for n in range(num_dev_fields):
+                field_def_num, field_size, dev_data_index = self._read_struct('3B', endian=endian)
+                field = get_dev_type(dev_data_index, field_def_num)
+                dev_field_defs.append(DevFieldDefinition(
+                    field=field,
+                    dev_data_index=dev_data_index,
+                    def_num=field_def_num,
+                    size=field_size
+                  ))
+
         def_mesg = DefinitionMessage(
             header=header,
             endian=endian,
             mesg_type=mesg_type,
             mesg_num=global_mesg_num,
             field_defs=field_defs,
+            dev_field_defs=dev_field_defs,
         )
         self._local_mesgs[header.local_mesg_num] = def_mesg
         return def_mesg
@@ -188,7 +210,7 @@ class FitFile(object):
     def _parse_raw_values_from_data_message(self, def_mesg):
         # Go through mesg's field defs and read them
         raw_values = []
-        for field_def in def_mesg.field_defs:
+        for field_def in def_mesg.field_defs + def_mesg.dev_field_defs:
             base_type = field_def.base_type
             is_byte = base_type.name == 'byte'
             # Struct to read n base types (field def size / base type size)
@@ -263,7 +285,7 @@ class FitFile(object):
 
         # TODO: Maybe refactor this and make it simpler (or at least broken
         #       up into sub-functions)
-        for field_def, raw_value in zip(def_mesg.field_defs, raw_values):
+        for field_def, raw_value in zip(def_mesg.field_defs + def_mesg.dev_field_defs, raw_values):
             field, parent_field = field_def.field, None
             if field:
                 field, parent_field = self._resolve_subfield(field, def_mesg, raw_values)

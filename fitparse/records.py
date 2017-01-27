@@ -3,6 +3,9 @@ import struct
 import itertools
 
 
+DEV_TYPES = {}
+
+
 class RecordBase(object):
     # namedtuple-like base class. Subclasses should must __slots__
     __slots__ = ()
@@ -18,18 +21,19 @@ class RecordBase(object):
 
 
 class MessageHeader(RecordBase):
-    __slots__ = ('is_definition', 'local_mesg_num', 'time_offset')
+    __slots__ = ('is_definition', 'is_developer_data', 'local_mesg_num', 'time_offset')
 
     def __repr__(self):
-        return '<MessageHeader: %s -- local mesg: #%d%s>' % (
+        return '<MessageHeader: %s%s -- local mesg: #%d%s>' % (
             'definition' if self.is_definition else 'data',
+            '(developer)' if self.is_developer_data else '',
             self.local_mesg_num,
             ', time offset: %d' % self.time_offset if self.time_offset else '',
         )
 
 
 class DefinitionMessage(RecordBase):
-    __slots__ = ('header', 'endian', 'mesg_type', 'mesg_num', 'field_defs')
+    __slots__ = ('header', 'endian', 'mesg_type', 'mesg_num', 'field_defs', 'dev_field_defs')
     type = 'definition'
 
     @property
@@ -37,11 +41,12 @@ class DefinitionMessage(RecordBase):
         return self.mesg_type.name if self.mesg_type else 'unknown_%d' % self.mesg_num
 
     def __repr__(self):
-        return '<DefinitionMessage: %s (#%d) -- local mesg: #%d, field defs: [%s]>' % (
+        return '<DefinitionMessage: %s (#%d) -- local mesg: #%d, field defs: [%s], dev field defs: [%s]>' % (
             self.name,
             self.mesg_num,
             self.header.local_mesg_num,
             ', '.join([fd.name for fd in self.field_defs]),
+            ', '.join([fd.name for fd in self.dev_field_defs]),
         )
 
 
@@ -61,6 +66,32 @@ class FieldDefinition(RecordBase):
             self.name,
             self.def_num,
             self.type.name, self.base_type.name,
+            self.size, 's' if self.size != 1 else '',
+        )
+
+
+class DevFieldDefinition(RecordBase):
+    __slots__ = ('field', 'dev_data_index', 'base_type', 'def_num', 'size')
+
+    def __init__(self, **kwargs):
+        super(DevFieldDefinition, self).__init__(**kwargs)
+        # For dev fields, the base_type and type are always the same.
+        self.base_type = self.type
+
+    @property
+    def name(self):
+        return self.field.name if self.field else 'unknown_dev_%d_%d' % (self.dev_data_index, self.def_num)
+
+    @property
+    def type(self):
+        return self.field.type
+
+    def __repr__(self):
+        return '<DevFieldDefinition: %s:%s (#%d) -- type: %s, size: %d byte%s>' % (
+            self.name,
+            self.dev_data_index,
+            self.def_num,
+            self.type.name,
             self.size, 's' if self.size != 1 else '',
         )
 
@@ -251,6 +282,13 @@ class SubField(FieldAndSubFieldBase):
     field_type = 'subfield'
 
 
+class DevField(FieldAndSubFieldBase):
+    __slots__ = ('dev_data_index', 'def_num', 'type', 'name', 'units', 'native_field_num',
+                 # The rest of these are just to be compatible with Field objects. They're always None
+                 'scale', 'offset', 'components', 'subfields') 
+    field_type = 'devfield'
+
+
 class ReferenceField(RecordBase):
     __slots__ = ('name', 'def_num', 'value', 'raw_value')
 
@@ -300,3 +338,47 @@ BASE_TYPES = {
     0x8C: BaseType(name='uint32z', identifier=0x8C, fmt='I', parse=lambda x: None if x == 0x0 else x),
     0x0D: BASE_TYPE_BYTE,
 }
+
+
+def add_dev_data_id(message):
+    global DEV_TYPES
+    dev_data_index = message.get('developer_data_index').raw_value
+    application_id = message.get('application_id').raw_value
+
+    if dev_data_index in DEV_TYPES:
+        raise FitParseError("Added dev_data_index=%s multiple times" % (dev_data_index))
+    DEV_TYPES[dev_data_index] = {'dev_data_index': dev_data_index, 'application_id': application_id, 'fields': {}}
+
+
+def add_dev_field_description(message):
+    global DEV_TYPES
+
+    dev_data_index = message.get('developer_data_index').raw_value
+    field_def_num = message.get('field_definition_number').raw_value
+    base_type_id = message.get('fit_base_type_id').raw_value
+    field_name = message.get('field_name').raw_value
+    units = message.get('units').raw_value
+    native_field_num = message.get('native_field_num').raw_value
+
+    if dev_data_index not in DEV_TYPES:
+        raise FitParseError("No such dev_data_index=%s found" % (dev_data_index))
+    fields = DEV_TYPES[int(dev_data_index)]['fields']
+
+    if field_def_num in fields:
+        raise FitParseError("Added field_def_num=%s of dev_data_index=%s multiple times" % (field_def_num, dev_data_index))
+
+    fields[field_def_num] = DevField(dev_data_index=dev_data_index,
+                                     def_num=field_def_num,
+                                     type=BASE_TYPES[base_type_id],
+                                     name=field_name,
+                                     units=units,
+                                     native_field_num=native_field_num)
+
+
+def get_dev_type(dev_data_index, field_def_num):
+    if dev_data_index not in DEV_TYPES:
+        raise FitParseError("No such dev_data_index=%s found when looking up field %s" % (dev_data_index, field_def_num))
+    elif field_def_num not in DEV_TYPES[dev_data_index]['fields']:
+        raise FitParseError("No such field %s for dev_data_index %s" % (field_def_num, dev_data_index))
+
+    return DEV_TYPES[dev_data_index]['fields'][field_def_num]
