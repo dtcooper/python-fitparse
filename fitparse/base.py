@@ -1,9 +1,9 @@
 import struct
 
 try:
-    import cStringIO as StringIO
+    from StringIO import StringIO
 except ImportError:
-    import StringIO
+    from io import StringIO
 
 from fitparse.processors import FitFileDataProcessor
 from fitparse.profile import FIELD_TYPE_TIMESTAMP, MESSAGE_TYPES
