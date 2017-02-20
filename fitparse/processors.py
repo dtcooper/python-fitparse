@@ -14,12 +14,14 @@ class FitFileDataProcessor(object):
     def process_type_date_time(self, field_data):
         value = field_data.value
         if value is not None and value >= 0x10000000:
-            field_data.value = datetime.datetime.utcfromtimestamp(631065600 + value)
+            field_data.value = datetime.datetime.utcfromtimestamp(631065600 +
+                                                                  value)
             field_data.units = None  # Units were 's', set to None
 
     def process_type_local_date_time(self, field_data):
         if field_data.value is not None:
-            field_data.value = datetime.datetime.fromtimestamp(631065600 + field_data.value)
+            field_data.value = datetime.datetime.fromtimestamp(
+                631065600 + field_data.value)
             field_data.units = None
 
 
@@ -37,5 +39,5 @@ class StandardUnitsDataProcessor(FitFileDataProcessor):
 
     def process_units_semicircles(self, field_data):
         if field_data.value is not None:
-            field_data.value *= 180.0 / (2 ** 31)
+            field_data.value *= 180.0 / (2**31)
         field_data.units = 'deg'

@@ -1,5 +1,10 @@
 import math
 import struct
+try:
+    from itertools import izip_longest
+except:
+    from itertools import zip_longest as izip_longest
+from numbers import Number
 
 
 class RecordBase(object):
@@ -11,9 +16,10 @@ class RecordBase(object):
 
     def __init__(self, *args, **kwargs):
         # WARNING: use of map(None, l1, l2) equivalent to zip_longest in py3k
-        for slot_name, value in map(None, self.__slots__, args):
+        for slot_name, value in izip_longest(self.__slots__, args):
+            # map(None, self.__slots__, args):
             setattr(self, slot_name, value)
-        for slot_name, value in kwargs.iteritems():
+        for slot_name, value in kwargs.items():
             setattr(self, slot_name, value)
 
 
@@ -24,8 +30,8 @@ class MessageHeader(RecordBase):
         return '<MessageHeader: %s -- local mesg: #%d%s>' % (
             'definition' if self.is_definition else 'data',
             self.local_mesg_num,
-            ', time offset: %d' % self.time_offset if self.time_offset else '',
-        )
+            ', time offset: %d' % self.time_offset
+            if self.time_offset else '', )
 
 
 class DefinitionMessage(RecordBase):
@@ -41,8 +47,7 @@ class DefinitionMessage(RecordBase):
             self.name,
             self.mesg_num,
             self.header.local_mesg_num,
-            ', '.join([fd.name for fd in self.field_defs]),
-        )
+            ', '.join([fd.name for fd in self.field_defs]), )
 
 
 class FieldDefinition(RecordBase):
@@ -60,9 +65,10 @@ class FieldDefinition(RecordBase):
         return '<FieldDefinition: %s (#%d) -- type: %s (%s), size: %d byte%s>' % (
             self.name,
             self.def_num,
-            self.type.name, self.base_type.name,
-            self.size, 's' if self.size != 1 else '',
-        )
+            self.type.name,
+            self.base_type.name,
+            self.size,
+            's' if self.size != 1 else '', )
 
 
 class DataMessage(RecordBase):
@@ -83,7 +89,8 @@ class DataMessage(RecordBase):
 
     def get_values(self):
         # SIMPLIFY: get rid of this completely
-        return dict((f.name if f.name else f.def_num, f.value) for f in self.fields)
+        return dict((f.name if f.name else f.def_num, f.value)
+                    for f in self.fields)
 
     @property
     def name(self):
@@ -108,13 +115,17 @@ class DataMessage(RecordBase):
 
     def __iter__(self):
         # Sort by whether this is a known field, then its name
-        return iter(sorted(self.fields, key=lambda fd: (int(fd.field is None), fd.name)))
+        return iter(
+            sorted(
+                self.fields, key=lambda fd: (int(fd.field is None), fd.name)))
 
     def __repr__(self):
         return '<DataMessage: %s (#%d) -- local mesg: #%d, fields: [%s]>' % (
-            self.name, self.mesg_num, self.header.local_mesg_num,
-            ', '.join(["%s: %s" % (fd.name, fd.value) for fd in self.fields]),
-        )
+            self.name,
+            self.mesg_num,
+            self.header.local_mesg_num,
+            ', '.join(
+                ["%s: %s" % (fd.name, fd.value) for fd in self.fields]), )
 
     def __str__(self):
         # SIMPLIFY: get rid of this
@@ -122,7 +133,8 @@ class DataMessage(RecordBase):
 
 
 class FieldData(RecordBase):
-    __slots__ = ('field_def', 'field', 'parent_field', 'value', 'raw_value', 'units')
+    __slots__ = ('field_def', 'field', 'parent_field', 'value', 'raw_value',
+                 'units')
 
     def __init__(self, *args, **kwargs):
         super(FieldData, self).__init__(self, *args, **kwargs)
@@ -175,21 +187,30 @@ class FieldData(RecordBase):
 
     def as_dict(self):
         return {
-            'name': self.name, 'def_num': self.def_num, 'base_type': self.base_type.name,
-            'type': self.type.name, 'units': self.units, 'value': self.value,
+            'name': self.name,
+            'def_num': self.def_num,
+            'base_type': self.base_type.name,
+            'type': self.type.name,
+            'units': self.units,
+            'value': self.value,
             'raw_value': self.raw_value,
         }
 
     def __repr__(self):
         return '<FieldData: %s: %s%s, def num: %d, type: %s (%s), raw value: %s>' % (
-            self.name, self.value, ' [%s]' % self.units if self.units else '',
-            self.def_num, self.type.name, self.base_type.name, self.raw_value,
-        )
+            self.name,
+            self.value,
+            ' [%s]' % self.units if self.units else '',
+            self.def_num,
+            self.type.name,
+            self.base_type.name,
+            self.raw_value, )
 
     def __str__(self):
         return '%s: %s%s' % (
-            self.name, self.value, ' [%s]' % self.units if self.units else '',
-        )
+            self.name,
+            self.value,
+            ' [%s]' % self.units if self.units else '', )
 
 
 class BaseType(RecordBase):
@@ -206,8 +227,9 @@ class BaseType(RecordBase):
 
     def __repr__(self):
         return '<BaseType: %s (#%d [0x%X])>' % (
-            self.name, self.type_num, self.identifier,
-        )
+            self.name,
+            self.type_num,
+            self.identifier, )
 
 
 class FieldType(RecordBase):
@@ -242,12 +264,14 @@ class FieldAndSubFieldBase(RecordBase):
 
 
 class Field(FieldAndSubFieldBase):
-    __slots__ = ('name', 'type', 'def_num', 'scale', 'offset', 'units', 'components', 'subfields')
+    __slots__ = ('name', 'type', 'def_num', 'scale', 'offset', 'units',
+                 'components', 'subfields')
     field_type = 'field'
 
 
 class SubField(FieldAndSubFieldBase):
-    __slots__ = ('name', 'def_num', 'type', 'scale', 'offset', 'units', 'components', 'ref_fields')
+    __slots__ = ('name', 'def_num', 'type', 'scale', 'offset', 'units',
+                 'components', 'ref_fields')
     field_type = 'subfield'
 
 
@@ -256,7 +280,8 @@ class ReferenceField(RecordBase):
 
 
 class ComponentField(RecordBase):
-    __slots__ = ('name', 'def_num', 'scale', 'offset', 'units', 'accumulate', 'bits', 'bit_offset')
+    __slots__ = ('name', 'def_num', 'scale', 'offset', 'units', 'accumulate',
+                 'bits', 'bit_offset')
     field_type = 'component'
 
     def render(self, raw_value):
@@ -275,28 +300,84 @@ class ComponentField(RecordBase):
             raw_value = unpacked_num
 
         # Mask and shift like a normal number
-        if isinstance(raw_value, (int, long)):
+        if isinstance(raw_value, Number):
             raw_value = (raw_value >> self.bit_offset) & ((1 << self.bits) - 1)
 
         return raw_value
 
 
 # The default base type
-BASE_TYPE_BYTE = BaseType(name='byte', identifier=0x0D, fmt='B', parse=lambda x: None if all(b == 0xFF for b in x) else x)
+BASE_TYPE_BYTE = BaseType(
+    name='byte',
+    identifier=0x0D,
+    fmt='B',
+    parse=lambda x: None if all(b == 0xFF for b in x) else x)
 
 BASE_TYPES = {
-    0x00: BaseType(name='enum', identifier=0x00, fmt='B', parse=lambda x: None if x == 0xFF else x),
-    0x01: BaseType(name='sint8', identifier=0x01, fmt='b', parse=lambda x: None if x == 0x7F else x),
-    0x02: BaseType(name='uint8', identifier=0x02, fmt='B', parse=lambda x: None if x == 0xFF else x),
-    0x83: BaseType(name='sint16', identifier=0x83, fmt='h', parse=lambda x: None if x == 0x7FFF else x),
-    0x84: BaseType(name='uint16', identifier=0x84, fmt='H', parse=lambda x: None if x == 0xFFFF else x),
-    0x85: BaseType(name='sint32', identifier=0x85, fmt='i', parse=lambda x: None if x == 0x7FFFFFFF else x),
-    0x86: BaseType(name='uint32', identifier=0x86, fmt='I', parse=lambda x: None if x == 0xFFFFFFFF else x),
-    0x07: BaseType(name='string', identifier=0x07, fmt='s', parse=lambda x: x.split('\x00')[0] or None),
-    0x88: BaseType(name='float32', identifier=0x88, fmt='f', parse=lambda x: None if math.isnan(x) else x),
-    0x89: BaseType(name='float64', identifier=0x89, fmt='d', parse=lambda x: None if math.isnan(x) else x),
-    0x0A: BaseType(name='uint8z', identifier=0x0A, fmt='B', parse=lambda x: None if x == 0x0 else x),
-    0x8B: BaseType(name='uint16z', identifier=0x8B, fmt='H', parse=lambda x: None if x == 0x0 else x),
-    0x8C: BaseType(name='uint32z', identifier=0x8C, fmt='I', parse=lambda x: None if x == 0x0 else x),
+    0x00: BaseType(
+        name='enum',
+        identifier=0x00,
+        fmt='B',
+        parse=lambda x: None if x == 0xFF else x),
+    0x01: BaseType(
+        name='sint8',
+        identifier=0x01,
+        fmt='b',
+        parse=lambda x: None if x == 0x7F else x),
+    0x02: BaseType(
+        name='uint8',
+        identifier=0x02,
+        fmt='B',
+        parse=lambda x: None if x == 0xFF else x),
+    0x83: BaseType(
+        name='sint16',
+        identifier=0x83,
+        fmt='h',
+        parse=lambda x: None if x == 0x7FFF else x),
+    0x84: BaseType(
+        name='uint16',
+        identifier=0x84,
+        fmt='H',
+        parse=lambda x: None if x == 0xFFFF else x),
+    0x85: BaseType(
+        name='sint32',
+        identifier=0x85,
+        fmt='i',
+        parse=lambda x: None if x == 0x7FFFFFFF else x),
+    0x86: BaseType(
+        name='uint32',
+        identifier=0x86,
+        fmt='I',
+        parse=lambda x: None if x == 0xFFFFFFFF else x),
+    0x07: BaseType(
+        name='string',
+        identifier=0x07,
+        fmt='s',
+        parse=lambda x: x.split('\x00')[0] or None),
+    0x88: BaseType(
+        name='float32',
+        identifier=0x88,
+        fmt='f',
+        parse=lambda x: None if math.isnan(x) else x),
+    0x89: BaseType(
+        name='float64',
+        identifier=0x89,
+        fmt='d',
+        parse=lambda x: None if math.isnan(x) else x),
+    0x0A: BaseType(
+        name='uint8z',
+        identifier=0x0A,
+        fmt='B',
+        parse=lambda x: None if x == 0x0 else x),
+    0x8B: BaseType(
+        name='uint16z',
+        identifier=0x8B,
+        fmt='H',
+        parse=lambda x: None if x == 0x0 else x),
+    0x8C: BaseType(
+        name='uint32z',
+        identifier=0x8C,
+        fmt='I',
+        parse=lambda x: None if x == 0x0 else x),
     0x0D: BASE_TYPE_BYTE,
 }
