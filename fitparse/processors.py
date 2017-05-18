@@ -22,6 +22,13 @@ class FitFileDataProcessor(object):
             field_data.value = datetime.datetime.fromtimestamp(631065600 + field_data.value)
             field_data.units = None
 
+    def process_type_localtime_into_day(self, field_data):
+        if field_data.value is not None:
+            m, s = divmod(field_data.value, 60)
+            h, m = divmod(m, 60)
+            field_data.value = datetime.time(h, m, s)
+            field_data.units = None
+
 
 class StandardUnitsDataProcessor(FitFileDataProcessor):
     # Example use case
