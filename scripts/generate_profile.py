@@ -271,13 +271,18 @@ def fix_units(data):
     return data
 
 
-def parse_csv_fields(data, num_expected_if_empty):
+def parse_csv_fields(data, num_expected):
     if data is None or data == '':
-        return [None] * num_expected_if_empty
+        return [None] * num_expected
     elif isinstance(data, str):
-        return [(int(x.strip()) if x.strip().isdigit() else x.strip()) for x in data.strip().split(',')]
+        ret = [(int(x.strip()) if x.strip().isdigit() else x.strip()) for x in data.strip().split(',')]
     else:
-        return [data]
+        ret = [data]
+
+    # Only len 1 but more were expected, extend it for all values
+    if len(ret) == 1 and num_expected:
+        return ret * num_expected
+    return ret
 
 
 def parse_spreadsheet(xls_file, *sheet_names):
@@ -385,8 +390,8 @@ def parse_messages(messages_rows, type_list):
                     for cmp_name, cmp_scale, cmp_offset, cmp_units, cmp_bits, cmp_accumulate in zip(
                         component_names,  # name
                         parse_csv_fields(maybe_decode(row[6]), num_components),  # scale
-                        parse_csv_fields(row[7].decode(), num_components),  # offset
-                        parse_csv_fields(row[8].decode(), num_components),  # units
+                        parse_csv_fields(maybe_decode(row[7]), num_components),  # offset
+                        parse_csv_fields(maybe_decode(row[8]), num_components),  # units
                         parse_csv_fields(maybe_decode(row[9]), num_components),  # bits
                         parse_csv_fields(maybe_decode(row[10]), num_components),  # accumulate
                     )
@@ -483,7 +488,10 @@ def get_xls_and_version_from_zip(path):
     if version_match:
         profile_version = ("%f" % float(version_match.group(1))).rstrip('0').ljust(4, '0')
 
-    return archive.open('Profile.xls'), profile_version
+    try:
+        return archive.open('Profile.xls'), profile_version
+    except KeyError:
+        return archive.open('Profile.xlsx'), profile_version
 
 
 def main(input_xls_or_zip, output_py_path=None):
