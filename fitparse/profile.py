@@ -5565,7 +5565,7 @@ MESSAGE_TYPES = {
             ),
             1: Field(
                 name='device_type',
-                type=BASE_TYPES[0x02],  # uint8
+                type=FIELD_TYPES['antplus_device_type'],  # uint8
                 def_num=1,
                 subfields=(
                     SubField(
