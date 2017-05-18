@@ -229,10 +229,12 @@ class FitFile(object):
                             return sub_field, field
         return field, None
 
-    @staticmethod
-    def _apply_scale_offset(field, raw_value):
+    def _apply_scale_offset(self, field, raw_value):
         # Apply numeric transformations (scale+offset)
-        if isinstance(raw_value, (int, float)):
+        if isinstance(raw_value, tuple):
+            # Contains multiple values, apply transformations to all of them
+            return tuple(self._apply_scale_offset(field, x) for x in raw_value)
+        elif isinstance(raw_value, (int, float)):
             if field.scale:
                 raw_value = float(raw_value) / field.scale
             if field.offset:
