@@ -358,7 +358,10 @@ def add_dev_field_description(message):
     base_type_id = message.get('fit_base_type_id').raw_value
     field_name = message.get('field_name').raw_value
     units = message.get('units').raw_value
-    native_field_num = message.get('native_field_num').raw_value
+
+    native_field_num = message.get('native_field_num')
+    if native_field_num is not None:
+        native_field_num = native_field_num.raw_value
 
     if dev_data_index not in DEV_TYPES:
         raise FitParseError("No such dev_data_index=%s found" % (dev_data_index))

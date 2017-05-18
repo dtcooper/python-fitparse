@@ -282,6 +282,11 @@ class FitFileTestCase(unittest.TestCase):
         except StopIteration:
             pass
 
+    def test_developer_types(self):
+        """Test that a file with developer types in it can be parsed"""
+        FitFile(testfile('developer-types-sample.fit')).parse()
+        FitFile(testfile('20170518-191602-1740899583.fit')).parse()
+
     # TODO:
     #  * Test Processors:
     #    - process_type_<>, process_field_<>, process_units_<>, process_message_<>
