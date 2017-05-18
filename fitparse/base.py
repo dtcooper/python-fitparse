@@ -7,7 +7,7 @@ from fitparse.records import (
     DataMessage, FieldData, FieldDefinition, DefinitionMessage, MessageHeader,
     BASE_TYPES, BASE_TYPE_BYTE
 )
-from fitparse.utils import calc_crc, scrub_method_name
+from fitparse.utils import calc_crc
 
 
 class FitParseError(Exception):
@@ -340,30 +340,12 @@ class FitFile(object):
         # Apply data processors
         for field_data in field_datas:
             # Apply type name processor
-            process_method_name = scrub_method_name('process_type_%s' % field_data.type.name)
-            type_processor = getattr(self._processor, process_method_name, None)
-            if type_processor:
-                type_processor(field_data)
-
-            # Apply field name processor
-            process_method_name = scrub_method_name('process_field_%s' % field_data.name)
-            field_processor = getattr(self._processor, process_method_name, None)
-            if field_processor:
-                field_processor(field_data)
-
-            # Apply units name processor
-            if field_data.units:
-                process_method_name = scrub_method_name('process_units_%s' % field_data.units, convert_units=True)
-                units_processor = getattr(self._processor, process_method_name, None)
-                if units_processor:
-                    units_processor(field_data)
+            self._processor.run_type_processor(field_data)
+            self._processor.run_field_processor(field_data)
+            self._processor.run_unit_processor(field_data)
 
         data_message = DataMessage(header=header, def_mesg=def_mesg, fields=field_datas)
-
-        process_method_name = scrub_method_name('process_message_%s' % def_mesg.name)
-        mesg_processor = getattr(self._processor, process_method_name, None)
-        if mesg_processor:
-            mesg_processor(data_message)
+        self._processor.run_message_processor(data_message)
 
         return data_message
 
