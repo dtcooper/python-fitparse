@@ -347,8 +347,7 @@ def add_dev_data_id(message):
     dev_data_index = message.get('developer_data_index').raw_value
     application_id = message.get('application_id').raw_value
 
-    if dev_data_index in DEV_TYPES:
-        raise FitParseError("Added dev_data_index=%s multiple times" % (dev_data_index))
+    # Note that nothing in the spec says overwriting an existing type is invalid
     DEV_TYPES[dev_data_index] = {'dev_data_index': dev_data_index, 'application_id': application_id, 'fields': {}}
 
 
@@ -369,9 +368,7 @@ def add_dev_field_description(message):
         raise FitParseError("No such dev_data_index=%s found" % (dev_data_index))
     fields = DEV_TYPES[int(dev_data_index)]['fields']
 
-    if field_def_num in fields:
-        raise FitParseError("Added field_def_num=%s of dev_data_index=%s multiple times" % (field_def_num, dev_data_index))
-
+    # Note that nothing in the spec says overwriting an existing field is invalid
     fields[field_def_num] = DevField(dev_data_index=dev_data_index,
                                      def_num=field_def_num,
                                      type=BASE_TYPES[base_type_id],
