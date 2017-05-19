@@ -4,10 +4,10 @@ import os
 from struct import pack
 import sys
 
-from fitparse import FitFile, FitParseError
-from fitparse.records import BASE_TYPES
-from fitparse.utils import calc_crc
+from fitparse import FitFile
 from fitparse.processors import UTC_REFERENCE
+from fitparse.records import BASE_TYPES
+from fitparse.utils import calc_crc, FitEOFError, FitCRCError, FitHeaderError
 
 if sys.version_info >= (2, 7):
     import unittest
@@ -297,26 +297,41 @@ class FitFileTestCase(unittest.TestCase):
         try:
             FitFile(testfile('activity-filecrc.fit')).parse()
             self.fail("Didn't detect an invalid CRC")
-        except FitParseError:
+        except FitCRCError:
             pass
 
     def test_unexpected_eof(self):
         try:
             FitFile(testfile('activity-unexpected-eof.fit')).parse()
             self.fail("Didn't detect an unexpected EOF")
-        except FitParseError:
+        except FitEOFError:
             pass
 
+    def test_chained_file(self):
+        FitFile(testfile('activity-settings.fit')).parse()
+
     def test_invalid_chained_files(self):
-        """Detect errors when files are catted together"""
-        for x in ('activity-activity-filecrc.fit',
-                  'activity-settings-corruptheader.fit',
-                  'activity-settings-nodata.fit'):
-            try:
-                FitFile(testfile(x)).parse()
-                self.fail("Didn't detect an error in '{}'".format(x))
-            except FitParseError:
-                pass
+        """Detect errors when files are chained together
+
+        Note that 'chained' means just concatinated in this case
+        """
+        try:
+            FitFile(testfile('activity-activity-filecrc.fit')).parse()
+            self.fail("Didn't detect a CRC error in the chained file")
+        except FitCRCError:
+            pass
+
+        try:
+            FitFile(testfile('activity-settings-corruptheader.fit')).parse()
+            self.fail("Didn't detect a header error in the chained file")
+        except FitHeaderError:
+            pass
+
+        try:
+            FitFile(testfile('activity-settings-nodata.fit')).parse()
+            self.fail("Didn't detect an EOF error in the chaned file")
+        except FitEOFError:
+            pass
 
     # TODO:
     #  * Test Processors:

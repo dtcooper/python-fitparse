@@ -9,12 +9,7 @@ from fitparse.records import (
     BASE_TYPES, BASE_TYPE_BYTE, DevField,
     add_dev_data_id, add_dev_field_description, get_dev_type
 )
-from fitparse.utils import calc_crc
-
-
-class FitParseError(Exception):
-    pass
-
+from fitparse.utils import calc_crc, FitParseError, FitEOFError, FitCRCError, FitHeaderError
 
 class FitFile(object):
     def __init__(self, fileish, check_crc=True, data_processor=None):
@@ -68,7 +63,7 @@ class FitFile(object):
             data = self._read(size)
 
         if size != len(data):
-            raise FitParseError("Tried to read %d bytes from .FIT file but got %d" % (size, len(data)))
+            raise FitEOFError("Tried to read %d bytes from .FIT file but got %d" % (size, len(data)))
 
         unpacked = struct.unpack(fmt_with_endian, data)
         # Flatten tuple if it's got only one value
@@ -80,7 +75,7 @@ class FitFile(object):
 
         if (crc_actual != crc_expected) and not (allow_zero and (crc_actual == 0)):
             if self.check_crc:
-                raise FitParseError('CRC Mismatch [expected = 0x%04X, actual = 0x%04X]' % (
+                raise FitCRCError('CRC Mismatch [expected = 0x%04X, actual = 0x%04X]' % (
                     crc_expected, crc_actual))
 
     ##########
@@ -99,7 +94,7 @@ class FitFile(object):
 
         header_data = self._read(12)
         if header_data[8:12] != b'.FIT':
-            raise FitParseError("Invalid .FIT File Header")
+            raise FitHeaderError("Invalid .FIT File Header")
 
         # Larger fields are explicitly little endian from SDK
         header_size, protocol_ver_enc, profile_ver_enc, data_size = self._read_struct('2BHI4x', data=header_data)
@@ -113,7 +108,7 @@ class FitFile(object):
         if extra_header_size > 0:
             # Make sure extra field in header is at least 2 bytes to calculate CRC
             if extra_header_size < 2:
-                raise FitParseError('Irregular File Header Size')
+                raise FitHeaderError('Irregular File Header Size')
 
             # Consume extra two bytes of header and check CRC
             self._read_and_assert_crc(allow_zero=True)

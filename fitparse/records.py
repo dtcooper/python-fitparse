@@ -2,6 +2,8 @@ import math
 import struct
 import itertools
 
+from fitparse.utils import FitParseError
+
 
 DEV_TYPES = {}
 
