@@ -1,4 +1,5 @@
 import io
+import os
 import struct
 
 from fitparse.processors import FitFileDataProcessor
@@ -25,17 +26,14 @@ class FitFile(object):
             self._file = open(fileish, 'rb')
 
         self.check_crc = check_crc
-
-        self._accumulators = {}
-        self._bytes_left = -1  # Not valid until after _parse_file_header()
-        self._complete = False
-        self._compressed_ts_accumulator = 0
-        self._crc = 0
-        self._local_mesgs = {}
-        self._messages = []
         self._processor = data_processor or FitFileDataProcessor()
 
-        # Start off by parsing the file header (makes self._bytes_left valid)
+        # Get total filesize
+        self._file.seek(0, os.SEEK_END)
+        self._filesize = self._file.tell()
+        self._file.seek(0, os.SEEK_SET)
+
+        # Start off by parsing the file header (sets initial attribute values)
         self._parse_file_header()
 
     def __del__(self):
@@ -89,6 +87,16 @@ class FitFile(object):
     # Private Data Parsing Methods
 
     def _parse_file_header(self):
+
+        # Initialize data
+        self._accumulators = {}
+        self._bytes_left = -1
+        self._complete = False
+        self._compressed_ts_accumulator = 0
+        self._crc = 0
+        self._local_mesgs = {}
+        self._messages = []
+
         header_data = self._read(12)
         if header_data[8:12] != b'.FIT':
             raise FitParseError("Invalid .FIT File Header")
@@ -122,10 +130,15 @@ class FitFile(object):
         if self._bytes_left <= 0:
             if not self._complete:
                 self._read_and_assert_crc()
+
+            if self._file.tell() >= self._filesize:
                 self._complete = True
                 self.close()
+                return None
 
-            return None
+            # Still have data left in the file - assuming chained fit files
+            self._parse_file_header()
+            return self._parse_message()
 
         header = self._parse_message_header()
 
