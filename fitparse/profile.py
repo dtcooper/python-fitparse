@@ -2868,7 +2868,7 @@ MESSAGE_TYPES = {
                 type=BASE_TYPES[0x02],  # uint8
                 def_num=19,
                 scale=2,
-                offset=b'-110',
+                offset=-110,
                 units='mm',
             ),
             20: Field(
