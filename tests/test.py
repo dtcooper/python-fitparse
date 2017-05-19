@@ -4,7 +4,7 @@ import os
 from struct import pack
 import sys
 
-from fitparse import FitFile
+from fitparse import FitFile, FitParseError
 from fitparse.records import BASE_TYPES
 from fitparse.utils import calc_crc
 from fitparse.processors import UTC_REFERENCE
@@ -107,7 +107,8 @@ class FitFileTestCase(unittest.TestCase):
 
     def test_component_field_accumulaters(self):
         # TODO: abstract CSV parsing
-        csv_file = csv.reader(open(testfile('compressed-speed-distance-records.csv'), 'r'))
+        csv_fp = open(testfile('compressed-speed-distance-records.csv'), 'r')
+        csv_file = csv.reader(csv_fp)
         csv_file.__next__()  # Consume header
 
         f = FitFile(testfile('compressed-speed-distance.fit'))
@@ -134,6 +135,7 @@ class FitFileTestCase(unittest.TestCase):
             self.assertAlmostEqual(record.get_value('distance'), float(distance))
 
         self.assertEqual(count, 753)  # TODO: confirm size(records) = size(csv)
+        csv_fp.close()
 
     def test_component_field_resolves_subfield(self):
         fit_data = generate_fitfile(
@@ -226,7 +228,8 @@ class FitFileTestCase(unittest.TestCase):
             self.assertEqual(gear_change.get_value(field), 20)
 
     def test_parsing_edge_500_fit_file(self):
-        csv_messages = csv.reader(open(testfile('garmin-edge-500-activitiy-records.csv'), 'r'))
+        csv_fp = open(testfile('garmin-edge-500-activitiy-records.csv'), 'r')
+        csv_messages = csv.reader(csv_fp)
         field_names = csv_messages.__next__()  # Consume header
 
         f = FitFile(testfile('garmin-edge-500-activitiy.fit'))
@@ -282,10 +285,38 @@ class FitFileTestCase(unittest.TestCase):
         except StopIteration:
             pass
 
+        csv_fp.close()
+
     def test_developer_types(self):
         """Test that a file with developer types in it can be parsed"""
         FitFile(testfile('developer-types-sample.fit')).parse()
         FitFile(testfile('20170518-191602-1740899583.fit')).parse()
+        FitFile(testfile('DeveloperData.fit')).parse()
+
+    def test_invalid_crc(self):
+        try:
+            FitFile(testfile('activity-filecrc.fit')).parse()
+            self.fail("Didn't detect an invalid CRC")
+        except FitParseError:
+            pass
+
+    def test_unexpected_eof(self):
+        try:
+            FitFile(testfile('activity-unexpected-eof.fit')).parse()
+            self.fail("Didn't detect an unexpected EOF")
+        except FitParseError:
+            pass
+
+    def test_invalid_chained_files(self):
+        """Detect errors when files are catted together"""
+        for x in ('activity-activity-filecrc.fit',
+                  'activity-settings-corruptheader.fit',
+                  'activity-settings-nodata.fit'):
+            try:
+                FitFile(testfile(x)).parse()
+                self.fail("Didn't detect an error in '{}'".format(x))
+            except FitParseError:
+                pass
 
     # TODO:
     #  * Test Processors:
