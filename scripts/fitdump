@@ -77,4 +77,7 @@ def main(args=None):
             print('{}. {}'.format(n, format_message(message, options), file=options.print_stream))
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except BrokenPipeError:
+        pass
