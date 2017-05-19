@@ -333,6 +333,19 @@ class FitFileTestCase(unittest.TestCase):
         except FitEOFError:
             pass
 
+    def test_valid_files(self):
+        """Test that parsing a bunch of random known-good files works"""
+        for x in ('2013-02-06-12-11-14.fit', '2015-10-13-08-43-15.fit',
+                  'Activity.fit', 'Edge810-Vector-2013-08-16-15-35-10.fit',
+                  'MonitoringFile.fit', 'Settings.fit', 'Settings2.fit',
+                  'WeightScaleMultiUser.fit', 'WeightScaleSingleUser.fit',
+                  'WorkoutCustomTargetValues.fit', 'WorkoutIndividualSteps.fit',
+                  'WorkoutRepeatGreaterThanStep.fit', 'WorkoutRepeatSteps.fit',
+                  'activity-large-fenxi2-multisport.fit', 'activity-small-fenix2-run.fit',
+                  'antfs-dump.63.fit', 'sample-activity-indoor-trainer.fit',
+                  'sample-activity.fit'):
+            FitFile(testfile(x)).parse()
+
     # TODO:
     #  * Test Processors:
     #    - process_type_<>, process_field_<>, process_units_<>, process_message_<>
