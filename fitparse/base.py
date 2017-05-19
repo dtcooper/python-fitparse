@@ -38,6 +38,20 @@ class FitFile(object):
         # Start off by parsing the file header (makes self._bytes_left valid)
         self._parse_file_header()
 
+    def __del__(self):
+        self.close()
+
+    def close(self):
+        if self._file and hasattr(self._file, "close"):
+            self._file.close()
+            self._file = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        self.close()
+
     ##########
     # Private low-level utility methods for reading of fit file
 
@@ -108,10 +122,8 @@ class FitFile(object):
         if self._bytes_left <= 0:
             if not self._complete:
                 self._read_and_assert_crc()
-
-                if hasattr(self._file, 'close'):
-                    self._file.close()
                 self._complete = True
+                self.close()
 
             return None
 
