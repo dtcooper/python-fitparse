@@ -3,6 +3,13 @@
 import argparse
 import sys
 
+# Python 2 compat
+try:
+    BrokenPipeError
+except NameError:
+    import socket
+    BrokenPipeError = socket.error
+
 import fitparse
 
 

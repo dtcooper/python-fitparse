@@ -1,6 +1,11 @@
 import math
 import struct
-import itertools
+
+# Python 2 compat
+try:
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
 
 from fitparse.utils import FitParseError
 
@@ -16,7 +21,7 @@ class RecordBase(object):
     #       and see if that gives us any performance improvements
 
     def __init__(self, *args, **kwargs):
-        for slot_name, value in itertools.zip_longest(self.__slots__, args, fillvalue=None):
+        for slot_name, value in zip_longest(self.__slots__, args, fillvalue=None):
             setattr(self, slot_name, value)
         for slot_name, value in kwargs.items():
             setattr(self, slot_name, value)
@@ -321,6 +326,14 @@ class ComponentField(RecordBase):
         return raw_value
 
 
+def parse_string(string):
+    try:
+        end = string.index(0x00)
+    except TypeError: # Python 2 compat
+        end = string.index('\x00')
+
+    return string[:end].decode('utf-8', errors='replace') or None
+
 # The default base type
 BASE_TYPE_BYTE = BaseType(name='byte', identifier=0x0D, fmt='B', parse=lambda x: None if all(b == 0xFF for b in x) else x)
 
@@ -332,7 +345,7 @@ BASE_TYPES = {
     0x84: BaseType(name='uint16', identifier=0x84, fmt='H', parse=lambda x: None if x == 0xFFFF else x),
     0x85: BaseType(name='sint32', identifier=0x85, fmt='i', parse=lambda x: None if x == 0x7FFFFFFF else x),
     0x86: BaseType(name='uint32', identifier=0x86, fmt='I', parse=lambda x: None if x == 0xFFFFFFFF else x),
-    0x07: BaseType(name='string', identifier=0x07, fmt='s', parse=lambda x: x[0:x.index(0)].decode('utf-8', errors='replace') or None),
+    0x07: BaseType(name='string', identifier=0x07, fmt='s', parse=parse_string),
     0x88: BaseType(name='float32', identifier=0x88, fmt='f', parse=lambda x: None if math.isnan(x) else x),
     0x89: BaseType(name='float64', identifier=0x89, fmt='d', parse=lambda x: None if math.isnan(x) else x),
     0x0A: BaseType(name='uint8z', identifier=0x0A, fmt='B', parse=lambda x: None if x == 0x0 else x),

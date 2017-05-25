@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import csv
 import datetime
 import os
@@ -5,7 +7,7 @@ from struct import pack
 import sys
 
 from fitparse import FitFile
-from fitparse.processors import UTC_REFERENCE
+from fitparse.processors import UTC_REFERENCE, StandardUnitsDataProcessor
 from fitparse.records import BASE_TYPES
 from fitparse.utils import calc_crc, FitEOFError, FitCRCError, FitHeaderError
 
@@ -109,13 +111,13 @@ class FitFileTestCase(unittest.TestCase):
         # TODO: abstract CSV parsing
         csv_fp = open(testfile('compressed-speed-distance-records.csv'), 'r')
         csv_file = csv.reader(csv_fp)
-        csv_file.__next__()  # Consume header
+        next(csv_file)  # Consume header
 
         f = FitFile(testfile('compressed-speed-distance.fit'))
         f.parse()
 
         records = f.get_messages(name='record')
-        empty_record = records.__next__()  # Skip empty record for now (sets timestamp via header)
+        empty_record = next(records)  # Skip empty record for now (sets timestamp via header)
 
         # File's timestamp record is < 0x10000000, so field returns seconds
         self.assertEqual(empty_record.get_value('timestamp'), 17217864)
@@ -230,7 +232,7 @@ class FitFileTestCase(unittest.TestCase):
     def test_parsing_edge_500_fit_file(self):
         csv_fp = open(testfile('garmin-edge-500-activitiy-records.csv'), 'r')
         csv_messages = csv.reader(csv_fp)
-        field_names = csv_messages.__next__()  # Consume header
+        field_names = next(csv_messages)  # Consume header
 
         f = FitFile(testfile('garmin-edge-500-activitiy.fit'))
         messages = f.get_messages(name='record')
@@ -274,13 +276,13 @@ class FitFileTestCase(unittest.TestCase):
                     self.assertEqual(fit_value, csv_value)
 
         try:
-            messages.__next__()
+            next(messages)
             self.fail(".FIT file had more than csv file")
         except StopIteration:
             pass
 
         try:
-            csv_messages.__next__()
+            next(csv_messages)
             self.fail(".CSV file had more messages than .FIT file")
         except StopIteration:
             pass
@@ -345,6 +347,18 @@ class FitFileTestCase(unittest.TestCase):
                   'antfs-dump.63.fit', 'sample-activity-indoor-trainer.fit',
                   'sample-activity.fit'):
             FitFile(testfile(x)).parse()
+
+    def test_units_processor(self):
+        for x in ('2013-02-06-12-11-14.fit', '2015-10-13-08-43-15.fit',
+                  'Activity.fit', 'Edge810-Vector-2013-08-16-15-35-10.fit',
+                  'MonitoringFile.fit', 'Settings.fit', 'Settings2.fit',
+                  'WeightScaleMultiUser.fit', 'WeightScaleSingleUser.fit',
+                  'WorkoutCustomTargetValues.fit', 'WorkoutIndividualSteps.fit',
+                  'WorkoutRepeatGreaterThanStep.fit', 'WorkoutRepeatSteps.fit',
+                  'activity-large-fenxi2-multisport.fit', 'activity-small-fenix2-run.fit',
+                  'antfs-dump.63.fit', 'sample-activity-indoor-trainer.fit',
+                  'sample-activity.fit'):
+            FitFile(testfile(x), data_processor=StandardUnitsDataProcessor()).parse()
 
     # TODO:
     #  * Test Processors:

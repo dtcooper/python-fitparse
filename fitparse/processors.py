@@ -1,4 +1,3 @@
-import contextlib
 import datetime
 from fitparse.utils import scrub_method_name
 
@@ -34,8 +33,10 @@ class FitFileDataProcessor(object):
         self._run_processor(scrub_method_name('process_message_%s' % data_message.def_mesg.name), data_message)
 
     def _run_processor(self, processor_name, data):
-        with contextlib.suppress(AttributeError):
+        try:
             getattr(self, processor_name)(data)
+        except AttributeError:
+            pass
 
     def process_type_bool(self, field_data):
         if field_data.value is not None:
@@ -72,7 +73,7 @@ class StandardUnitsDataProcessor(FitFileDataProcessor):
         if field_data.name.endswith("_speed"):
             self.process_field_speed(field_data)
         else:
-            super().run_field_processor(field_data)
+            super(StandardUnitsDataProcessor, self).run_field_processor(field_data)
 
     def process_field_distance(self, field_data):
         if field_data.value is not None:
