@@ -1,15 +1,18 @@
 python-fitparse
 ===============
 
-Welcome to the rewrite for the next generation (ng) of python-fitparse.
+Here's a Python library to parse ANT/Garmin `.FIT` files.
 
-Here's a preview of what's to come. Any and all feedback is welcome.
+Welcome to python-fitparse! After a few years of laying dormant we are back to
+active development! The old version is archived as
+[`v1-archive`](https://github.com/dtcooper/python-fitparse/releases/tag/v1-archive).
 
-**WARNING:** This is a WIP considered *HIGHLY* unstable. You want to use the
-master branch for now.
+The FIT (Flexible and Interoperable Data Transfer) file protocol is specified by
+ANT (http://www.thisisant.com/) and an SDK is available for download at
+http://www.thisisant.com/pages/products/fit-sdk.
 
-Major Changes
--------------
+Major Changes From Original Version
+-----------------------------------
 
   * New, hopefully cleaner public API with a clear division between accessible
     and internal parts. (Still unstable and partially complete.)
