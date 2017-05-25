@@ -1,5 +1,6 @@
 import math
 import struct
+import six
 
 
 class RecordBase(object):
@@ -11,9 +12,14 @@ class RecordBase(object):
 
     def __init__(self, *args, **kwargs):
         # WARNING: use of map(None, l1, l2) equivalent to zip_longest in py3k
-        for slot_name, value in map(None, self.__slots__, args):
-            setattr(self, slot_name, value)
-        for slot_name, value in kwargs.iteritems():
+        if six.PY2:
+            for slot_name, value in map(None, self.__slots__, args):
+                setattr(self, slot_name, value)
+        else:
+            from itertools import zip_longest
+            for slot_name, value in zip_longest(self.__slots__, args):
+                setattr(self, slot_name, value)
+        for slot_name, value in kwargs.items():
             setattr(self, slot_name, value)
 
 
@@ -245,6 +251,9 @@ class Field(FieldAndSubFieldBase):
     __slots__ = ('name', 'type', 'def_num', 'scale', 'offset', 'units', 'components', 'subfields')
     field_type = 'field'
 
+    def __init__(self, *args, **kwargs):
+        super(Field, self).__init__(self, *args, **kwargs)
+
 
 class SubField(FieldAndSubFieldBase):
     __slots__ = ('name', 'def_num', 'type', 'scale', 'offset', 'units', 'components', 'ref_fields')
@@ -275,7 +284,7 @@ class ComponentField(RecordBase):
             raw_value = unpacked_num
 
         # Mask and shift like a normal number
-        if isinstance(raw_value, (int, long)):
+        if isinstance(raw_value, int):
             raw_value = (raw_value >> self.bit_offset) & ((1 << self.bits) - 1)
 
         return raw_value
@@ -292,7 +301,7 @@ BASE_TYPES = {
     0x84: BaseType(name='uint16', identifier=0x84, fmt='H', parse=lambda x: None if x == 0xFFFF else x),
     0x85: BaseType(name='sint32', identifier=0x85, fmt='i', parse=lambda x: None if x == 0x7FFFFFFF else x),
     0x86: BaseType(name='uint32', identifier=0x86, fmt='I', parse=lambda x: None if x == 0xFFFFFFFF else x),
-    0x07: BaseType(name='string', identifier=0x07, fmt='s', parse=lambda x: x.split('\x00')[0] or None),
+    0x07: BaseType(name='string', identifier=0x07, fmt='s', parse=lambda x: x.split(b'\x00')[0] or None),
     0x88: BaseType(name='float32', identifier=0x88, fmt='f', parse=lambda x: None if math.isnan(x) else x),
     0x89: BaseType(name='float64', identifier=0x89, fmt='d', parse=lambda x: None if math.isnan(x) else x),
     0x0A: BaseType(name='uint8z', identifier=0x0A, fmt='B', parse=lambda x: None if x == 0x0 else x),

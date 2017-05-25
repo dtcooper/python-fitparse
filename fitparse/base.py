@@ -3,7 +3,9 @@ import struct
 try:
     import cStringIO as StringIO
 except ImportError:
-    import StringIO
+    from io import BytesIO
+
+from six import string_types
 
 from fitparse.processors import FitFileDataProcessor
 from fitparse.profile import FIELD_TYPE_TIMESTAMP, MESSAGE_TYPES
@@ -28,7 +30,7 @@ class FitFile(object):
             except:
                 # If the header smells like a string containing a fit file's
                 # data, we wrap it with StringIO
-                if isinstance(fileish, basestring) and fileish[8:12] == '.FIT':
+                if isinstance(fileish, string_types) and fileish[8:12] == '.FIT':
                     self._file = StringIO.StringIO(fileish)
                 else:
                     raise
@@ -85,7 +87,7 @@ class FitFile(object):
 
     def _parse_file_header(self):
         header_data = self._read(12)
-        if header_data[8:12] != '.FIT':
+        if header_data[8:12] != b'.FIT':
             raise FitParseError("Invalid .FIT File Header")
 
         # Larger fields are explicitly little endian from SDK
@@ -242,7 +244,7 @@ class FitFile(object):
     @staticmethod
     def _apply_scale_offset(field, raw_value):
         # Apply numeric transformations (scale+offset)
-        if isinstance(raw_value, (int, long, float)):
+        if isinstance(raw_value, (int, float)):
             if field.scale:
                 raw_value = float(raw_value) / field.scale
             if field.offset:
@@ -392,7 +394,7 @@ class FitFile(object):
 
             # Convert any string numbers in names to ints
             names = set([
-                int(n) if (isinstance(n, basestring) and n.isdigit()) else n
+                int(n) if (isinstance(n, string_types) and n.isdigit()) else n
                 for n in names
             ])
 
