@@ -23,9 +23,9 @@ def do_profile_xls():
             unit_values = [v.strip() for v in unit_value.split(',')]
             all_unit_values.extend(unit_values)
 
-    print 'In Profile.xls:'
+    print('In Profile.xls:')
     for unit_value in sorted(set(all_unit_values)):
-        print ' * %s' % unit_value
+        print(' * %s' % unit_value)
 
 
 def do_fitparse_profile():
@@ -45,20 +45,18 @@ def do_fitparse_profile():
 
     unit_values = filter(None, unit_values)
 
-    print 'In fitparse/profile.py:'
+    print('In fitparse/profile.py:')
     for unit_value in sorted(set(unit_values)):
-        print ' * %s [%s]' % (
+        print(' * {} [{}]'.format(
             unit_value,
-            scrub_method_name('process_units_%s' % unit_value, convert_units=True),
-        )
+            scrub_method_name('process_units_%s' % unit_value, convert_units=True)
+        ))
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print "Usage: %s Profile.xls" % os.path.basename(__file__)
+        print("Usage: {0} Profile.xls".format(os.path.basename(__file__)))
         sys.exit(0)
 
     do_profile_xls()
-    print
+    print()
     do_fitparse_profile()
-
-
