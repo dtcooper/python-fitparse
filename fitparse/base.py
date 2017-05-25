@@ -50,7 +50,7 @@ class FitFile(object):
 
     def _read(self, size):
         if size <= 0:
-            return ''
+            return None
         data = self._file.read(size)
         self._crc = calc_crc(data, self._crc)
         self._bytes_left -= len(data)
@@ -59,6 +59,9 @@ class FitFile(object):
     def _read_struct(self, fmt, endian='<', data=None, always_tuple=False):
         fmt_with_endian = "%s%s" % (endian, fmt)
         size = struct.calcsize(fmt_with_endian)
+        if size <= 0:
+            raise FitParseError("Invalid struct format: %s" % fmt_with_endian)
+
         if data is None:
             data = self._read(size)
 
