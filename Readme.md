@@ -4,10 +4,11 @@ python-fitparse
 Important Note
 --------------
 
-This version of the library is **deprecated** and it is currently being
-rewritten on the ng branch.
+This version (v1) of the library is no longer maintained and it has been
+rewritten.
 
-For now, the master branch can still be considered stable. Updates to come.
+There will no fixes, no further releases, or support of code on this branch.
+All bugs are now features!
 
 
 About
