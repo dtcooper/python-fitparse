@@ -46,8 +46,7 @@ The ``FitFile`` Object
         exception. See the :ref:`note on exceptions <exception_warning>`.
 
 
-    .. method:: get_messages(name=None, mesg_num=None, has_field=None, \
-        with_definitions=False, as_dict=False)
+    .. method:: get_messages(name=None, with_definitions=False, as_dict=False)
 
         TODO: document and implement
 
