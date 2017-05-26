@@ -3,6 +3,13 @@
 import argparse
 import sys
 
+# Python 2 compat
+try:
+    BrokenPipeError
+except NameError:
+    import socket
+    BrokenPipeError = socket.error
+
 import fitparse
 
 
@@ -43,6 +50,9 @@ def parse_args(args=None):
         'infile', metavar='FITFILE', type=argparse.FileType(mode='rb'),
         help='Input .FIT file (Use - for stdin)',
     )
+    parser.add_argument(
+        '--ignore-crc', action='store_const', const=True, help='Some devices seem to write invalid crc\'s, ignore these.'
+    )
 
     options = parser.parse_args(args)
 
@@ -66,6 +76,7 @@ def main(args=None):
     fitfile = fitparse.FitFile(
         options.infile,
         data_processor=fitparse.StandardUnitsDataProcessor(),
+        check_crc = not(options.ignore_crc),
     )
     messages = fitfile.get_messages(
         name=options.name,
@@ -74,9 +85,10 @@ def main(args=None):
 
     for n, message in enumerate(messages, 1):
         if options.print_messages:
-            print >> options.print_stream, '%d. %s' % (
-                n, format_message(message, options),
-            )
+            print('{}. {}'.format(n, format_message(message, options), file=options.print_stream))
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except BrokenPipeError:
+        pass

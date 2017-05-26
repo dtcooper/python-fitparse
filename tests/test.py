@@ -1,20 +1,23 @@
+#!/usr/bin/env python
+
 import csv
 import datetime
 import os
 from struct import pack
 import sys
 
+from fitparse import FitFile
+from fitparse.processors import UTC_REFERENCE, StandardUnitsDataProcessor
+from fitparse.records import BASE_TYPES
+from fitparse.utils import calc_crc, FitEOFError, FitCRCError, FitHeaderError
+
 if sys.version_info >= (2, 7):
     import unittest
 else:
     import unittest2 as unittest
 
-from fitparse import FitFile
-from fitparse.records import BASE_TYPES
-from fitparse.utils import calc_crc
 
-
-def generate_messages(mesg_num, local_mesg_num, field_defs, endian='<', data=None, flatten=True):
+def generate_messages(mesg_num, local_mesg_num, field_defs, endian='<', data=None):
     mesgs = []
     base_type_list = []
 
@@ -38,7 +41,7 @@ def generate_messages(mesg_num, local_mesg_num, field_defs, endian='<', data=Non
                 s += pack("%s%s" % (endian, base_type.fmt), value)
             mesgs.append(s)
 
-    return ''.join(mesgs) if flatten else mesgs
+    return b''.join(mesgs)
 
 
 def generate_fitfile(data=None, endian='<'):
@@ -60,13 +63,13 @@ def generate_fitfile(data=None, endian='<'):
         fit_data += data
 
     # Prototcol version 1.0, profile version 1.52
-    header = pack('<2BHI4s', 14, 16, 152, len(fit_data), '.FIT')
+    header = pack('<2BHI4s', 14, 16, 152, len(fit_data), b'.FIT')
     file_data = header + pack('<H', calc_crc(header)) + fit_data
     return file_data + pack('<H', calc_crc(file_data))
 
 
 def secs_to_dt(secs):
-    return datetime.datetime.utcfromtimestamp(secs + 631065600)
+    return datetime.datetime.utcfromtimestamp(secs + UTC_REFERENCE)
 
 
 def testfile(filename):
@@ -106,14 +109,15 @@ class FitFileTestCase(unittest.TestCase):
 
     def test_component_field_accumulaters(self):
         # TODO: abstract CSV parsing
-        csv_file = csv.reader(open(testfile('compressed-speed-distance-records.csv'), 'rb'))
-        csv_file.next()  # Consume header
+        csv_fp = open(testfile('compressed-speed-distance-records.csv'), 'r')
+        csv_file = csv.reader(csv_fp)
+        next(csv_file)  # Consume header
 
         f = FitFile(testfile('compressed-speed-distance.fit'))
         f.parse()
 
         records = f.get_messages(name='record')
-        empty_record = records.next()  # Skip empty record for now (sets timestamp via header)
+        empty_record = next(records)  # Skip empty record for now (sets timestamp via header)
 
         # File's timestamp record is < 0x10000000, so field returns seconds
         self.assertEqual(empty_record.get_value('timestamp'), 17217864)
@@ -133,6 +137,7 @@ class FitFileTestCase(unittest.TestCase):
             self.assertAlmostEqual(record.get_value('distance'), float(distance))
 
         self.assertEqual(count, 753)  # TODO: confirm size(records) = size(csv)
+        csv_fp.close()
 
     def test_component_field_resolves_subfield(self):
         fit_data = generate_fitfile(
@@ -225,8 +230,9 @@ class FitFileTestCase(unittest.TestCase):
             self.assertEqual(gear_change.get_value(field), 20)
 
     def test_parsing_edge_500_fit_file(self):
-        csv_messages = csv.reader(open(testfile('garmin-edge-500-activitiy-records.csv'), 'rb'))
-        field_names = csv_messages.next()  # Consume header
+        csv_fp = open(testfile('garmin-edge-500-activitiy-records.csv'), 'r')
+        csv_messages = csv.reader(csv_fp)
+        field_names = next(csv_messages)  # Consume header
 
         f = FitFile(testfile('garmin-edge-500-activitiy.fit'))
         messages = f.get_messages(name='record')
@@ -260,8 +266,8 @@ class FitFileTestCase(unittest.TestCase):
                     if field_name == 'position_long':
                         fit_value = last_valid_long
 
-                if isinstance(fit_value, (int, long)):
-                    csv_value = int(csv_value)
+                if isinstance(fit_value, int):
+                    csv_value = int(fit_value)
 
                 if isinstance(fit_value, float):
                     # Float comparison
@@ -270,16 +276,89 @@ class FitFileTestCase(unittest.TestCase):
                     self.assertEqual(fit_value, csv_value)
 
         try:
-            messages.next()
+            next(messages)
             self.fail(".FIT file had more than csv file")
         except StopIteration:
             pass
 
         try:
-            csv_messages.next()
+            next(csv_messages)
             self.fail(".CSV file had more messages than .FIT file")
         except StopIteration:
             pass
+
+        csv_fp.close()
+
+    def test_developer_types(self):
+        """Test that a file with developer types in it can be parsed"""
+        FitFile(testfile('developer-types-sample.fit')).parse()
+        FitFile(testfile('20170518-191602-1740899583.fit')).parse()
+        FitFile(testfile('DeveloperData.fit')).parse()
+
+    def test_invalid_crc(self):
+        try:
+            FitFile(testfile('activity-filecrc.fit')).parse()
+            self.fail("Didn't detect an invalid CRC")
+        except FitCRCError:
+            pass
+
+    def test_unexpected_eof(self):
+        try:
+            FitFile(testfile('activity-unexpected-eof.fit')).parse()
+            self.fail("Didn't detect an unexpected EOF")
+        except FitEOFError:
+            pass
+
+    def test_chained_file(self):
+        FitFile(testfile('activity-settings.fit')).parse()
+
+    def test_invalid_chained_files(self):
+        """Detect errors when files are chained together
+
+        Note that 'chained' means just concatinated in this case
+        """
+        try:
+            FitFile(testfile('activity-activity-filecrc.fit')).parse()
+            self.fail("Didn't detect a CRC error in the chained file")
+        except FitCRCError:
+            pass
+
+        try:
+            FitFile(testfile('activity-settings-corruptheader.fit')).parse()
+            self.fail("Didn't detect a header error in the chained file")
+        except FitHeaderError:
+            pass
+
+        try:
+            FitFile(testfile('activity-settings-nodata.fit')).parse()
+            self.fail("Didn't detect an EOF error in the chaned file")
+        except FitEOFError:
+            pass
+
+    def test_valid_files(self):
+        """Test that parsing a bunch of random known-good files works"""
+        for x in ('2013-02-06-12-11-14.fit', '2015-10-13-08-43-15.fit',
+                  'Activity.fit', 'Edge810-Vector-2013-08-16-15-35-10.fit',
+                  'MonitoringFile.fit', 'Settings.fit', 'Settings2.fit',
+                  'WeightScaleMultiUser.fit', 'WeightScaleSingleUser.fit',
+                  'WorkoutCustomTargetValues.fit', 'WorkoutIndividualSteps.fit',
+                  'WorkoutRepeatGreaterThanStep.fit', 'WorkoutRepeatSteps.fit',
+                  'activity-large-fenxi2-multisport.fit', 'activity-small-fenix2-run.fit',
+                  'antfs-dump.63.fit', 'sample-activity-indoor-trainer.fit',
+                  'sample-activity.fit'):
+            FitFile(testfile(x)).parse()
+
+    def test_units_processor(self):
+        for x in ('2013-02-06-12-11-14.fit', '2015-10-13-08-43-15.fit',
+                  'Activity.fit', 'Edge810-Vector-2013-08-16-15-35-10.fit',
+                  'MonitoringFile.fit', 'Settings.fit', 'Settings2.fit',
+                  'WeightScaleMultiUser.fit', 'WeightScaleSingleUser.fit',
+                  'WorkoutCustomTargetValues.fit', 'WorkoutIndividualSteps.fit',
+                  'WorkoutRepeatGreaterThanStep.fit', 'WorkoutRepeatSteps.fit',
+                  'activity-large-fenxi2-multisport.fit', 'activity-small-fenix2-run.fit',
+                  'antfs-dump.63.fit', 'sample-activity-indoor-trainer.fit',
+                  'sample-activity.fit'):
+            FitFile(testfile(x), data_processor=StandardUnitsDataProcessor()).parse()
 
     # TODO:
     #  * Test Processors:

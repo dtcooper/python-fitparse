@@ -20,7 +20,7 @@ import zipfile
 import xlrd  # Dev requirement for parsing Excel spreadsheet
 
 
-XLS_HEADER_MAGIC = '\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1'
+XLS_HEADER_MAGIC = b'\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1'
 
 
 def header(header, indent=0):
@@ -110,7 +110,7 @@ class TypeInfo(namedtuple('TypeInfo', ('name', 'base_type', 'values', 'comment')
         )
         if self.values:
             s += "    values={\n"
-            for value in sorted(self.values, key=lambda x: x.value):
+            for value in sorted(self.values, key=lambda x: x.value if isinstance(x.value, int) else int(x.value, 16)):
                 s += "        %s\n" % (value,)
             s += "    },\n"
         s += ")"
@@ -199,7 +199,7 @@ class ComponentFieldInfo(namedtuple('ComponentFieldInfo', ('name', 'num', 'scale
     def __str__(self):
         s = "ComponentField(\n"
         s += "    name='%s',\n" % self.name
-        s += "    def_num=%d,\n" % self.num
+        s += "    def_num=%d,\n" % (self.num if self.num is not None else 0)
         if self.scale:
             s += "    scale=%s,\n" % self.scale
         if self.offset:
@@ -263,7 +263,7 @@ def fix_scale(data):
 
 
 def fix_units(data):
-    if isinstance(data, basestring):
+    if isinstance(data, str):
         data = data.replace(' / ', '/')
         data = data.replace(' * ', '*')
         data = data.replace('(steps)', 'or steps')
@@ -271,17 +271,22 @@ def fix_units(data):
     return data
 
 
-def parse_csv_fields(data, num_expected_if_empty):
-    if data is None:
-        return [None] * num_expected_if_empty
-    elif isinstance(data, basestring):
-        return [(int(x.strip()) if x.strip().isdigit() else x.strip()) for x in data.strip().split(',')]
+def parse_csv_fields(data, num_expected):
+    if data is None or data == '':
+        return [None] * num_expected
+    elif isinstance(data, str):
+        ret = [(int(x.strip()) if x.strip().isdigit() else x.strip()) for x in data.strip().split(',')]
     else:
-        return [data]
+        ret = [data]
+
+    # Only len 1 but more were expected, extend it for all values
+    if len(ret) == 1 and num_expected:
+        return ret * num_expected
+    return ret
 
 
 def parse_spreadsheet(xls_file, *sheet_names):
-    if isinstance(xls_file, basestring):
+    if isinstance(xls_file, str):
         workbook = xlrd.open_workbook(xls_file)
     else:
         workbook = xlrd.open_workbook(file_contents=xls_file.read())
@@ -301,7 +306,7 @@ def parse_spreadsheet(xls_file, *sheet_names):
                 row_values = row_values[:14]
 
             for value in row_values:
-                if isinstance(value, basestring):
+                if isinstance(value, str):
                     # Use strings for now. Unicode is wonky
                     value = value.strip().encode('ascii', 'ignore')
                     if value == '':
@@ -327,7 +332,7 @@ def parse_types(types_rows):
         if row[0]:
             # First column means new type
             type = TypeInfo(
-                name=row[0], base_type=row[1], values=[], comment=row[4],
+                name=row[0].decode(), base_type=row[1].decode(), values=[], comment=row[4].decode(),
             )
             type_list.types.append(type)
             assert type.name
@@ -335,14 +340,12 @@ def parse_types(types_rows):
 
         else:
             # No first column means a value for this type
-            value = TypeValueInfo(name=row[2], value=row[3], comment=row[4])
+            value = TypeValueInfo(name=row[2].decode(), value=maybe_decode(row[3]), comment=row[4].decode())
 
-            assert value.name
-            assert value.value is not None
-
-            # Don't add ignore keyed types
-            if "%s:%s" % (type.name, value.name) not in IGNORE_TYPE_VALUES:
-                type.values.append(value)
+            if value.name and value.value is not None:
+                # Don't add ignore keyed types
+                if "%s:%s" % (type.name, value.name) not in IGNORE_TYPE_VALUES:
+                    type.values.append(value)
 
     # Add missing boolean type if it's not there
     if not type_list.get('bool', raise_exception=False):
@@ -351,27 +354,34 @@ def parse_types(types_rows):
     return type_list
 
 
+def maybe_decode(o):
+    if isinstance(o, bytes):
+        return o.decode()
+    return o
+
 def parse_messages(messages_rows, type_list):
     message_list = MessageList([])
 
+    group_name = ""
     for row in messages_rows:
-        if (row[3] is not None) and all(r is None for n, r in enumerate(row[:14]) if n != 3):
+        if (row[3] is not None) and all(r == b'' for n, r in enumerate(row[:14]) if n != 3):
             # Only row 3 means it's a group name
-            group_name = row[3].title()
-        elif row[0] is not None:
+            group_name = row[3].decode().title()
+        elif row[0] is not None and row[0] != b'':
             # First row means a new message
+            name = row[0].decode()
             message = MessageInfo(
-                name=row[0], num=type_list.get_mesg_num(row[0]),
-                group_name=group_name, fields=[], comment=row[13],
+                name=name, num=type_list.get_mesg_num(name),
+                group_name=group_name, fields=[], comment=row[13].decode(),
             )
             message_list.messages.append(message)
         else:
             # Get components if they exist
             components = []
-            component_names = parse_csv_fields(row[5], 0)
-            if component_names:
+            component_names = parse_csv_fields(row[5].decode(), 0)
+            if component_names and (len(component_names) != 1 or component_names[0] != ''):
                 num_components = len(component_names)
-                components.extend(
+                components = [
                     ComponentFieldInfo(
                         name=cmp_name, num=None, scale=fix_scale(cmp_scale),
                         offset=cmp_offset, units=fix_units(cmp_units),
@@ -379,26 +389,26 @@ def parse_messages(messages_rows, type_list):
                     )
                     for cmp_name, cmp_scale, cmp_offset, cmp_units, cmp_bits, cmp_accumulate in zip(
                         component_names,  # name
-                        parse_csv_fields(row[6], num_components),  # scale
-                        parse_csv_fields(row[7], num_components),  # offset
-                        parse_csv_fields(row[8], num_components),  # units
-                        parse_csv_fields(row[9], num_components),  # bits
-                        parse_csv_fields(row[10], num_components),  # accumulate
+                        parse_csv_fields(maybe_decode(row[6]), num_components),  # scale
+                        parse_csv_fields(maybe_decode(row[7]), num_components),  # offset
+                        parse_csv_fields(maybe_decode(row[8]), num_components),  # units
+                        parse_csv_fields(maybe_decode(row[9]), num_components),  # bits
+                        parse_csv_fields(maybe_decode(row[10]), num_components),  # accumulate
                     )
-                )
+                ]
 
                 assert len(components) == num_components
                 for component in components:
                     assert component.name
                     assert component.bits
 
-            # Otherwise a field
+        # Otherwise a field
             # Not a subfield if first row has definition num
-            if row[1] is not None:
+            if row[1] is not None and row[1] != b'':
                 field = FieldInfo(
-                    name=row[2], type=row[3], num=row[1], scale=fix_scale(row[6]),
-                    offset=row[7], units=fix_units(row[8]), components=[],
-                    subfields=[], comment=row[13],
+                    name=row[2].decode(), type=row[3].decode(), num=maybe_decode(row[1]), scale=fix_scale(row[6]),
+                    offset=row[7], units=fix_units(row[8].decode()), components=[],
+                    subfields=[], comment=row[13].decode(),
                 )
 
                 assert field.name
@@ -411,15 +421,15 @@ def parse_messages(messages_rows, type_list):
                     field = field._replace(scale=None, offset=None, units=None)
 
                 message.fields.append(field)
-            else:
+            elif row[2] != b'':
                 # Sub fields
                 subfield = SubFieldInfo(
-                    name=row[2], num=field.num, type=row[3], scale=fix_scale(row[6]),
-                    offset=row[7], units=fix_units(row[8]), ref_fields=[],
-                    components=[], comment=row[13],
+                    name=row[2].decode(), num=field.num, type=row[3].decode(), scale=fix_scale(row[6]),
+                    offset=row[7], units=fix_units(row[8].decode()), ref_fields=[],
+                    components=[], comment=row[13].decode(),
                 )
 
-                ref_field_names = parse_csv_fields(row[11], 0)
+                ref_field_names = parse_csv_fields(row[11].decode(), 0)
                 assert ref_field_names
 
                 if components:
@@ -433,11 +443,12 @@ def parse_messages(messages_rows, type_list):
                         num=None, raw_value=None,
                     )
                     for ref_field_name, ref_field_value
-                    in zip(ref_field_names, parse_csv_fields(row[12], 0))
+                    in zip(ref_field_names, parse_csv_fields(row[12].decode(), 0))
                 )
 
                 assert len(subfield.ref_fields) == len(ref_field_names)
-                field.subfields.append(subfield)
+                if not "alert_type" in ref_field_names:
+                    field.subfields.append(subfield)
 
     # Resolve reference fields for subfields and components
     for message in message_list.messages:
@@ -472,18 +483,21 @@ def get_xls_and_version_from_zip(path):
 
     version_match = re.search(
         r'Profile Version.+?(\d+\.?\d*).*',
-        archive.open('c/fit.h').read(),
+        archive.open('c/fit.h').read().decode(),
     )
     if version_match:
         profile_version = ("%f" % float(version_match.group(1))).rstrip('0').ljust(4, '0')
 
-    return archive.open('Profile.xls'), profile_version
+    try:
+        return archive.open('Profile.xls'), profile_version
+    except KeyError:
+        return archive.open('Profile.xlsx'), profile_version
 
 
 def main(input_xls_or_zip, output_py_path=None):
     if output_py_path and os.path.exists(output_py_path):
-        if not open(output_py_path, 'rb').read().strip().startswith(PROFILE_HEADER_FIRST_PART):
-            print "Python file doesn't begin with appropriate header. Exiting."
+        if not open(output_py_path, 'r').read().strip().startswith(PROFILE_HEADER_FIRST_PART):
+            print("Python file doesn't begin with appropriate header. Exiting.")
             sys.exit(1)
 
     if open(input_xls_or_zip, 'rb').read().startswith(XLS_HEADER_MAGIC):
@@ -515,18 +529,18 @@ def main(input_xls_or_zip, output_py_path=None):
     # fields to actual field objects? Would clean up accesses to these
 
     if output_py_path:
-        open(output_py_path, 'wb').write(output)
-        print "Profile%s written to %s" % (
+        open(output_py_path, 'w').write(output)
+        print("Profile%s written to %s",
             ' version %s' % profile_version if profile_version else '',
-            output_py_path,
+            output_py_path
         )
     else:
-        print output.strip()
+        print(output.strip())
 
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print "Usage: %s <FitSDK.zip | Profile.xls> [profile.py]" % os.path.basename(__file__)
+        print("Usage: %s <FitSDK.zip | Profile.xls> [profile.py]", os.path.basename(__file__))
         sys.exit(0)
 
     xls = sys.argv[1]
