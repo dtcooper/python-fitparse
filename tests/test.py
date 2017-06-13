@@ -230,11 +230,11 @@ class FitFileTestCase(unittest.TestCase):
             self.assertEqual(gear_change.get_value(field), 20)
 
     def test_parsing_edge_500_fit_file(self):
-        csv_fp = open(testfile('garmin-edge-500-activitiy-records.csv'), 'r')
+        csv_fp = open(testfile('garmin-edge-500-activity-records.csv'), 'r')
         csv_messages = csv.reader(csv_fp)
         field_names = next(csv_messages)  # Consume header
 
-        f = FitFile(testfile('garmin-edge-500-activitiy.fit'))
+        f = FitFile(testfile('garmin-edge-500-activity.fit'))
         messages = f.get_messages(name='record')
 
         # For fixups
