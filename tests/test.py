@@ -345,7 +345,9 @@ class FitFileTestCase(unittest.TestCase):
                   'WorkoutRepeatGreaterThanStep.fit', 'WorkoutRepeatSteps.fit',
                   'activity-large-fenxi2-multisport.fit', 'activity-small-fenix2-run.fit',
                   'antfs-dump.63.fit', 'sample-activity-indoor-trainer.fit',
-                  'sample-activity.fit'):
+                  'sample-activity.fit', 'garmin-fenix-5-bike.fit',
+                  'garmin-fenix-5-run.fit', 'garmin-fenix-5-walk.fit',
+                  'garmin-edge-820-bike.fit'):
             FitFile(testfile(x)).parse()
 
     def test_units_processor(self):
@@ -357,7 +359,9 @@ class FitFileTestCase(unittest.TestCase):
                   'WorkoutRepeatGreaterThanStep.fit', 'WorkoutRepeatSteps.fit',
                   'activity-large-fenxi2-multisport.fit', 'activity-small-fenix2-run.fit',
                   'antfs-dump.63.fit', 'sample-activity-indoor-trainer.fit',
-                  'sample-activity.fit'):
+                  'sample-activity.fit', 'garmin-fenix-5-bike.fit',
+                  'garmin-fenix-5-run.fit', 'garmin-fenix-5-walk.fit',
+                  'garmin-edge-820-bike.fit'):
             FitFile(testfile(x), data_processor=StandardUnitsDataProcessor()).parse()
 
     # TODO:
