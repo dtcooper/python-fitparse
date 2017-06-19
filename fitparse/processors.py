@@ -19,18 +19,43 @@ class FitFileDataProcessor(object):
     #def process_units_<unit_name> (field_data)
     #def process_message_<mesg_name / mesg_type_num> (data_message)
 
+    # Used to memoize scrubbed method names
+    _scrubbed_method_names = {}
+
+    def _scrub_method_name(self, method_name):
+        """Scrubs a method name, returning result from local cache if available.
+
+        This method wraps fitparse.utils.scrub_method_name and memoizes results,
+        as scrubbing a method name is expensive.
+
+        Args:
+            method_name: Method name to scrub.
+
+        Returns:
+            Scrubbed method name.
+        """
+        if method_name not in self._scrubbed_method_names:
+            self._scrubbed_method_names[method_name] = (
+                scrub_method_name(method_name))
+
+        return self._scrubbed_method_names[method_name]
+
     def run_type_processor(self, field_data):
-        self._run_processor(scrub_method_name('process_type_%s' % field_data.type.name), field_data)
+        self._run_processor(self._scrub_method_name(
+            'process_type_%s' % field_data.type.name), field_data)
 
     def run_field_processor(self, field_data):
-        self._run_processor(scrub_method_name('process_field_%s' % field_data.name), field_data)
+        self._run_processor(self._scrub_method_name(
+            'process_field_%s' % field_data.name), field_data)
 
     def run_unit_processor(self, field_data):
         if field_data.units:
-            self._run_processor(scrub_method_name('process_units_%s' % field_data.units), field_data)
+            self._run_processor(self._scrub_method_name(
+                'process_units_%s' % field_data.units), field_data)
 
     def run_message_processor(self, data_message):
-        self._run_processor(scrub_method_name('process_message_%s' % data_message.def_mesg.name), data_message)
+        self._run_processor(self._scrub_method_name(
+            'process_message_%s' % data_message.def_mesg.name), data_message)
 
     def _run_processor(self, processor_name, data):
         try:
