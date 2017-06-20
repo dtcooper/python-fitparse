@@ -3,6 +3,11 @@ import struct
 
 # Python 2 compat
 try:
+    int_types = (int, long,)
+except NameError:
+    int_types = (int,)
+
+try:
     from itertools import zip_longest
 except ImportError:
     from itertools import izip_longest as zip_longest
@@ -320,7 +325,7 @@ class ComponentField(RecordBase):
             raw_value = unpacked_num
 
         # Mask and shift like a normal number
-        if isinstance(raw_value, int):
+        if isinstance(raw_value, int_types):
             raw_value = (raw_value >> self.bit_offset) & ((1 << self.bits) - 1)
 
         return raw_value
