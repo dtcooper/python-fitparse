@@ -360,6 +360,11 @@ class FitFileTestCase(unittest.TestCase):
                   'sample-activity.fit'):
             FitFile(testfile(x), data_processor=StandardUnitsDataProcessor()).parse()
 
+    def test_int_long(self):
+        """Test that ints are properly shifted and scaled"""
+        with FitFile(testfile('event_timestamp.fit')) as f:
+            assert f.messages[-1].fields[1].raw_value == 1739.486328125
+
     # TODO:
     #  * Test Processors:
     #    - process_type_<>, process_field_<>, process_units_<>, process_message_<>
