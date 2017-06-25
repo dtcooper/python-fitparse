@@ -230,11 +230,36 @@ class FitFileTestCase(unittest.TestCase):
             self.assertEqual(gear_change.get_value(field), 20)
 
     def test_parsing_edge_500_fit_file(self):
-        csv_fp = open(testfile('garmin-edge-500-activity-records.csv'), 'r')
+        self._csv_test_helper(
+            'garmin-edge-500-activity.fit',
+            'garmin-edge-500-activity-records.csv')
+
+    def test_parsing_edge_500_fit_file(self):
+        self._csv_test_helper(
+            'garmin-fenix-5-bike.fit',
+            'garmin-fenix-5-bike-records.csv')
+
+    def test_parsing_edge_500_fit_file(self):
+        self._csv_test_helper(
+            'garmin-fenix-5-run.fit',
+            'garmin-fenix-5-run-records.csv')
+
+    def test_parsing_edge_500_fit_file(self):
+        self._csv_test_helper(
+            'garmin-fenix-5-run.fit',
+            'garmin-fenix-5-run-records.csv')
+
+    def test_parsing_edge_500_fit_file(self):
+        self._csv_test_helper(
+            'garmin-edge-820-bike.fit',
+            'garmin-edge-820-bike-records.csv')
+
+    def _csv_test_helper(self, fit_file, csv_file):
+        csv_fp = open(testfile(csv_file), 'r')
         csv_messages = csv.reader(csv_fp)
         field_names = next(csv_messages)  # Consume header
 
-        f = FitFile(testfile('garmin-edge-500-activity.fit'))
+        f = FitFile(testfile(fit_file))
         messages = f.get_messages(name='record')
 
         # For fixups
