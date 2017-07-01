@@ -2,6 +2,7 @@
 
 import csv
 import datetime
+import io
 import os
 from struct import pack
 import sys
@@ -396,6 +397,17 @@ class FitFileTestCase(unittest.TestCase):
         """Test that ints are properly shifted and scaled"""
         with FitFile(testfile('event_timestamp.fit')) as f:
             assert f.messages[-1].fields[1].raw_value == 1739.486328125
+
+    def test_fileish_types(self):
+        """Test the constructor does the right thing when given different types"""
+        with FitFile(testfile('Settings.FIT')):
+            pass
+        with FitFile(open(testfile("Settings.fit"), 'rb')):
+            pass
+        with FitFile(open(testfile("Settings.fit"), 'rb').read()):
+            pass
+        with FitFile(io.BytesIO(open(testfile("Settings.fit"), 'rb').read())):
+            pass
 
     # TODO:
     #  * Test Processors:
