@@ -5,6 +5,7 @@ import struct
 # Python 2 compat
 try:
     num_types = (int, float, long)
+    str = basestring
 except NameError:
     num_types = (int, float)
 
@@ -20,11 +21,18 @@ from fitparse.utils import calc_crc, FitParseError, FitEOFError, FitCRCError, Fi
 class FitFile(object):
     def __init__(self, fileish, check_crc=True, data_processor=None):
         if hasattr(fileish, 'read'):
+            # BytesIO-like object
             self._file = fileish
-        elif isinstance(fileish, bytes) and fileish[8:12] == b'.FIT':
-            self._file = io.BytesIO(fileish)
+        elif isinstance(fileish, str):
+            # Python2 - file path, file contents in the case of a TypeError
+            # Python3 - file path
+            try:
+                self._file = open(fileish, 'rb')
+            except TypeError:
+                self._file = io.BytesIO(fileish)
         else:
-            self._file = open(fileish, 'rb')
+            # Python 3 - file contents
+            self._file = io.BytesIO(fileish)
 
         self.check_crc = check_crc
         self._processor = data_processor or FitFileDataProcessor()
@@ -41,7 +49,7 @@ class FitFile(object):
         self.close()
 
     def close(self):
-        if self._file and hasattr(self._file, "close"):
+        if hasattr(self, "_file") and self._file and hasattr(self._file, "close"):
             self._file.close()
             self._file = None
 
@@ -416,6 +424,7 @@ class FitFile(object):
                 names = [name]
 
             # Convert any string numbers in names to ints
+            # TODO: Revisit Python2/3 str/bytes typecheck issues
             names = set([
                 int(n) if (isinstance(n, str) and n.isdigit()) else n
                 for n in names
