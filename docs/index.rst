@@ -37,7 +37,7 @@ The easiest way to grab :mod:`fitparse` is using ``pip``,
 
 ::
 
-    $ pip install python-fitparse
+    $ pip install fitparse
 
 
 From github
