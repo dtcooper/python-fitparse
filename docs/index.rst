@@ -96,12 +96,12 @@ Here's a simple program to print all the record fields in an activity file::
 
             # Print the records name and value (and units if it has any)
             if record_data.units:
-                print " * %s: %s %s" % (
+                print(" * %s: %s %s" % (
                     record_data.name, record_data.value, record_data.units,
-                )
+                ))
             else:
-                print " * %s: %s" % (record_data.name, record_data.value)
-        print
+                print(" * %s: %s" % (record_data.name, record_data.value))
+        print()
 
 
 License
