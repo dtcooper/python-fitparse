@@ -363,7 +363,10 @@ BASE_TYPES = {
 def add_dev_data_id(message):
     global DEV_TYPES
     dev_data_index = message.get('developer_data_index').raw_value
-    application_id = message.get('application_id').raw_value
+    if message.get('application_id'):
+        application_id = message.get('application_id').raw_value
+    else:
+        application_id = None
 
     # Note that nothing in the spec says overwriting an existing type is invalid
     DEV_TYPES[dev_data_index] = {'dev_data_index': dev_data_index, 'application_id': application_id, 'fields': {}}
