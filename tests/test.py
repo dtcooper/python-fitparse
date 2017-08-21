@@ -399,14 +399,18 @@ class FitFileTestCase(unittest.TestCase):
             assert f.messages[-1].fields[1].raw_value == 1739.486328125
 
     def test_fileish_types(self):
-        """Test the constructor does the right thing when given different types"""
-        with FitFile(testfile('Settings.FIT')):
+        """Test the constructor does the right thing when given different types
+        (specifically, test files with 8 characters, followed by an uppercase.FIT
+        extension), which confused the fileish check on Python 2, see
+        https://github.com/dtcooper/python-fitparse/issues/29#issuecomment-312436350
+        for details"""
+        with FitFile(testfile('nametest.FIT')):
             pass
-        with FitFile(open(testfile("Settings.fit"), 'rb')):
+        with FitFile(open(testfile("nametest.FIT"), 'rb')):
             pass
-        with FitFile(open(testfile("Settings.fit"), 'rb').read()):
+        with FitFile(open(testfile("nametest.FIT"), 'rb').read()):
             pass
-        with FitFile(io.BytesIO(open(testfile("Settings.fit"), 'rb').read())):
+        with FitFile(io.BytesIO(open(testfile("nametest.FIT"), 'rb').read())):
             pass
 
     def test_elemnt_bolt_developer_data_id_without_application_id(self):
