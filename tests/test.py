@@ -409,6 +409,11 @@ class FitFileTestCase(unittest.TestCase):
         with FitFile(io.BytesIO(open(testfile("Settings.fit"), 'rb').read())):
             pass
 
+    def test_elemnt_bolt_developer_data_id_without_application_id(self):
+        """Test that a file without application id set inside developer_data_id is parsed
+        (as seen on ELEMNT BOLT with firmware version WB09-1507)"""
+        FitFile(testfile('elemnt-bolt-no-application-id-inside-developer-data-id.fit')).parse()
+
     # TODO:
     #  * Test Processors:
     #    - process_type_<>, process_field_<>, process_units_<>, process_message_<>
