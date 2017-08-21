@@ -406,12 +406,12 @@ class FitFileTestCase(unittest.TestCase):
         for details"""
         with FitFile(testfile('nametest.FIT')):
             pass
-        with FitFile(open(testfile("nametest.FIT"), 'rb')):
-            pass
-        with FitFile(open(testfile("nametest.FIT"), 'rb').read()):
-            pass
-        with FitFile(io.BytesIO(open(testfile("nametest.FIT"), 'rb').read())):
-            pass
+        with open(testfile("nametest.FIT"), 'rb') as f:
+            FitFile(f)
+        with open(testfile("nametest.FIT"), 'rb') as f:
+            FitFile(f.read())
+        with open(testfile("nametest.FIT"), 'rb') as f:
+            FitFile(io.BytesIO(f.read()))
 
     def test_elemnt_bolt_developer_data_id_without_application_id(self):
         """Test that a file without application id set inside developer_data_id is parsed
