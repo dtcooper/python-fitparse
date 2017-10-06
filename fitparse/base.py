@@ -334,7 +334,7 @@ class FitFile(object):
                         cmp_raw_value = component.render(raw_value)
 
                         # Apply accumulated value
-                        if component.accumulate:
+                        if component.accumulate and cmp_raw_value is not None:
                             accumulator = self._accumulators[def_mesg.mesg_num]
                             cmp_raw_value = self._apply_compressed_accumulation(
                                 cmp_raw_value, accumulator[component.def_num], component.bits,
