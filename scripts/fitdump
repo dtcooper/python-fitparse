@@ -1,7 +1,12 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 import argparse
+import codecs
+import datetime
+import json
 import sys
+import types
 
 # Python 2 compat
 try:
@@ -13,20 +18,21 @@ except NameError:
 import fitparse
 
 
-def format_message(message, options):
-    s = message.name
+def format_message(num, message, options):
+    s = ["{}. {}".format(num, message.name)]
     if options.with_defs:
-        s += ' [%s]' % message.type
-    s += '\n'
+        s.append(' [{}]'.format(message.type))
+    s.append('\n')
 
     if message.type == 'data':
         for field_data in message:
-            s += ' * %s: %s' % (field_data.name, field_data.value)
+            s.append(' * {}: {}'.format(field_data.name, field_data.value))
             if field_data.units:
-                s += ' [%s]' % field_data.units
-            s += '\n'
+                s.append(' [{}]'.format(field_data.units))
+            s.append('\n')
 
-    return s
+    s.append('\n')
+    return "".join(s)
 
 
 def parse_args(args=None):
@@ -36,11 +42,12 @@ def parse_args(args=None):
     )
     parser.add_argument('-v', '--verbose', action='count', default=0)
     parser.add_argument(
-        '-o', '--output', type=argparse.FileType(mode='wb'),
-        help='File to output to.',
+        '-o', '--output', type=argparse.FileType(mode='w'), default="-",
+        help='File to output data into (defaults to stdout)',
     )
     parser.add_argument(
-        '-t', '--type', choices=('csv', 'excel', 'readable'), default='readable',
+        # TODO: csv
+        '-t', '--type', choices=('readable', 'json'), default='readable',
         help='File type to output. (DEFAULT: %(default)s)',
     )
     parser.add_argument(
@@ -56,18 +63,34 @@ def parse_args(args=None):
 
     options = parser.parse_args(args)
 
-    if (options.type != 'readable') and not options.output:
-        parser.error('Please specify an output file (-o) or set --type readable')
+    # Work around argparse.FileType not accepting an `encoding` kwarg in
+    # Python < 3.4 by closing and reopening the file (unless it's stdout)
+    if options.output is not sys.stdout:
+        options.output.close()
+        options.output = codecs.open(options.output.name, 'w', encoding='UTF-8')
 
-    options.with_defs = (options.verbose >= 1)
-    options.print_messages = (options.type == 'readable')
-    options.print_stream = (options.output or sys.stdout)
-
-    if not options.print_messages and (options.verbose >= 1):
-        options.print_messages = True
-        options.print_stream = sys.stdout
+    options.verbose = options.verbose >= 1
+    options.with_defs = (options.type == "readable" and options.verbose)
+    options.as_dict = (options.type != "readable" and options.verbose)
 
     return options
+
+
+class RecordJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, types.GeneratorType):
+            return list(obj)
+        if isinstance(obj, datetime.datetime):
+            return obj.isoformat()
+        if isinstance(obj, fitparse.DataMessage):
+            return {
+                "type": obj.name,
+                "data": {
+                    data.name: data.value for data in obj
+                }
+            }
+        # Fall back to original to raise a TypeError
+        return super(RecordJSONEncoder, self).default(obj)
 
 
 def main(args=None):
@@ -78,14 +101,18 @@ def main(args=None):
         data_processor=fitparse.StandardUnitsDataProcessor(),
         check_crc = not(options.ignore_crc),
     )
-    messages = fitfile.get_messages(
+    records = fitfile.get_messages(
         name=options.name,
         with_definitions=options.with_defs,
+        as_dict=options.as_dict
     )
 
-    for n, message in enumerate(messages, 1):
-        if options.print_messages:
-            print('{}. {}'.format(n, format_message(message, options), file=options.print_stream))
+    if options.type == "json":
+        json.dump(records, fp=options.output, cls=RecordJSONEncoder)
+    elif options.type == "readable":
+        options.output.writelines(format_message(n, record, options)
+                                  for n, record in enumerate(records, 1))
+
 
 if __name__ == '__main__':
     try:
