@@ -57,7 +57,7 @@ Download the latest SDK from http://www.thisisant.com/pages/products/fit-sdk
 
 Update the profile:
 ```
-python3 scripts/generate_profile.py /path/to/fit_sdk.zip > fitparse/profile.py
+python3 scripts/generate_profile.py /path/to/fit_sdk.zip fitparse/profile.py
 ```
 
 
