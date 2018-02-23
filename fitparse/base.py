@@ -18,6 +18,7 @@ from fitparse.records import (
 )
 from fitparse.utils import calc_crc, FitParseError, FitEOFError, FitCRCError, FitHeaderError
 
+
 class FitFile(object):
     def __init__(self, fileish, check_crc=True, data_processor=None):
         if hasattr(fileish, 'read'):
@@ -180,7 +181,7 @@ class FitFile(object):
         else:
             return MessageHeader(
                 is_definition=bool(header & 0x40),  # bit 6
-                is_developer_data=bool(header & 0x20), # bit 5
+                is_developer_data=bool(header & 0x20),  # bit 5
                 local_mesg_num=header & 0xF,  # bits 0-3
                 time_offset=None,
             )
@@ -231,7 +232,7 @@ class FitFile(object):
                     dev_data_index=dev_data_index,
                     def_num=field_def_num,
                     size=field_size
-                  ))
+                ))
 
         def_mesg = DefinitionMessage(
             header=header,
@@ -462,7 +463,6 @@ class FitFile(object):
 
     def __iter__(self):
         return self.get_messages()
-
 
 # TODO: Create subclasses like Activity and do per-value monkey patching
 # for example local_timestamp to adjust timestamp on a per-file basis

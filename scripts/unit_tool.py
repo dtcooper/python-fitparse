@@ -52,6 +52,7 @@ def do_fitparse_profile():
             scrub_method_name('process_units_%s' % unit_value, convert_units=True)
         ))
 
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("Usage: {0} Profile.xls".format(os.path.basename(__file__)))

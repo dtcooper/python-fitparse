@@ -76,7 +76,7 @@ def main(args=None):
     fitfile = fitparse.FitFile(
         options.infile,
         data_processor=fitparse.StandardUnitsDataProcessor(),
-        check_crc = not(options.ignore_crc),
+        check_crc=not (options.ignore_crc),
     )
     messages = fitfile.get_messages(
         name=options.name,
@@ -86,6 +86,7 @@ def main(args=None):
     for n, message in enumerate(messages, 1):
         if options.print_messages:
             print('{}. {}'.format(n, format_message(message, options), file=options.print_stream))
+
 
 if __name__ == '__main__':
     try:

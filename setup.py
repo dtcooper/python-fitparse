@@ -3,11 +3,9 @@ import sys
 
 import fitparse
 
-
 requires = None
 if sys.version_info < (2, 7):
     requires = ['argparse']
-
 
 setup(
     name='fitparse',

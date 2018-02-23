@@ -19,7 +19,6 @@ import zipfile
 
 import xlrd  # Dev requirement for parsing Excel spreadsheet
 
-
 XLS_HEADER_MAGIC = b'\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1'
 
 
@@ -359,6 +358,7 @@ def maybe_decode(o):
         return o.decode()
     return o
 
+
 def parse_messages(messages_rows, type_list):
     message_list = MessageList([])
 
@@ -402,7 +402,7 @@ def parse_messages(messages_rows, type_list):
                     assert component.name
                     assert component.bits
 
-        # Otherwise a field
+            # Otherwise a field
             # Not a subfield if first row has definition num
             if row[1] is not None and row[1] != b'':
                 field = FieldInfo(
