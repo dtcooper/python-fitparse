@@ -53,5 +53,8 @@ docs/_build/
 # PyBuilder
 target/
 
+# Various IDEs
+/.idea
+
 # python-fitparse specific
 FitSDK*
