@@ -8,16 +8,16 @@ UTC_REFERENCE = 631065600  # timestamp for UTC 00:00 Dec 31 1989
 class FitFileDataProcessor(object):
     # TODO: Document API
     # Functions that will be called to do the processing:
-    #def run_type_processor(field_data)
-    #def run_field_processor(field_data)
-    #def run_unit_processor(field_data)
-    #def run_message_processor(data_message)
+    # def run_type_processor(field_data)
+    # def run_field_processor(field_data)
+    # def run_unit_processor(field_data)
+    # def run_message_processor(data_message)
 
     # By default, the above functions call these functions if they exist:
-    #def process_type_<type_name> (field_data)
-    #def process_field_<field_name> (field_data) -- can be unknown_DD but NOT recommended
-    #def process_units_<unit_name> (field_data)
-    #def process_message_<mesg_name / mesg_type_num> (data_message)
+    # def process_type_<type_name> (field_data)
+    # def process_field_<field_name> (field_data) -- can be unknown_DD but NOT recommended
+    # def process_units_<unit_name> (field_data)
+    # def process_message_<mesg_name / mesg_type_num> (data_message)
 
     # Used to memoize scrubbed method names
     _scrubbed_method_names = {}

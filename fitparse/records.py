@@ -14,7 +14,6 @@ except ImportError:
 
 from fitparse.utils import FitParseError
 
-
 DEV_TYPES = {}
 
 
@@ -297,7 +296,7 @@ class SubField(FieldAndSubFieldBase):
 class DevField(FieldAndSubFieldBase):
     __slots__ = ('dev_data_index', 'def_num', 'type', 'name', 'units', 'native_field_num',
                  # The rest of these are just to be compatible with Field objects. They're always None
-                 'scale', 'offset', 'components', 'subfields') 
+                 'scale', 'offset', 'components', 'subfields')
     field_type = 'devfield'
 
 
@@ -334,10 +333,11 @@ class ComponentField(RecordBase):
 def parse_string(string):
     try:
         end = string.index(0x00)
-    except TypeError: # Python 2 compat
+    except TypeError:  # Python 2 compat
         end = string.index('\x00')
 
     return string[:end].decode('utf-8', errors='replace') or None
+
 
 # The default base type
 BASE_TYPE_BYTE = BaseType(name='byte', identifier=0x0D, fmt='B', parse=lambda x: None if all(b == 0xFF for b in x) else x)

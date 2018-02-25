@@ -4,11 +4,14 @@ import re
 class FitParseError(ValueError):
     pass
 
+
 class FitEOFError(FitParseError):
     pass
 
+
 class FitCRCError(FitParseError):
     pass
+
 
 class FitHeaderError(FitParseError):
     pass
@@ -39,6 +42,7 @@ UNIT_NAME_TO_FUNC_REPLACEMENTS = (
     ('%', 'percent'),
     ('*', ' times '),
 )
+
 
 def scrub_method_name(method_name, convert_units=False):
     if convert_units:
