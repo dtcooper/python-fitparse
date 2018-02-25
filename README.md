@@ -3,16 +3,25 @@ python-fitparse
 
 Here's a Python library to parse ANT/Garmin `.FIT` files.
 
-Welcome to python-fitparse! After a few years of laying dormant we are back to
-active development! The old version is archived as
-[`v1-archive`](https://github.com/dtcooper/python-fitparse/releases/tag/v1-archive).
+Install from [![PyPI](https://img.shields.io/pypi/v/fitparse.svg)](https://pypi.python.org/pypi/fitparse/):
+```
+pip install fitparse
+```
 
-The FIT (Flexible and Interoperable Data Transfer) file protocol is specified by
-ANT (http://www.thisisant.com/) and an SDK is available for download at
-http://www.thisisant.com/pages/products/fit-sdk.
-
+FIT files
+------------
+- FIT files contain data stored in a binary file format.
+- The FIT (Flexible and Interoperable Data Transfer) file protocol is specified
+  by [ANT](http://www.thisisant.com/).
+- The SDK, code examples, and detailed documentation can be found in the
+  [ANT FIT SDK](http://www.thisisant.com/resources/fit).
+  
 Major Changes From Original Version
 -----------------------------------
+
+After a few years of laying dormant we are back to active development!
+The old version is archived as
+[`v1-archive`](https://github.com/dtcooper/python-fitparse/releases/tag/v1-archive).
 
   * New, hopefully cleaner public API with a clear division between accessible
     and internal parts. (Still unstable and partially complete.)
@@ -53,9 +62,8 @@ Major Changes From Original Version
 
 Updating to new FIT SDK versions
 --------------------------------
-Download the latest SDK from http://www.thisisant.com/pages/products/fit-sdk
-
-Update the profile:
+- Download the latest [ANT FIT SDK](http://www.thisisant.com/resources/fit).
+- Update the profile:
 ```
 python3 scripts/generate_profile.py /path/to/fit_sdk.zip fitparse/profile.py
 ```
