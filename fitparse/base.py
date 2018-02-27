@@ -16,23 +16,12 @@ from fitparse.records import (
     BASE_TYPES, BASE_TYPE_BYTE, DevField,
     add_dev_data_id, add_dev_field_description, get_dev_type
 )
-from fitparse.utils import calc_crc, FitParseError, FitEOFError, FitCRCError, FitHeaderError
+from fitparse.utils import calc_crc, fileish_open, FitParseError, FitEOFError, FitCRCError, FitHeaderError
+
 
 class FitFile(object):
     def __init__(self, fileish, check_crc=True, data_processor=None):
-        if hasattr(fileish, 'read'):
-            # BytesIO-like object
-            self._file = fileish
-        elif isinstance(fileish, str):
-            # Python2 - file path, file contents in the case of a TypeError
-            # Python3 - file path
-            try:
-                self._file = open(fileish, 'rb')
-            except TypeError:
-                self._file = io.BytesIO(fileish)
-        else:
-            # Python 3 - file contents
-            self._file = io.BytesIO(fileish)
+        self._file = fileish_open(fileish, 'rb')
 
         self.check_crc = check_crc
         self._processor = data_processor or FitFileDataProcessor()

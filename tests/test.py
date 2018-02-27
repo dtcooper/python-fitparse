@@ -398,21 +398,6 @@ class FitFileTestCase(unittest.TestCase):
         with FitFile(testfile('event_timestamp.fit')) as f:
             assert f.messages[-1].fields[1].raw_value == 1739.486328125
 
-    def test_fileish_types(self):
-        """Test the constructor does the right thing when given different types
-        (specifically, test files with 8 characters, followed by an uppercase.FIT
-        extension), which confused the fileish check on Python 2, see
-        https://github.com/dtcooper/python-fitparse/issues/29#issuecomment-312436350
-        for details"""
-        with FitFile(testfile('nametest.FIT')):
-            pass
-        with open(testfile("nametest.FIT"), 'rb') as f:
-            FitFile(f)
-        with open(testfile("nametest.FIT"), 'rb') as f:
-            FitFile(f.read())
-        with open(testfile("nametest.FIT"), 'rb') as f:
-            FitFile(io.BytesIO(f.read()))
-
     def test_elemnt_bolt_developer_data_id_without_application_id(self):
         """Test that a file without application id set inside developer_data_id is parsed
         (as seen on ELEMNT BOLT with firmware version WB09-1507)"""

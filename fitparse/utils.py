@@ -1,5 +1,7 @@
 import re
 
+import io
+
 
 class FitParseError(ValueError):
     pass
@@ -47,3 +49,29 @@ def scrub_method_name(method_name, convert_units=False):
                 replace_from, '%s' % replace_to,
             )
     return METHOD_NAME_SCRUBBER.sub('_', method_name)
+
+
+def fileish_open(fileish, mode):
+    """
+    Convert file-ish object to BytesIO like object.
+    :param fileish: the file-ihs object (str, BytesIO, bytes, file contents)
+    :param str mode: mode for the open function.
+    :rtype: BytesIO
+    """
+    if mode is not None and any(m in mode for m in ['+', 'w', 'a', 'x']):
+        attr = 'write'
+    else:
+        attr = 'read'
+    if hasattr(fileish, attr) and hasattr(fileish, 'seek'):
+        # BytesIO-like object
+        return fileish
+    elif isinstance(fileish, str):
+        # Python2 - file path, file contents in the case of a TypeError
+        # Python3 - file path
+        try:
+            return open(fileish, mode)
+        except TypeError:
+            return io.BytesIO(fileish)
+    else:
+        # Python 3 - file contents
+        return io.BytesIO(fileish)
