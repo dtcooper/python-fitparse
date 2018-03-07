@@ -14,26 +14,17 @@ except ImportError:
 
 from fitparse.utils import FitParseError
 
-
 DEV_TYPES = {}
 
 
-class RecordBase(object):
-    # namedtuple-like base class. Subclasses should must __slots__
-    __slots__ = ()
-
-    # TODO: switch back to namedtuple, and don't use default arguments as None
-    #       and see if that gives us any performance improvements
-
-    def __init__(self, *args, **kwargs):
-        for slot_name, value in zip_longest(self.__slots__, args, fillvalue=None):
-            setattr(self, slot_name, value)
-        for slot_name, value in kwargs.items():
-            setattr(self, slot_name, value)
-
-
-class MessageHeader(RecordBase):
+class MessageHeader(object):
     __slots__ = ('is_definition', 'is_developer_data', 'local_mesg_num', 'time_offset')
+
+    def __init__(self, is_definition, is_developer_data, local_mesg_num, time_offset):
+        self.is_definition = is_definition
+        self.is_developer_data = is_developer_data
+        self.local_mesg_num = local_mesg_num
+        self.time_offset = time_offset
 
     def __repr__(self):
         return '<MessageHeader: %s%s -- local mesg: #%d%s>' % (
@@ -44,9 +35,17 @@ class MessageHeader(RecordBase):
         )
 
 
-class DefinitionMessage(RecordBase):
+class DefinitionMessage(object):
     __slots__ = ('header', 'endian', 'mesg_type', 'mesg_num', 'field_defs', 'dev_field_defs')
     type = 'definition'
+
+    def __init__(self, header, endian, mesg_type, mesg_num, field_defs, dev_field_defs):
+        self.header = header
+        self.endian = endian
+        self.mesg_type = mesg_type
+        self.mesg_num = mesg_num
+        self.field_defs = field_defs
+        self.dev_field_defs = dev_field_defs
 
     @property
     def name(self):
@@ -62,8 +61,14 @@ class DefinitionMessage(RecordBase):
         )
 
 
-class FieldDefinition(RecordBase):
+class FieldDefinition(object):
     __slots__ = ('field', 'def_num', 'base_type', 'size')
+
+    def __init__(self, field, def_num, base_type, size):
+        self.field = field
+        self.def_num = def_num
+        self.base_type = base_type
+        self.size = size
 
     @property
     def name(self):
@@ -82,11 +87,14 @@ class FieldDefinition(RecordBase):
         )
 
 
-class DevFieldDefinition(RecordBase):
+class DevFieldDefinition(object):
     __slots__ = ('field', 'dev_data_index', 'base_type', 'def_num', 'size')
 
-    def __init__(self, **kwargs):
-        super(DevFieldDefinition, self).__init__(**kwargs)
+    def __init__(self, field, dev_data_index, def_num, size):
+        self.field = field
+        self.def_num = def_num
+        self.dev_data_index = dev_data_index
+        self.size = size
         # For dev fields, the base_type and type are always the same.
         self.base_type = self.type
 
@@ -108,9 +116,14 @@ class DevFieldDefinition(RecordBase):
         )
 
 
-class DataMessage(RecordBase):
+class DataMessage(object):
     __slots__ = ('header', 'def_mesg', 'fields')
     type = 'data'
+
+    def __init__(self, header, def_mesg, fields):
+        self.header = header
+        self.def_mesg = def_mesg
+        self.fields = fields
 
     def get(self, field_name, as_dict=False):
         # SIMPLIFY: get rid of as_dict
@@ -164,11 +177,16 @@ class DataMessage(RecordBase):
         return '%s (#%d)' % (self.name, self.mesg_num)
 
 
-class FieldData(RecordBase):
+class FieldData(object):
     __slots__ = ('field_def', 'field', 'parent_field', 'value', 'raw_value', 'units')
 
-    def __init__(self, *args, **kwargs):
-        super(FieldData, self).__init__(self, *args, **kwargs)
+    def __init__(self, field_def, field, parent_field, value, raw_value, units=None):
+        self.field_def = field_def
+        self.field = field
+        self.parent_field = parent_field
+        self.value = value
+        self.raw_value = raw_value
+        self.units = units
         if not self.units and self.field:
             # Default to units on field, otherwise None.
             # NOTE:Not a property since you may want to override this in a data processor
@@ -235,13 +253,22 @@ class FieldData(RecordBase):
         )
 
 
-class BaseType(RecordBase):
-    __slots__ = ('name', 'identifier', 'fmt', 'parse')
+class BaseType(object):
+    __slots__ = ('name', 'identifier', 'fmt', 'parse', '_size')
     values = None  # In case we're treated as a FieldType
+
+    def __init__(self, name, identifier, fmt, parse):
+        self.name = name
+        self.identifier = identifier
+        self.fmt = fmt
+        self.parse = parse
+        self._size = None
 
     @property
     def size(self):
-        return struct.calcsize(self.fmt)
+        if self._size is None:
+            self._size = struct.calcsize(self.fmt)
+        return self._size
 
     @property
     def type_num(self):
@@ -253,21 +280,31 @@ class BaseType(RecordBase):
         )
 
 
-class FieldType(RecordBase):
+class FieldType(object):
     __slots__ = ('name', 'base_type', 'values')
+
+    def __init__(self, name, base_type, values=None):
+        self.name = name
+        self.base_type = base_type
+        self.values = values
 
     def __repr__(self):
         return '<FieldType: %s (%s)>' % (self.name, self.base_type)
 
 
-class MessageType(RecordBase):
+class MessageType():
     __slots__ = ('name', 'mesg_num', 'fields')
+
+    def __init__(self, name, mesg_num, fields):
+        self.name = name
+        self.mesg_num = mesg_num
+        self.fields = fields
 
     def __repr__(self):
         return '<MessageType: %s (#%d)>' % (self.name, self.mesg_num)
 
 
-class FieldAndSubFieldBase(RecordBase):
+class FieldAndSubFieldBase(object):
     __slots__ = ()
 
     @property
@@ -288,26 +325,77 @@ class Field(FieldAndSubFieldBase):
     __slots__ = ('name', 'type', 'def_num', 'scale', 'offset', 'units', 'components', 'subfields')
     field_type = 'field'
 
+    def __init__(self, name, type, def_num, scale=None, offset=None, units=None, components=None, subfields=None):
+        super(Field, self).__init__()
+        self.name = name
+        self.type = type
+        self.def_num = def_num
+        self.scale = scale
+        self.offset = offset
+        self.units = units
+        self.components = components
+        self.subfields = subfields
+
 
 class SubField(FieldAndSubFieldBase):
     __slots__ = ('name', 'def_num', 'type', 'scale', 'offset', 'units', 'components', 'ref_fields')
     field_type = 'subfield'
 
+    def __init__(self, name, def_num, type, scale=None, offset=None, units=None, components=None, ref_fields=None):
+        super(SubField, self).__init__()
+        self.name = name
+        self.def_num = def_num
+        self.type = type
+        self.scale = scale
+        self.offset = offset
+        self.units = units
+        self.components = components
+        self.ref_fields = ref_fields
+
 
 class DevField(FieldAndSubFieldBase):
-    __slots__ = ('dev_data_index', 'def_num', 'type', 'name', 'units', 'native_field_num',
+    __slots__ = ('dev_data_index', 'name', 'def_num', 'type', 'units', 'native_field_num',
                  # The rest of these are just to be compatible with Field objects. They're always None
-                 'scale', 'offset', 'components', 'subfields') 
+                 'scale', 'offset', 'components', 'subfields')
     field_type = 'devfield'
 
+    def __init__(self, dev_data_index, name, def_num, type, units, native_field_num):
+        super(DevField, self).__init__()
+        self.dev_data_index = dev_data_index
+        self.name = name
+        self.def_num = def_num
+        self.type = type
+        self.units = units
+        self.native_field_num = native_field_num
+        self.scale = None
+        self.offset = None
+        self.components = None
+        self.subfields = None
 
-class ReferenceField(RecordBase):
+
+class ReferenceField(object):
     __slots__ = ('name', 'def_num', 'value', 'raw_value')
 
+    def __init__(self, name, def_num, value, raw_value):
+        self.name = name
+        self.def_num = def_num
+        self.value = value
+        self.raw_value = raw_value
 
-class ComponentField(RecordBase):
+
+class ComponentField(object):
     __slots__ = ('name', 'def_num', 'scale', 'offset', 'units', 'accumulate', 'bits', 'bit_offset')
     field_type = 'component'
+
+    def __init__(self, name, def_num, offset=None, scale=None, units=None, accumulate=None, bits=None, bit_offset=None):
+        self.name = name
+        self.def_num = def_num
+        self.scale = scale
+        self.units = units
+        self.accumulate = accumulate
+        self.bits = bits
+        self.bit_offset = bit_offset
+        self.offset = offset
 
     def render(self, raw_value):
         if raw_value is None:
@@ -391,9 +479,9 @@ def add_dev_field_description(message):
 
     # Note that nothing in the spec says overwriting an existing field is invalid
     fields[field_def_num] = DevField(dev_data_index=dev_data_index,
+                                     name=field_name,
                                      def_num=field_def_num,
                                      type=BASE_TYPES[base_type_id],
-                                     name=field_name,
                                      units=units,
                                      native_field_num=native_field_num)
 
