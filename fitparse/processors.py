@@ -1,4 +1,5 @@
 import datetime
+
 from fitparse.utils import scrub_method_name
 
 # Datetimes (uint32) represent seconds since this UTC_REFERENCE
@@ -6,24 +7,30 @@ UTC_REFERENCE = 631065600  # timestamp for UTC 00:00 Dec 31 1989
 
 
 class FitFileDataProcessor(object):
+    """
+    Processor to change raw values to more comfortable ones.
+    Uses method cache to speed up the processing - reuse the object if used multiple times.
+    """
+
     # TODO: Document API
     # Functions that will be called to do the processing:
-    #def run_type_processor(field_data)
-    #def run_field_processor(field_data)
-    #def run_unit_processor(field_data)
-    #def run_message_processor(data_message)
+    # def run_type_processor(field_data)
+    # def run_field_processor(field_data)
+    # def run_unit_processor(field_data)
+    # def run_message_processor(data_message)
 
     # By default, the above functions call these functions if they exist:
-    #def process_type_<type_name> (field_data)
-    #def process_field_<field_name> (field_data) -- can be unknown_DD but NOT recommended
-    #def process_units_<unit_name> (field_data)
-    #def process_message_<mesg_name / mesg_type_num> (data_message)
+    # def process_type_<type_name> (field_data)
+    # def process_field_<field_name> (field_data) -- can be unknown_DD but NOT recommended
+    # def process_units_<unit_name> (field_data)
+    # def process_message_<mesg_name / mesg_type_num> (data_message)
 
-    # Used to memoize scrubbed method names
-    _scrubbed_method_names = {}
+    def __init__(self):
+        # Used to memoize scrubbed methods
+        self._method_cache = {}
 
-    def _scrub_method_name(self, method_name):
-        """Scrubs a method name, returning result from local cache if available.
+    def _get_scrubbed_method(self, method_name):
+        """Scrubs a method name and cache it _method_cache.
 
         This method wraps fitparse.utils.scrub_method_name and memoizes results,
         as scrubbing a method name is expensive.
@@ -32,36 +39,38 @@ class FitFileDataProcessor(object):
             method_name: Method name to scrub.
 
         Returns:
-            Scrubbed method name.
+            Scrubbed method (bounded).
         """
-        if method_name not in self._scrubbed_method_names:
-            self._scrubbed_method_names[method_name] = (
-                scrub_method_name(method_name))
+        method = self._method_cache.get(method_name, False)
+        if method is not False:
+            return method
 
-        return self._scrubbed_method_names[method_name]
+        scrubbed_method_name = scrub_method_name(method_name)
+        try:
+            method = getattr(self, scrubbed_method_name)
+        except AttributeError:
+            method = None
+        self._method_cache[method_name] = method
+        return method
+
+    def _run_processor(self, method_name, data):
+        method = self._get_scrubbed_method(method_name)
+        if method is None:
+            return
+        method(data)
 
     def run_type_processor(self, field_data):
-        self._run_processor(self._scrub_method_name(
-            'process_type_%s' % field_data.type.name), field_data)
+        self._run_processor('process_type_' + field_data.type.name, field_data)
 
     def run_field_processor(self, field_data):
-        self._run_processor(self._scrub_method_name(
-            'process_field_%s' % field_data.name), field_data)
+        self._run_processor('process_field_' + field_data.name, field_data)
 
     def run_unit_processor(self, field_data):
         if field_data.units:
-            self._run_processor(self._scrub_method_name(
-                'process_units_%s' % field_data.units), field_data)
+            self._run_processor('process_units_' + field_data.units, field_data)
 
     def run_message_processor(self, data_message):
-        self._run_processor(self._scrub_method_name(
-            'process_message_%s' % data_message.def_mesg.name), data_message)
-
-    def _run_processor(self, processor_name, data):
-        try:
-            getattr(self, processor_name)(data)
-        except AttributeError:
-            pass
+        self._run_processor('process_message_' + data_message.def_mesg.name, data_message)
 
     def process_type_bool(self, field_data):
         if field_data.value is not None:
@@ -114,3 +123,11 @@ class StandardUnitsDataProcessor(FitFileDataProcessor):
         if field_data.value is not None:
             field_data.value *= 180.0 / (2 ** 31)
         field_data.units = 'deg'
+
+
+_DEFAULT_PROCESSOR = FitFileDataProcessor()
+
+
+def get_default_processor():
+    """Default, shared instance of processor. (Due to the method cache.)"""
+    return _DEFAULT_PROCESSOR

@@ -9,7 +9,7 @@ try:
 except NameError:
     num_types = (int, float)
 
-from fitparse.processors import FitFileDataProcessor
+from fitparse import processors
 from fitparse.profile import FIELD_TYPE_TIMESTAMP, MESSAGE_TYPES
 from fitparse.records import (
     DataMessage, FieldData, FieldDefinition, DevFieldDefinition, DefinitionMessage, MessageHeader,
@@ -35,7 +35,7 @@ class FitFile(object):
             self._file = io.BytesIO(fileish)
 
         self.check_crc = check_crc
-        self._processor = data_processor or FitFileDataProcessor()
+        self._processor = data_processor or processors.get_default_processor()
 
         # Get total filesize
         self._file.seek(0, os.SEEK_END)
