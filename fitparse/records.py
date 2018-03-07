@@ -1,12 +1,20 @@
+import itertools
 import math
 import struct
 
-# Python 2 compat
 try:
+    # Python 2
     int_types = (int, long,)
+    num_types = (int, float, long)
+    int_type = long
+    math_nan = float('nan')
     byte_iter = bytearray
 except NameError:
+    # Python 3
     int_types = (int,)
+    num_types = (int, float)
+    int_type = int
+    math_nan = math.nan
     byte_iter = lambda x: x
 
 try:
@@ -55,13 +63,24 @@ class DefinitionMessage(RecordBase):
         return self.mesg_type.name if self.mesg_type else 'unknown_%d' % self.mesg_num
 
     def __repr__(self):
-        return '<DefinitionMessage: %s (#%d) -- local mesg: #%d, field defs: [%s], dev field defs: [%s]>' % (
+        return '<DefinitionMessage: %s (#%s) -- local mesg: #%s, field defs: [%s], dev field defs: [%s]>' % (
             self.name,
             self.mesg_num,
             self.header.local_mesg_num,
             ', '.join([fd.name for fd in self.field_defs]),
             ', '.join([fd.name for fd in self.dev_field_defs]),
         )
+
+    def all_field_defs(self):
+        if not self.dev_field_defs:
+            return self.field_defs
+        return itertools.chain(self.field_defs, self.dev_field_defs)
+
+    def get_field_def(self, name):
+        for field_def in self.all_field_defs():
+            if field_def.is_named(name):
+                return field_def
+        return None
 
 
 class FieldDefinition(RecordBase):
@@ -76,12 +95,16 @@ class FieldDefinition(RecordBase):
         return self.field.type if self.field else self.base_type
 
     def __repr__(self):
-        return '<FieldDefinition: %s (#%d) -- type: %s (%s), size: %d byte%s>' % (
+        return '<FieldDefinition: %s (#%s) -- type: %s (%s), size: %s byte%s>' % (
             self.name,
             self.def_num,
             self.type.name, self.base_type.name,
             self.size, 's' if self.size != 1 else '',
         )
+
+    def is_named(self, name):
+        return self.field.is_named(name)
+
 
 
 class DevFieldDefinition(RecordBase):
@@ -156,7 +179,7 @@ class DataMessage(RecordBase):
         return iter(sorted(self.fields, key=lambda fd: (int(fd.field is None), fd.name)))
 
     def __repr__(self):
-        return '<DataMessage: %s (#%d) -- local mesg: #%d, fields: [%s]>' % (
+        return '<DataMessage: %s (#%s) -- local mesg: #%s, fields: [%s]>' % (
             self.name, self.mesg_num, self.header.local_mesg_num,
             ', '.join(["%s: %s" % (fd.name, fd.value) for fd in self.fields]),
         )
@@ -237,13 +260,25 @@ class FieldData(RecordBase):
         )
 
 
-class BaseType(RecordBase):
-    __slots__ = ('name', 'identifier', 'fmt', 'parse')
+class BaseType(object):
+    __slots__ = ('name', 'identifier', 'fmt', 'invalid_value', 'parse', 'unparse', 'in_range', '_size')
     values = None  # In case we're treated as a FieldType
+
+    def __init__(self, name, identifier, fmt, invalid_value=None, parse=None, unparse=None, in_range=None):
+        self.name = name
+        self.identifier = identifier
+        self.fmt = fmt
+        self.invalid_value = invalid_value
+        self.parse = parse or self._parse
+        self.unparse = unparse or self._unparse
+        self.in_range = in_range or self._in_range
+        self._size = None
 
     @property
     def size(self):
-        return struct.calcsize(self.fmt)
+        if self._size is None:
+            self._size = struct.calcsize(self.fmt)
+        return self._size
 
     @property
     def type_num(self):
@@ -253,6 +288,17 @@ class BaseType(RecordBase):
         return '<BaseType: %s (#%d [0x%X])>' % (
             self.name, self.type_num, self.identifier,
         )
+
+    def _parse(self, x):
+        return None if x == self.invalid_value else x
+
+    def _unparse(self, x):
+        return self.invalid_value if x is None else x
+
+    def _in_range(self, x):
+        # basic implementation for int types
+        return self.invalid_value if x.bit_length() > self.size * 8 else x
+
 
 
 class FieldType(RecordBase):
@@ -268,8 +314,51 @@ class MessageType(RecordBase):
     def __repr__(self):
         return '<MessageType: %s (#%d)>' % (self.name, self.mesg_num)
 
+    def get_field_and_subfield(self, name):
+        """
+        Get field by name.
+        :rtype tuple(Field, SubField) or tuple(Field, None) or (None, None)
+        """
+        for field in self.fields.values():
+            if field.is_named(name):
+                return (field, None)
+            if field.subfields:
+                subfield = next((f for f in field.subfields if f.is_named(name)), None)
+                if subfield:
+                    return (field, subfield)
 
-class FieldAndSubFieldBase(RecordBase):
+        return (None, None)
+
+
+class ScaleOffsetMixin(object):
+    """Common methods for classes with scale and offset."""
+
+    def apply_scale_offset(self, raw_value):
+        if isinstance(raw_value, tuple):
+            # Contains multiple values, apply transformations to all of them
+            return tuple(self.apply_scale_offset(x) for x in raw_value)
+        elif isinstance(raw_value, num_types):
+            if self.scale:
+                raw_value = float(raw_value) / self.scale
+            if self.offset:
+                raw_value = raw_value - self.offset
+        return raw_value
+
+    def unapply_scale_offset(self, value):
+        if isinstance(value, tuple):
+            # Contains multiple values, apply transformations to all of them
+            return tuple(self.unapply_scale_offset(x) for x in value)
+        elif isinstance(value, num_types):
+            if self.offset:
+                value = value + self.offset
+            if self.scale:
+                value = float(value) * self.scale
+            if isinstance(value, float):
+                value = int_type(round(value))
+        return value
+
+
+class FieldAndSubFieldBase(RecordBase, ScaleOffsetMixin):
     __slots__ = ()
 
     @property
@@ -280,9 +369,26 @@ class FieldAndSubFieldBase(RecordBase):
     def is_base_type(self):
         return isinstance(self.type, BaseType)
 
+    def __repr__(self):
+        return '<%s: %s (#%s) -- type: %s (%s)>' % (
+            self.__class__.__name__,
+            self.name,
+            self.def_num,
+            self.type.name,
+            self.base_type
+        )
+
+    def is_named(self, name):
+        return self.name == name or self.def_num == name
+
     def render(self, raw_value):
-        if self.type.values and (raw_value in self.type.values):
-            return self.type.values[raw_value]
+        if self.type.values:
+            return self.type.values.get(raw_value, raw_value)
+        return raw_value
+
+    def unrender(self, raw_value):
+        if self.type.values:
+            return next((k for k, v in self.type.values.items() if v == raw_value), raw_value)
         return raw_value
 
 
@@ -307,7 +413,7 @@ class ReferenceField(RecordBase):
     __slots__ = ('name', 'def_num', 'value', 'raw_value')
 
 
-class ComponentField(RecordBase):
+class ComponentField(RecordBase, ScaleOffsetMixin):
     __slots__ = ('name', 'def_num', 'scale', 'offset', 'units', 'accumulate', 'bits', 'bit_offset')
     field_type = 'component'
 
@@ -382,28 +488,48 @@ class Crc(object):
 def parse_string(string):
     try:
         end = string.index(0x00)
-    except TypeError: # Python 2 compat
+    except TypeError:  # Python 2 compat
         end = string.index('\x00')
 
     return string[:end].decode('utf-8', errors='replace') or None
 
+
+def unparse_string(string):
+    if string is None:
+        string = ''
+    sbytes = string.encode('utf-8', errors='replace') + b'\0'
+    return sbytes
+
+
+_FLOAT32_INVALID_VALUE = struct.unpack('f', bytes(b'\xff' * 4))[0]
+_FLOAT32_MIN = -3.4028235e+38
+_FLOAT32_MAX = 3.4028235e+38
+_FLOAT64_INVALID_VALUE = struct.unpack('d', bytes(b'\xff' * 8))[0]
+
 # The default base type
-BASE_TYPE_BYTE = BaseType(name='byte', identifier=0x0D, fmt='B', parse=lambda x: None if all(b == 0xFF for b in x) else x)
+BASE_TYPE_BYTE = BaseType(name='byte', identifier=0x0D, fmt='B',
+                          parse=lambda x: None if all(b == 0xFF for b in x) else x,
+                          unparse=lambda x: b'\xFF' if x is None else x,
+                          in_range=lambda x: x)
 
 BASE_TYPES = {
-    0x00: BaseType(name='enum', identifier=0x00, fmt='B', parse=lambda x: None if x == 0xFF else x),
-    0x01: BaseType(name='sint8', identifier=0x01, fmt='b', parse=lambda x: None if x == 0x7F else x),
-    0x02: BaseType(name='uint8', identifier=0x02, fmt='B', parse=lambda x: None if x == 0xFF else x),
-    0x83: BaseType(name='sint16', identifier=0x83, fmt='h', parse=lambda x: None if x == 0x7FFF else x),
-    0x84: BaseType(name='uint16', identifier=0x84, fmt='H', parse=lambda x: None if x == 0xFFFF else x),
-    0x85: BaseType(name='sint32', identifier=0x85, fmt='i', parse=lambda x: None if x == 0x7FFFFFFF else x),
-    0x86: BaseType(name='uint32', identifier=0x86, fmt='I', parse=lambda x: None if x == 0xFFFFFFFF else x),
-    0x07: BaseType(name='string', identifier=0x07, fmt='s', parse=parse_string),
-    0x88: BaseType(name='float32', identifier=0x88, fmt='f', parse=lambda x: None if math.isnan(x) else x),
-    0x89: BaseType(name='float64', identifier=0x89, fmt='d', parse=lambda x: None if math.isnan(x) else x),
-    0x0A: BaseType(name='uint8z', identifier=0x0A, fmt='B', parse=lambda x: None if x == 0x0 else x),
-    0x8B: BaseType(name='uint16z', identifier=0x8B, fmt='H', parse=lambda x: None if x == 0x0 else x),
-    0x8C: BaseType(name='uint32z', identifier=0x8C, fmt='I', parse=lambda x: None if x == 0x0 else x),
+    0x00: BaseType(name='enum', identifier=0x00, fmt='B', invalid_value=0xFF),
+    0x01: BaseType(name='sint8', identifier=0x01, fmt='b', invalid_value=0x7F),
+    0x02: BaseType(name='uint8', identifier=0x02, fmt='B', invalid_value=0xFF),
+    0x83: BaseType(name='sint16', identifier=0x83, fmt='h', invalid_value=0x7FFF),
+    0x84: BaseType(name='uint16', identifier=0x84, fmt='H', invalid_value=0xFFFF),
+    0x85: BaseType(name='sint32', identifier=0x85, fmt='i', invalid_value=0x7FFFFFFF),
+    0x86: BaseType(name='uint32', identifier=0x86, fmt='I', invalid_value=0xFFFFFFFF),
+    0x07: BaseType(name='string', identifier=0x07, fmt='s', parse=parse_string, unparse=unparse_string, in_range=lambda x: x),
+    0x88: BaseType(name='float32', identifier=0x88, fmt='f', invalid_value=_FLOAT32_INVALID_VALUE,
+                   parse=lambda x: None if math.isnan(x) else x,
+                   in_range=lambda x: x if _FLOAT32_MIN < x < _FLOAT32_MAX else _FLOAT32_INVALID_VALUE),
+    0x89: BaseType(name='float64', identifier=0x89, fmt='d', invalid_value=_FLOAT64_INVALID_VALUE,
+                   parse=lambda x: None if math.isnan(x) else x,
+                   in_range=lambda x: x),
+    0x0A: BaseType(name='uint8z', identifier=0x0A, fmt='B', invalid_value=0x0),
+    0x8B: BaseType(name='uint16z', identifier=0x8B, fmt='H', invalid_value=0x0),
+    0x8C: BaseType(name='uint32z', identifier=0x8C, fmt='I', invalid_value=0x0),
     0x0D: BASE_TYPE_BYTE,
 }
 

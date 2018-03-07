@@ -1,13 +1,5 @@
-import io
 import os
 import struct
-
-# Python 2 compat
-try:
-    num_types = (int, float, long)
-    str = basestring
-except NameError:
-    num_types = (int, float)
 
 from fitparse.processors import FitFileDataProcessor
 from fitparse.profile import FIELD_TYPE_TIMESTAMP, MESSAGE_TYPES
@@ -94,6 +86,7 @@ class FitFile(object):
 
         # Initialize data
         self._accumulators = {}
+        self.data_size = 0
         self._bytes_left = -1
         self._complete = False
         self._compressed_ts_accumulator = 0
@@ -106,7 +99,7 @@ class FitFile(object):
             raise FitHeaderError("Invalid .FIT File Header")
 
         # Larger fields are explicitly little endian from SDK
-        header_size, protocol_ver_enc, profile_ver_enc, data_size = self._read_struct('2BHI4x', data=header_data)
+        header_size, protocol_ver_enc, profile_ver_enc, self.data_size = self._read_struct('2BHI4x', data=header_data)
 
         # Decode the same way the SDK does
         self.protocol_version = float("%d.%d" % (protocol_ver_enc >> 4, protocol_ver_enc & ((1 << 4) - 1)))
@@ -127,7 +120,7 @@ class FitFile(object):
             self._read(extra_header_size - 2)
 
         # After we've consumed the header, set the bytes left to be read
-        self._bytes_left = data_size
+        self._bytes_left = self.data_size
 
     def _parse_message(self):
         # When done, calculate the CRC and return None
@@ -239,7 +232,7 @@ class FitFile(object):
     def _parse_raw_values_from_data_message(self, def_mesg):
         # Go through mesg's field defs and read them
         raw_values = []
-        for field_def in def_mesg.field_defs + def_mesg.dev_field_defs:
+        for field_def in def_mesg.all_field_defs():
             base_type = field_def.base_type
             is_byte = base_type.name == 'byte'
             # Struct to read n base types (field def size / base type size)
@@ -277,18 +270,6 @@ class FitFile(object):
                             return sub_field, field
         return field, None
 
-    def _apply_scale_offset(self, field, raw_value):
-        # Apply numeric transformations (scale+offset)
-        if isinstance(raw_value, tuple):
-            # Contains multiple values, apply transformations to all of them
-            return tuple(self._apply_scale_offset(field, x) for x in raw_value)
-        elif isinstance(raw_value, num_types):
-            if field.scale:
-                raw_value = float(raw_value) / field.scale
-            if field.offset:
-                raw_value = raw_value - field.offset
-        return raw_value
-
     @staticmethod
     def _apply_compressed_accumulation(raw_value, accumulation, num_bits):
         max_value = (1 << num_bits)
@@ -311,7 +292,7 @@ class FitFile(object):
 
         # TODO: Maybe refactor this and make it simpler (or at least broken
         #       up into sub-functions)
-        for field_def, raw_value in zip(def_mesg.field_defs + def_mesg.dev_field_defs, raw_values):
+        for field_def, raw_value in zip(def_mesg.all_field_defs(), raw_values):
             field, parent_field = field_def.field, None
             if field:
                 field, parent_field = self._resolve_subfield(field, def_mesg, raw_values)
@@ -332,7 +313,7 @@ class FitFile(object):
 
                         # Apply scale and offset from component, not from the dynamic field
                         # as they may differ
-                        cmp_raw_value = self._apply_scale_offset(component, cmp_raw_value)
+                        cmp_raw_value = component.apply_scale_offset(cmp_raw_value)
 
                         # Extract the component's dynamic field from def_mesg
                         cmp_field = def_mesg.mesg_type.fields[component.def_num]
@@ -354,7 +335,8 @@ class FitFile(object):
 
                 # TODO: Do we care about a base_type and a resolved field mismatch?
                 # My hunch is we don't
-                value = self._apply_scale_offset(field, field.render(raw_value))
+                value = field.render(raw_value)
+                value = field.apply_scale_offset(value)
             else:
                 value = raw_value
 

@@ -2,6 +2,7 @@
 
 import sys
 
+from fitparse import records
 from fitparse.records import Crc
 
 if sys.version_info >= (2, 7):
@@ -11,6 +12,13 @@ else:
 
 
 class RecordsTestCase(unittest.TestCase):
+
+    def test_string_parse(self):
+        sb = b'Test string\0'
+        s = records.parse_string(sb)
+        self.assertEqual('Test string', s)
+        self.assertEqual(sb, records.unparse_string(s))
+
     def test_crc(self):
         crc = Crc()
         self.assertEqual(0, crc.value)
