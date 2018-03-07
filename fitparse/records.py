@@ -4,8 +4,10 @@ import struct
 # Python 2 compat
 try:
     int_types = (int, long,)
+    byte_iter = bytearray
 except NameError:
     int_types = (int,)
+    byte_iter = lambda x: x
 
 try:
     from itertools import zip_longest
@@ -329,6 +331,52 @@ class ComponentField(RecordBase):
             raw_value = (raw_value >> self.bit_offset) & ((1 << self.bits) - 1)
 
         return raw_value
+
+
+class Crc(object):
+    """FIT file CRC computation."""
+
+    CRC_TABLE = (
+        0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401,
+        0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400,
+    )
+
+    FMT = '<H'
+
+    def __init__(self, value=0, byte_arr=None):
+        self.value = value
+        if byte_arr:
+            self.update(byte_arr)
+
+    def __repr__(self):
+        return '<%s %s>' % (self.__class__.__name__, self.value or "-")
+
+    def __str__(self):
+        return self.format(self.value)
+
+    def update(self, byte_arr):
+        """Read bytes and update the CRC computed."""
+        if byte_arr:
+            self.value = self.calculate(byte_arr, self.value)
+
+    @staticmethod
+    def format(value):
+        """Format CRC value to string."""
+        return '0x%04X' % value
+
+    @classmethod
+    def calculate(cls, byte_arr, crc=0):
+        """Compute CRC for input bytes."""
+        for byte in byte_iter(byte_arr):
+            # Taken verbatim from FIT SDK docs
+            tmp = cls.CRC_TABLE[crc & 0xF]
+            crc = (crc >> 4) & 0x0FFF
+            crc = crc ^ tmp ^ cls.CRC_TABLE[byte & 0xF]
+
+            tmp = cls.CRC_TABLE[crc & 0xF]
+            crc = (crc >> 4) & 0x0FFF
+            crc = crc ^ tmp ^ cls.CRC_TABLE[(byte >> 4) & 0xF]
+        return crc
 
 
 def parse_string(string):

@@ -2,15 +2,14 @@
 
 import csv
 import datetime
-import io
 import os
 from struct import pack
 import sys
 
 from fitparse import FitFile
 from fitparse.processors import UTC_REFERENCE, StandardUnitsDataProcessor
-from fitparse.records import BASE_TYPES
-from fitparse.utils import calc_crc, FitEOFError, FitCRCError, FitHeaderError
+from fitparse.records import BASE_TYPES, Crc
+from fitparse.utils import FitEOFError, FitCRCError, FitHeaderError
 
 if sys.version_info >= (2, 7):
     import unittest
@@ -65,8 +64,8 @@ def generate_fitfile(data=None, endian='<'):
 
     # Prototcol version 1.0, profile version 1.52
     header = pack('<2BHI4s', 14, 16, 152, len(fit_data), b'.FIT')
-    file_data = header + pack('<H', calc_crc(header)) + fit_data
-    return file_data + pack('<H', calc_crc(file_data))
+    file_data = header + pack(Crc.FMT, Crc.calculate(header)) + fit_data
+    return file_data + pack(Crc.FMT, Crc.calculate(file_data))
 
 
 def secs_to_dt(secs):
