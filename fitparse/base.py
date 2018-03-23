@@ -107,7 +107,6 @@ class FitFile(object):
         self._compressed_ts_accumulator = 0
         self._crc = 0
         self._local_mesgs = {}
-        self._messages = []
 
         header_data = self._read(12)
         if header_data[8:12] != b'.FIT':
@@ -164,7 +163,6 @@ class FitFile(object):
                 elif message.mesg_type.name == 'field_description':
                     add_dev_field_description(message)
 
-        self._messages.append(message)
         return message
 
     def _parse_message_header(self):
@@ -440,25 +438,10 @@ class FitFile(object):
                         return True
             return False
 
-        # Yield all parsed messages first
-        for message in self._messages:
-            if should_yield(message):
-                yield message.as_dict() if as_dict else message
-
-        # If there are unparsed messages, yield those too
         while not self._complete:
             message = self._parse_message()
             if message and should_yield(message):
                 yield message.as_dict() if as_dict else message
-
-    @property
-    def messages(self):
-        # TODO: could this be more efficient?
-        return list(self.get_messages())
-
-    def parse(self):
-        while self._parse_message():
-            pass
 
     def __iter__(self):
         return self.get_messages()

@@ -77,15 +77,24 @@ def testfile(filename):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), 'files', filename)
 
 
+class TestFitFile(FitFile):
+    def __init__(self, filename, data_processor=None):
+        super().__init__(testfile(filename), data_processor=data_processor)
+
+    def parse(self):
+        for _ in self.get_messages():
+            pass
+
+
 class FitFileTestCase(unittest.TestCase):
     def test_basic_file_with_one_record(self, endian='<'):
         f = FitFile(generate_fitfile(endian=endian))
-        f.parse()
+        messages = list(f.get_messages())
 
         self.assertEqual(f.profile_version, 1.52)
         self.assertEqual(f.protocol_version, 1.0)
 
-        file_id = f.messages[0]
+        file_id = messages[0]
         self.assertEqual(file_id.name, 'file_id')
 
         for field in ('type', 0):
@@ -115,7 +124,6 @@ class FitFileTestCase(unittest.TestCase):
         next(csv_file)  # Consume header
 
         f = FitFile(testfile('compressed-speed-distance.fit'))
-        f.parse()
 
         records = f.get_messages(name='record')
         empty_record = next(records)  # Skip empty record for now (sets timestamp via header)
@@ -153,9 +161,9 @@ class FitFileTestCase(unittest.TestCase):
         )
 
         f = FitFile(fit_data)
-        f.parse()
+        messages = list(f.get_messages())
 
-        event = f.messages[1]
+        event = messages[1]
         self.assertEqual(event.name, 'event')
         for field in ('event', 0):
             self.assertEqual(event.get_value(field), 'timer')
@@ -198,9 +206,9 @@ class FitFileTestCase(unittest.TestCase):
         )
 
         f = FitFile(fit_data)
-        f.parse()
+        messages = list(f.get_messages())
 
-        sport_point = f.messages[1]
+        sport_point = messages[1]
         self.assertEqual(sport_point.name, 'event')
         for field in ('event', 0):
             self.assertEqual(sport_point.get_value(field), 'sport_point')
@@ -213,7 +221,7 @@ class FitFileTestCase(unittest.TestCase):
         for field in ('opponent_score', 8):
             self.assertEqual(sport_point.get_value(field), 456)
 
-        gear_change = f.messages[2]
+        gear_change = messages[2]
         self.assertEqual(gear_change.name, 'event')
         for field in ('event', 0):
             self.assertEqual(gear_change.get_value(field), 'front_gear_change')
@@ -320,26 +328,26 @@ class FitFileTestCase(unittest.TestCase):
 
     def test_developer_types(self):
         """Test that a file with developer types in it can be parsed"""
-        FitFile(testfile('developer-types-sample.fit')).parse()
-        FitFile(testfile('20170518-191602-1740899583.fit')).parse()
-        FitFile(testfile('DeveloperData.fit')).parse()
+        TestFitFile('developer-types-sample.fit').parse()
+        TestFitFile('20170518-191602-1740899583.fit').parse()
+        TestFitFile('DeveloperData.fit').parse()
 
     def test_invalid_crc(self):
         try:
-            FitFile(testfile('activity-filecrc.fit')).parse()
+            TestFitFile('activity-filecrc.fit').parse()
             self.fail("Didn't detect an invalid CRC")
         except FitCRCError:
             pass
 
     def test_unexpected_eof(self):
         try:
-            FitFile(testfile('activity-unexpected-eof.fit')).parse()
+            TestFitFile('activity-unexpected-eof.fit').parse()
             self.fail("Didn't detect an unexpected EOF")
         except FitEOFError:
             pass
 
     def test_chained_file(self):
-        FitFile(testfile('activity-settings.fit')).parse()
+        TestFitFile('activity-settings.fit').parse()
 
     def test_invalid_chained_files(self):
         """Detect errors when files are chained together
@@ -347,19 +355,19 @@ class FitFileTestCase(unittest.TestCase):
         Note that 'chained' means just concatinated in this case
         """
         try:
-            FitFile(testfile('activity-activity-filecrc.fit')).parse()
+            TestFitFile('activity-activity-filecrc.fit').parse()
             self.fail("Didn't detect a CRC error in the chained file")
         except FitCRCError:
             pass
 
         try:
-            FitFile(testfile('activity-settings-corruptheader.fit')).parse()
+            TestFitFile('activity-settings-corruptheader.fit').parse()
             self.fail("Didn't detect a header error in the chained file")
         except FitHeaderError:
             pass
 
         try:
-            FitFile(testfile('activity-settings-nodata.fit')).parse()
+            TestFitFile('activity-settings-nodata.fit').parse()
             self.fail("Didn't detect an EOF error in the chaned file")
         except FitEOFError:
             pass
@@ -377,7 +385,7 @@ class FitFileTestCase(unittest.TestCase):
                   'sample-activity.fit', 'garmin-fenix-5-bike.fit',
                   'garmin-fenix-5-run.fit', 'garmin-fenix-5-walk.fit',
                   'garmin-edge-820-bike.fit', 'null_compressed_speed_dist.fit'):
-            FitFile(testfile(x)).parse()
+            TestFitFile(x).parse()
 
     def test_units_processor(self):
         for x in ('2013-02-06-12-11-14.fit', '2015-10-13-08-43-15.fit',
@@ -391,12 +399,13 @@ class FitFileTestCase(unittest.TestCase):
                   'sample-activity.fit', 'garmin-fenix-5-bike.fit',
                   'garmin-fenix-5-run.fit', 'garmin-fenix-5-walk.fit',
                   'garmin-edge-820-bike.fit'):
-            FitFile(testfile(x), data_processor=StandardUnitsDataProcessor()).parse()
+            TestFitFile(x, data_processor=StandardUnitsDataProcessor()).parse()
 
     def test_int_long(self):
         """Test that ints are properly shifted and scaled"""
         with FitFile(testfile('event_timestamp.fit')) as f:
-            assert f.messages[-1].fields[1].raw_value == 1739.486328125
+            messages = list(f.get_messages())
+            assert messages[-1].fields[1].raw_value == 1739.486328125
 
     def test_fileish_types(self):
         """Test the constructor does the right thing when given different types
@@ -416,7 +425,7 @@ class FitFileTestCase(unittest.TestCase):
     def test_elemnt_bolt_developer_data_id_without_application_id(self):
         """Test that a file without application id set inside developer_data_id is parsed
         (as seen on ELEMNT BOLT with firmware version WB09-1507)"""
-        FitFile(testfile('elemnt-bolt-no-application-id-inside-developer-data-id.fit')).parse()
+        TestFitFile('elemnt-bolt-no-application-id-inside-developer-data-id.fit').parse()
 
     # TODO:
     #  * Test Processors:
