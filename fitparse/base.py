@@ -9,7 +9,7 @@ try:
 except NameError:
     num_types = (int, float)
 
-from fitparse.processors import FitFileDataProcessor
+from fitparse import processors
 from fitparse.profile import FIELD_TYPE_TIMESTAMP, MESSAGE_TYPES
 from fitparse.records import (
     DataMessage, FieldData, FieldDefinition, DevFieldDefinition, DefinitionMessage, MessageHeader,
@@ -24,7 +24,7 @@ class FitFile(object):
         self._file = fileish_open(fileish, 'rb')
 
         self.check_crc = check_crc
-        self._processor = data_processor or FitFileDataProcessor()
+        self._processor = data_processor or processors.get_default_processor()
 
         # Get total filesize
         self._file.seek(0, os.SEEK_END)
@@ -60,7 +60,7 @@ class FitFile(object):
         return data
 
     def _read_struct(self, fmt, endian='<', data=None, always_tuple=False):
-        fmt_with_endian = "%s%s" % (endian, fmt)
+        fmt_with_endian = endian + fmt
         size = struct.calcsize(fmt_with_endian)
         if size <= 0:
             raise FitParseError("Invalid struct format: %s" % fmt_with_endian)
@@ -240,10 +240,7 @@ class FitFile(object):
             base_type = field_def.base_type
             is_byte = base_type.name == 'byte'
             # Struct to read n base types (field def size / base type size)
-            struct_fmt = '%d%s' % (
-                field_def.size / base_type.size,
-                base_type.fmt,
-            )
+            struct_fmt = str(int(field_def.size / base_type.size)) + base_type.fmt
 
             # Extract the raw value, ask for a tuple if it's a byte type
             raw_value = self._read_struct(
