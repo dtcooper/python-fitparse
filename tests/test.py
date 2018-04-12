@@ -64,8 +64,8 @@ def generate_fitfile(data=None, endian='<'):
 
     # Prototcol version 1.0, profile version 1.52
     header = pack('<2BHI4s', 14, 16, 152, len(fit_data), b'.FIT')
-    file_data = header + pack(Crc.FMT, Crc.calculate(header)) + fit_data
-    return file_data + pack(Crc.FMT, Crc.calculate(file_data))
+    file_data = header + pack('<' + Crc.FMT, Crc.calculate(header)) + fit_data
+    return file_data + pack('<' + Crc.FMT, Crc.calculate(file_data))
 
 
 def secs_to_dt(secs):

@@ -65,11 +65,7 @@ class FitFile(object):
         return data
 
     def _read_struct(self, fmt, endian='<', data=None, always_tuple=False):
-        if fmt.startswith('<') or fmt.startswith('>'):
-            # fmt contains endian
-            fmt_with_endian = fmt
-        else:
-            fmt_with_endian = "%s%s" % (endian, fmt)
+        fmt_with_endian = endian + fmt
         size = struct.calcsize(fmt_with_endian)
         if size <= 0:
             raise FitParseError("Invalid struct format: %s" % fmt_with_endian)
@@ -247,10 +243,7 @@ class FitFile(object):
             base_type = field_def.base_type
             is_byte = base_type.name == 'byte'
             # Struct to read n base types (field def size / base type size)
-            struct_fmt = '%d%s' % (
-                field_def.size / base_type.size,
-                base_type.fmt,
-            )
+            struct_fmt = str(int(field_def.size / base_type.size)) + base_type.fmt
 
             # Extract the raw value, ask for a tuple if it's a byte type
             raw_value = self._read_struct(
