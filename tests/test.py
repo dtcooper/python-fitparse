@@ -7,7 +7,7 @@ from struct import pack
 import sys
 
 from fitparse import FitFile
-from fitparse.processors import UTC_REFERENCE, StandardUnitsDataProcessor
+from fitparse.processors import fit_to_datetime, StandardUnitsDataProcessor
 from fitparse.records import BASE_TYPES, Crc
 from fitparse.utils import FitEOFError, FitCRCError, FitHeaderError
 
@@ -68,10 +68,6 @@ def generate_fitfile(data=None, endian='<'):
     return file_data + pack('<' + Crc.FMT, Crc.calculate(file_data))
 
 
-def secs_to_dt(secs):
-    return datetime.datetime.utcfromtimestamp(secs + UTC_REFERENCE)
-
-
 def testfile(filename):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), 'files', filename)
 
@@ -99,7 +95,7 @@ class FitFileTestCase(unittest.TestCase):
         for field in ('serial_number', 3):
             self.assertEqual(file_id.get_value(field), 558069241)
         for field in ('time_created', 4):
-            self.assertEqual(file_id.get_value(field), secs_to_dt(723842606))
+            self.assertEqual(file_id.get_value(field), fit_to_datetime(723842606))
             self.assertEqual(file_id.get(field).raw_value, 723842606)
         for field in ('number', 5):
             self.assertEqual(file_id.get_value(field), None)
