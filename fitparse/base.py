@@ -5,7 +5,6 @@ import struct
 # Python 2 compat
 try:
     num_types = (int, float, long)
-    str = basestring
 except NameError:
     num_types = (int, float)
 
@@ -16,7 +15,7 @@ from fitparse.records import (
     BASE_TYPES, BASE_TYPE_BYTE,
     add_dev_data_id, add_dev_field_description, get_dev_type
 )
-from fitparse.utils import fileish_open, FitParseError, FitEOFError, FitCRCError, FitHeaderError
+from fitparse.utils import fileish_open, is_iterable, FitParseError, FitEOFError, FitCRCError, FitHeaderError
 
 
 class FitFile(object):
@@ -407,17 +406,10 @@ class FitFile(object):
             as_dict = False
 
         if name is not None:
-            if isinstance(name, (tuple, list)):
-                names = name
+            if is_iterable(name):
+                names = set(name)
             else:
-                names = [name]
-
-            # Convert any string numbers in names to ints
-            # TODO: Revisit Python2/3 str/bytes typecheck issues
-            names = set([
-                int(n) if (isinstance(n, str) and n.isdigit()) else n
-                for n in names
-            ])
+                names = set((name,))
 
         def should_yield(message):
             if with_definitions or message.type == 'data':
