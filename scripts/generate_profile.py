@@ -274,8 +274,18 @@ def fix_units(data):
 def parse_csv_fields(data, num_expected):
     if data is None or data == '':
         return [None] * num_expected
-    elif isinstance(data, str):
-        ret = [(int(x.strip()) if x.strip().isdigit() else x.strip()) for x in data.strip().split(',')]
+    elif isinstance(data, str) or isinstance(data, unicode):
+        ret = []
+        lines = data.strip().splitlines()
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            for x in line.split(','):
+                x = x.strip()
+                if not x:
+                    continue
+                ret.append(int(x) if x.isdigit() else x)
     else:
         ret = [data]
 
@@ -364,6 +374,8 @@ def parse_messages(messages_rows, type_list):
 
     group_name = ""
     for row in messages_rows:
+        if not any(row):
+            continue
         if (row[3] is not None) and all(r == b'' for n, r in enumerate(row[:14]) if n != 3):
             # Only row 3 means it's a group name
             group_name = row[3].decode().title()
@@ -379,6 +391,7 @@ def parse_messages(messages_rows, type_list):
             # Get components if they exist
             components = []
             component_names = parse_csv_fields(row[5].decode(), 0)
+            assert type(component_names) == type([])
             if component_names and (len(component_names) != 1 or component_names[0] != ''):
                 num_components = len(component_names)
                 components = [
@@ -421,7 +434,7 @@ def parse_messages(messages_rows, type_list):
                     field = field._replace(scale=None, offset=None, units=None)
 
                 message.fields.append(field)
-            elif row[2] != b'':
+            elif row[2] != b'' or not row[1]:
                 # Sub fields
                 subfield = SubFieldInfo(
                     name=row[2].decode(), num=field.num, type=row[3].decode(), scale=fix_scale(row[6]),
@@ -530,9 +543,9 @@ def main(input_xls_or_zip, output_py_path=None):
 
     if output_py_path:
         open(output_py_path, 'w').write(output)
-        print("Profile%s written to %s",
-            ' version %s' % profile_version if profile_version else '',
-            output_py_path
+        print("Profile%s written to %s" %
+            ((' version %s' % profile_version if profile_version else ''),
+            output_py_path)
         )
     else:
         print(output.strip())
