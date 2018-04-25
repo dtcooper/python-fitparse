@@ -1,6 +1,6 @@
-import re
-
 import io
+import re
+from collections import Iterable
 
 
 class FitParseError(ValueError):
@@ -56,3 +56,10 @@ def fileish_open(fileish, mode):
     else:
         # Python 3 - file contents
         return io.BytesIO(fileish)
+
+
+def is_iterable(obj):
+    """Check, if the obj is iterable but not string or bytes.
+    :rtype bool"""
+    # Speed: do not use iter() although it's more robust, see also https://stackoverflow.com/questions/1952464/
+    return isinstance(obj, Iterable) and not isinstance(obj, (str, bytes))

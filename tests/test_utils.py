@@ -5,7 +5,7 @@ import os
 import sys
 import tempfile
 
-from fitparse.utils import fileish_open
+from fitparse.utils import fileish_open, is_iterable
 
 if sys.version_info >= (2, 7):
     import unittest
@@ -60,6 +60,16 @@ class UtilsTestCase(unittest.TestCase):
                 os.remove(filename)
             except OSError:
                 pass
+
+    def test_is_iterable(self):
+        self.assertFalse(is_iterable(None))
+        self.assertFalse(is_iterable(1))
+        self.assertFalse(is_iterable('1'))
+        self.assertFalse(is_iterable(b'1'))
+
+        self.assertTrue(is_iterable((1, 2)))
+        self.assertTrue(is_iterable([1, 2]))
+        self.assertTrue(is_iterable(range(2)))
 
 
 if __name__ == '__main__':
