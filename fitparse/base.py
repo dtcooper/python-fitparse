@@ -30,6 +30,7 @@ class FitFile(object):
         self._file.seek(0, os.SEEK_END)
         self._filesize = self._file.tell()
         self._file.seek(0, os.SEEK_SET)
+        self._messages = []
 
         # Start off by parsing the file header (sets initial attribute values)
         self._parse_file_header()
@@ -98,7 +99,6 @@ class FitFile(object):
         self._compressed_ts_accumulator = 0
         self._crc = Crc()
         self._local_mesgs = {}
-        self._messages = []
 
         header_data = self._read(12)
         if header_data[8:12] != b'.FIT':
