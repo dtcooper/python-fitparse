@@ -402,6 +402,11 @@ class FitFileTestCase(unittest.TestCase):
         (as seen on ELEMNT BOLT with firmware version WB09-1507)"""
         FitFile(testfile('elemnt-bolt-no-application-id-inside-developer-data-id.fit')).parse()
 
+    def test_multiple_header(self):
+        f = FitFile(testfile('sample_mulitple_header.fit'))
+        assert len(f.messages) == 3023
+
+
     # TODO:
     #  * Test Processors:
     #    - process_type_<>, process_field_<>, process_units_<>, process_message_<>
