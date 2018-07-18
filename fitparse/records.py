@@ -389,11 +389,23 @@ class Crc(object):
 
 def parse_string(string):
     try:
-        end = string.index(0x00)
-    except TypeError: # Python 2 compat
-        end = string.index('\x00')
+        try:
+            s = string[:string.index(0x00)]
+        except TypeError: # Python 2 compat
+            s = string[:string.index('\x00')]
+    except ValueError:
+        # FIT specification defines the 'string' type as follows: "Null
+        # terminated string encoded in UTF-8 format".
+        #
+        # However 'string' values are not always null-terminated when encoded,
+        # according to FIT files created by Garmin devices (e.g. DEVICE.FIT file
+        # from a fenix3).
+        #
+        # So in order to be more flexible, in case index() could not find any
+        # null byte, we just decode the whole bytes-like object.
+        s = string
 
-    return string[:end].decode('utf-8', errors='replace') or None
+    return s.decode(encoding='utf-8', errors='replace') or None
 
 # The default base type
 BASE_TYPE_BYTE = BaseType(name='byte', identifier=0x0D, fmt='B', parse=lambda x: None if all(b == 0xFF for b in x) else x)
