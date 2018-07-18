@@ -20,6 +20,8 @@ import zipfile
 import xlrd  # Dev requirement for parsing Excel spreadsheet
 
 
+FIELD_NUM_TIMESTAMP = 253
+
 XLS_HEADER_MAGIC = b'\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1'
 
 
@@ -42,7 +44,7 @@ IMPORT_HEADER = '''from fitparse.records import (
     BASE_TYPES,
 )'''
 
-SPECIAL_FIELD_DECLARTIONS = "FIELD_TYPE_TIMESTAMP = Field(name='timestamp', type=FIELD_TYPES['date_time'], def_num=253, units='s')"
+SPECIAL_FIELD_DECLARATIONS = "FIELD_TYPE_TIMESTAMP = Field(name='timestamp', type=FIELD_TYPES['date_time'], def_num=" + str(FIELD_NUM_TIMESTAMP) + ", units='s')"
 
 IGNORE_TYPE_VALUES = (
     # of the form 'type_name:value_name'
@@ -179,7 +181,7 @@ class MessageInfo(namedtuple('MessageInfo', ('name', 'num', 'group_name', 'field
 
 class FieldInfo(namedtuple('FieldInfo', ('name', 'type', 'num', 'scale', 'offset', 'units', 'components', 'subfields', 'comment'))):
     def __str__(self):
-        if self.num == 253:
+        if self.num == FIELD_NUM_TIMESTAMP:
             # Add trailing comma here because of comment
             assert not self.components and not self.subfields
             return 'FIELD_TYPE_TIMESTAMP,%s' % render_comment(self.comment)
@@ -372,6 +374,7 @@ def maybe_decode(o):
         return o.decode()
     return o
 
+
 def parse_messages(messages_rows, type_list):
     message_list = MessageList([])
 
@@ -402,10 +405,10 @@ def parse_messages(messages_rows, type_list):
                     )
                     for cmp_name, cmp_scale, cmp_offset, cmp_units, cmp_bits, cmp_accumulate in zip(
                         component_names,  # name
-                        parse_csv_fields(maybe_decode(row[6]), num_components),  # scale
-                        parse_csv_fields(maybe_decode(row[7]), num_components),  # offset
-                        parse_csv_fields(maybe_decode(row[8]), num_components),  # units
-                        parse_csv_fields(maybe_decode(row[9]), num_components),  # bits
+                        parse_csv_fields(maybe_decode(row[6]), num_components),   # scale
+                        parse_csv_fields(maybe_decode(row[7]), num_components),   # offset
+                        parse_csv_fields(maybe_decode(row[8]), num_components),   # units
+                        parse_csv_fields(maybe_decode(row[9]), num_components),   # bits
                         parse_csv_fields(maybe_decode(row[10]), num_components),  # accumulate
                     )
                 ]
@@ -415,12 +418,12 @@ def parse_messages(messages_rows, type_list):
                     assert component.name
                     assert component.bits
 
-        # Otherwise a field
+            # Otherwise a field
             # Not a subfield if first row has definition num
             if row[1] is not None and row[1] != b'':
                 field = FieldInfo(
                     name=row[2].decode(), type=row[3].decode(), num=maybe_decode(row[1]), scale=fix_scale(row[6]),
-                    offset=row[7], units=fix_units(row[8].decode()), components=[],
+                    offset=maybe_decode(row[7]), units=fix_units(row[8].decode()), components=[],
                     subfields=[], comment=row[13].decode(),
                 )
 
@@ -438,7 +441,7 @@ def parse_messages(messages_rows, type_list):
                 # Sub fields
                 subfield = SubFieldInfo(
                     name=row[2].decode(), num=field.num, type=row[3].decode(), scale=fix_scale(row[6]),
-                    offset=row[7], units=fix_units(row[8].decode()), ref_fields=[],
+                    offset=maybe_decode(row[7]), units=fix_units(row[8].decode()), ref_fields=[],
                     components=[], comment=row[13].decode(),
                 )
 
@@ -460,7 +463,7 @@ def parse_messages(messages_rows, type_list):
                 )
 
                 assert len(subfield.ref_fields) == len(ref_field_names)
-                if not "alert_type" in ref_field_names:
+                if "alert_type" not in ref_field_names:
                     field.subfields.append(subfield)
 
     # Resolve reference fields for subfields and components
@@ -524,9 +527,9 @@ def main(input_xls_or_zip, output_py_path=None):
 
     output = '\n'.join([
         "\n%s" % PROFILE_HEADER_FIRST_PART,
-        header('EXPORTED PROFILE FROM %s AT %s' % (
+        header('EXPORTED PROFILE FROM %s ON %s' % (
             ('SDK VERSION %s' % profile_version) if profile_version else 'SPREADSHEET',
-            datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            datetime.datetime.now().strftime('%Y-%m-%d'),
         )),
         header('PARSED %d TYPES (%d VALUES), %d MESSAGES (%d FIELDS)' % (
             len(type_list.types), sum(len(ti.values) for ti in type_list.types),
@@ -543,17 +546,16 @@ def main(input_xls_or_zip, output_py_path=None):
 
     if output_py_path:
         open(output_py_path, 'w').write(output)
-        print("Profile%s written to %s",
-            ' version %s' % profile_version if profile_version else '',
-            output_py_path
-        )
+        print('Profile version %s written to %s' % (
+            profile_version if profile_version else '<unknown>',
+            output_py_path))
     else:
         print(output.strip())
 
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Usage: %s <FitSDK.zip | Profile.xls> [profile.py]", os.path.basename(__file__))
+        print("Usage: %s <FitSDK.zip | Profile.xls> [profile.py]" % os.path.basename(__file__))
         sys.exit(0)
 
     xls = sys.argv[1]
