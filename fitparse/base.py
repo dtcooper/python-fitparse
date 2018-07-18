@@ -319,7 +319,10 @@ class FitFile(object):
                 if field.components:
                     for component in field.components:
                         # Render its raw value
-                        cmp_raw_value = component.render(raw_value)
+                        try:
+                            cmp_raw_value = component.render(raw_value)
+                        except ValueError:
+                            continue
 
                         # Apply accumulated value
                         if component.accumulate and cmp_raw_value is not None:

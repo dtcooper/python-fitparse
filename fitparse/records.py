@@ -299,7 +299,7 @@ class SubField(FieldAndSubFieldBase):
 class DevField(FieldAndSubFieldBase):
     __slots__ = ('dev_data_index', 'def_num', 'type', 'name', 'units', 'native_field_num',
                  # The rest of these are just to be compatible with Field objects. They're always None
-                 'scale', 'offset', 'components', 'subfields') 
+                 'scale', 'offset', 'components', 'subfields')
     field_type = 'devfield'
 
 
@@ -318,6 +318,14 @@ class ComponentField(RecordBase):
         # If it's a tuple, then it's a byte array and unpack it as such
         # (only type that uses this is compressed speed/distance)
         if isinstance(raw_value, tuple):
+            # Profile.xls sometimes contains more components than the read raw
+            # value is able to hold (typically the *event_timestamp_12* field in
+            # *hr* messages).
+            # This test allows to ensure *unpacked_num* is not right-shifted
+            # more than necessary.
+            if self.bit_offset and self.bit_offset >= len(raw_value) << 3:
+                raise ValueError()
+
             unpacked_num = 0
 
             # Unpack byte array as little endian
