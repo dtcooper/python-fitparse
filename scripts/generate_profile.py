@@ -52,10 +52,23 @@ IGNORE_TYPE_VALUES = (
 )
 
 BASE_TYPES = {
-    'enum': '0x00', 'sint8': '0x01', 'uint8': '0x02', 'sint16': '0x83',
-    'uint16': '0x84', 'sint32': '0x85', 'uint32': '0x86', 'string': '0x07',
-    'float32': '0x88', 'float64': '0x89', 'uint8z': '0x0A', 'uint16z': '0x8B',
-    'uint32z': '0x8C', 'byte': '0x0D',
+    'enum': '0x00',
+    'sint8': '0x01',
+    'uint8': '0x02',
+    'sint16': '0x83',
+    'uint16': '0x84',
+    'sint32': '0x85',
+    'uint32': '0x86',
+    'string': '0x07',
+    'float32': '0x88',
+    'float64': '0x89',
+    'uint8z': '0x0A',
+    'uint16z': '0x8B',
+    'uint32z': '0x8C',
+    'byte': '0x0D',
+    'sint64': '0x8E',
+    'uint64': '0x8F',
+    'uint64z': '0x90',
 }
 
 
