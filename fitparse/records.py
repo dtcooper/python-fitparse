@@ -425,6 +425,9 @@ BASE_TYPES = {
     0x8B: BaseType(name='uint16z', identifier=0x8B, fmt='H', parse=lambda x: None if x == 0x0 else x),
     0x8C: BaseType(name='uint32z', identifier=0x8C, fmt='I', parse=lambda x: None if x == 0x0 else x),
     0x0D: BASE_TYPE_BYTE,
+    0x8E: BaseType(name='sint64', identifier=0x8E, fmt='q', parse=lambda x: None if x == 0x7FFFFFFFFFFFFFFF else x),
+    0x8F: BaseType(name='uint64', identifier=0x8F, fmt='Q', parse=lambda x: None if x == 0xFFFFFFFFFFFFFFFF else x),
+    0x90: BaseType(name='uint64z', identifier=0x90, fmt='Q', parse=lambda x: None if x == 0 else x),
 }
 
 
