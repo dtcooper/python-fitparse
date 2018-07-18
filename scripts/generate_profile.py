@@ -24,9 +24,15 @@ FIELD_NUM_TIMESTAMP = 253
 
 XLS_HEADER_MAGIC = b'\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1'
 
+SYMBOL_NAME_SCRUBBER = re.compile(r'\W|^(?=\d)')
+
 
 def header(header, indent=0):
-    return '%s%s' % (' ' * indent, (' %s ' % header).center(78 - indent, '#'))
+    return '%s# %s' % (' ' * indent, (' %s ' % header).center(78 - indent, '*'))
+
+
+def scrub_symbol_name(symbol_name):
+    return SYMBOL_NAME_SCRUBBER.sub('_', symbol_name)
 
 
 PROFILE_HEADER_FIRST_PART = "%s\n%s" % (
@@ -43,6 +49,16 @@ IMPORT_HEADER = '''from fitparse.records import (
     SubField,
     BASE_TYPES,
 )'''
+
+# This allows to prepend the declaration of some message numbers to the
+# generated file.
+# E.g. 'hr' -> MESG_NUM_HR = 132
+MESSAGE_NUM_DECLARATIONS = ()
+
+# This allows to prepend the declaration of some field numbers of specific
+# messages to the generated file.
+# E.g. 'hr.event_timestamp' -> FIELD_NUM_HR_EVENT_TIMESTAMP = 9
+FIELD_NUM_DECLARATIONS = ()
 
 SPECIAL_FIELD_DECLARATIONS = "FIELD_TYPE_TIMESTAMP = Field(name='timestamp', type=FIELD_TYPES['date_time'], def_num=" + str(FIELD_NUM_TIMESTAMP) + ", units='s')"
 
@@ -157,6 +173,22 @@ class MessageList(namedtuple('MessageList', ('messages'))):
             s += "    %s: %s,\n" % (message.num, indent(message))
         s += '}'
         return s
+
+    def get_by_name(self, mesg_name):
+        for mesg in self.messages:
+            if mesg.name == mesg_name:
+                return mesg
+
+        raise ValueError('message "%s" not found' % mesg_name)
+
+    def get_field_by_name(self, mesg_name, field_name):
+        mesg = self.get_by_name(mesg_name)
+
+        for field in mesg.fields:
+            if field.name == field_name:
+                return mesg, field
+
+        raise ValueError('field "%s" not found in message "%s"' % (field_name, mesg_name))
 
 
 class MessageInfo(namedtuple('MessageInfo', ('name', 'num', 'group_name', 'fields', 'comment'))):
@@ -525,6 +557,27 @@ def main(input_xls_or_zip, output_py_path=None):
     type_list = parse_types(types_rows)
     message_list = parse_messages(messages_rows, type_list)
 
+    mesg_num_declarations = []
+    for mesg_name in MESSAGE_NUM_DECLARATIONS:
+        mesg_info = message_list.get_by_name(mesg_name)
+
+        mesg_num_declarations.append('MESG_NUM_%s = %s' % (
+            scrub_symbol_name(mesg_name).upper(),
+            str(mesg_info.num) if mesg_info else 'None'))
+
+    field_num_declarations = [
+        'FIELD_NUM_TIMESTAMP = ' + str(FIELD_NUM_TIMESTAMP)]
+    for field_fqn in FIELD_NUM_DECLARATIONS:
+        mesg_name, field_name = field_fqn.split('.', maxsplit=1)
+        mesg_info, field_info = message_list.get_field_by_name(mesg_name, field_name)
+
+        field_decl = 'FIELD_NUM_%s_%s = %s' % (
+            scrub_symbol_name(mesg_name).upper(),
+            scrub_symbol_name(field_name).upper(),
+            str(field_info.num))
+
+        field_num_declarations.append(field_decl)
+
     output = '\n'.join([
         "\n%s" % PROFILE_HEADER_FIRST_PART,
         header('EXPORTED PROFILE FROM %s ON %s' % (
@@ -535,9 +588,17 @@ def main(input_xls_or_zip, output_py_path=None):
             len(type_list.types), sum(len(ti.values) for ti in type_list.types),
             len(message_list.messages), sum(len(mi.fields) for mi in message_list.messages),
         )),
-        '', IMPORT_HEADER, '\n',
+        '', IMPORT_HEADER
+    ]) + '\n'
+
+    if mesg_num_declarations:
+        output += '\n\n' + '\n'.join(mesg_num_declarations) + '\n'
+    if field_num_declarations:
+        output += '\n\n' + '\n'.join(field_num_declarations) + '\n'
+
+    output += '\n\n' + '\n'.join([
         str(type_list), '\n',
-        SPECIAL_FIELD_DECLARTIONS, '\n',
+        SPECIAL_FIELD_DECLARATIONS, '\n',
         str(message_list), ''
     ])
 
