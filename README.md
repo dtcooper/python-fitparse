@@ -27,7 +27,7 @@ The old version is archived as
     and internal parts. (Still unstable and partially complete.)
 
   * Proper documentation!
-    [Available here](http://dtcooper.github.com/python-fitparse/).
+    [Available here](https://pythonhosted.org/fitparse/).
 
   * Unit tests and example programs.
 
