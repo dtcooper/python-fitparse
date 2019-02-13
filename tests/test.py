@@ -406,6 +406,10 @@ class FitFileTestCase(unittest.TestCase):
         f = FitFile(testfile('sample_mulitple_header.fit'))
         assert len(f.messages) == 3023
 
+    def test_rollers(self):
+        f = FitFile(testfile('rollers.fit'))
+        f.parse()
+
 
     # TODO:
     #  * Test Processors:
