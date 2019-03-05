@@ -406,6 +406,10 @@ class FitFileTestCase(unittest.TestCase):
         f = FitFile(testfile('sample_mulitple_header.fit'))
         assert len(f.messages) == 3023
 
+    def test_speed(self):
+        f = FitFile(testfile('2019-02-17-062644-ELEMNT-297E-195-0.fit'))
+        avg_speed = list(f.get_messages('session'))[0].get_values().get('avg_speed')
+        self.assertEqual(avg_speed, 5.86)
 
     # TODO:
     #  * Test Processors:
