@@ -395,7 +395,7 @@ class FitFileTestCase(unittest.TestCase):
     def test_int_long(self):
         """Test that ints are properly shifted and scaled"""
         with FitFile(testfile('event_timestamp.fit')) as f:
-            assert f.messages[-1].fields[1].raw_value == 1739.486328125
+            assert f.messages[-1].fields[1].raw_value == 863.486328125
 
     def test_elemnt_bolt_developer_data_id_without_application_id(self):
         """Test that a file without application id set inside developer_data_id is parsed
