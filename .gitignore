@@ -58,3 +58,5 @@ target/
 
 # python-fitparse specific
 FitSDK*
+Pipfile.lock
+Pipfile*
