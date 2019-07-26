@@ -395,7 +395,7 @@ class FitFileTestCase(unittest.TestCase):
     def test_int_long(self):
         """Test that ints are properly shifted and scaled"""
         with FitFile(testfile('event_timestamp.fit')) as f:
-            assert f.messages[-1].fields[1].raw_value == 1739.486328125
+            assert f.messages[-1].fields[1].raw_value == 863.486328125
 
     def test_elemnt_bolt_developer_data_id_without_application_id(self):
         """Test that a file without application id set inside developer_data_id is parsed
@@ -406,10 +406,14 @@ class FitFileTestCase(unittest.TestCase):
         f = FitFile(testfile('sample_mulitple_header.fit'))
         assert len(f.messages) == 3023
 
+    def test_speed(self):
+        f = FitFile(testfile('2019-02-17-062644-ELEMNT-297E-195-0.fit'))
+        avg_speed = list(f.get_messages('session'))[0].get_values().get('avg_speed')
+        self.assertEqual(avg_speed, 5.86)
+
     def test_rollers(self):
         f = FitFile(testfile('rollers.fit'))
         f.parse()
-
 
     # TODO:
     #  * Test Processors:

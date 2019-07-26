@@ -465,8 +465,10 @@ def parse_messages(messages_rows, type_list):
                 # Add components if they exist
                 if components:
                     field.components.extend(components)
-                    # Wipe out scale, units, offset from field since it's a component
-                    field = field._replace(scale=None, offset=None, units=None)
+
+                    # Wipe out scale, units, offset from field since components scale is None or b'' or is not digit
+                    if row[6] is None or row[6] == b'' or not str(row[6]).isdigit():
+                        field = field._replace(scale=None, offset=None, units=None)
 
                 message.fields.append(field)
             elif row[2] != b'':
