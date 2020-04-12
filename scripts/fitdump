@@ -89,6 +89,8 @@ class RecordJSONEncoder(json.JSONEncoder):
                     data.name: data.value for data in obj
                 }
             }
+        if isinstance(obj, datetime.time):
+            return str(obj)
         # Fall back to original to raise a TypeError
         return super(RecordJSONEncoder, self).default(obj)
 
