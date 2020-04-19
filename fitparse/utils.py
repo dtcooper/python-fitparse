@@ -4,6 +4,7 @@ try:
     from collections.abc import Iterable
 except ImportError:
     from collections import Iterable
+from pathlib import PurePath
 
 
 class FitParseError(ValueError):
@@ -56,6 +57,8 @@ def fileish_open(fileish, mode):
             return open(fileish, mode)
         except TypeError:
             return io.BytesIO(fileish)
+    if isinstance(fileish, PurePath):
+        return fileish.open(mode)
     else:
         # Python 3 - file contents
         return io.BytesIO(fileish)

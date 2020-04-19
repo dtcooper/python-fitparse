@@ -4,6 +4,7 @@ import io
 import os
 import sys
 import tempfile
+from pathlib import Path
 
 from fitparse.utils import fileish_open, is_iterable
 
@@ -32,6 +33,7 @@ class UtilsTestCase(unittest.TestCase):
                 f.seek(0, os.SEEK_SET)
 
         test_fopen(testfile('nametest.FIT'))
+        test_fopen(Path(testfile('nametest.FIT')))
         with open(testfile("nametest.FIT"), 'rb') as f:
             test_fopen(f)
         with open(testfile("nametest.FIT"), 'rb') as f:
