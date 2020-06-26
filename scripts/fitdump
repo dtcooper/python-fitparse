@@ -35,10 +35,90 @@ def format_message(num, message, options):
     return "".join(s)
 
 
+def get_gpxdat(records, src=None, trkname=None):
+    gpxdat = {
+        'time': None,
+        'src': src,
+        'trkname': trkname,
+        'trkpts': [],
+    }
+    
+    for message in records:
+        
+        if message.name == 'event':
+            start_event_type = False
+            tstamp = None
+            for field_data in message:
+                if field_data.name == 'event_type' and field_data.value == 'start':
+                    start_event_type = True
+                elif field_data.name == 'timestamp':
+                    tstamp = field_data.value
+            if start_event_type and tstamp is not None:
+                gpxdat['time'] = tstamp.strftime('%Y-%m-%dT%H:%M:%S')
+        
+        elif message.name == 'record':
+            trkpt = {
+                'lat': None,
+                'lon': None,
+                'ele': None,
+                'time': None,
+                'speed': None, # in m/s
+            }
+            for field_data in message:
+                if field_data.name == 'position_lat':
+                    trkpt['lat'] = field_data.value
+                elif field_data.name == 'position_long':
+                    trkpt['lon'] = field_data.value
+                elif field_data.name == 'enhanced_altitude':
+                    trkpt['ele'] = field_data.value
+                elif field_data.name == 'timestamp':
+                    trkpt['time'] = field_data.value.strftime('%Y-%m-%dT%H:%M:%S')
+                elif field_data.name == 'enhanced_speed':
+                    trkpt['speed'] = field_data.value / 3.6 # convert to m/s
+            gpxdat['trkpts'].append(trkpt)
+    
+    return gpxdat
+
+
+def format_gpx(gpxdat):
+    s = []
+    # header
+    s.append('<?xml version="1.0"?>\n')
+    s.append('<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="fitdump (python-fitparse)" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n')
+    s.append('<metadata>\n')
+    if gpxdat['time'] is not None:
+        s.append('<time>' + gpxdat['time'] + '</time>\n')
+    if gpxdat['src'] is not None:
+        s.append('<src>' + gpxdat['src'] + '</src>\n')
+    s.append('</metadata>\n')
+    s.append('<trk>\n')
+    if gpxdat['trkname'] is not None:
+        s.append('<name>' + gpxdat['trkname'] + '</name>\n')
+    s.append('<trkseg>\n')
+    
+    # track points
+    for dat in gpxdat['trkpts']:
+        if dat['lat'] is not None and dat['lon'] is not None:
+            s.append('<trkpt lat="' + str(dat['lat']) + '" lon="' + str(dat['lon']) + '">\n')
+            if dat['ele'] is not None:
+                s.append('<ele>' + str(dat['ele']) + '</ele>\n')
+            if dat['time'] is not None:
+                s.append('<time>' + str(dat['time']) + '</time>\n')
+            if dat['speed'] is not None:
+                s.append('<speed>' + str(dat['speed']) + '</speed>\n')
+            s.append('</trkpt>\n')
+    
+    # close tags
+    s.append('</trkseg>\n')
+    s.append('</trk>\n')
+    s.append('</gpx>\n')
+     
+    return s
+
+
 def parse_args(args=None):
     parser = argparse.ArgumentParser(
-        description='Dump .FIT files to various formats',
-        epilog='python-fitparse version %s' % fitparse.__version__,
+        description='Dump .FIT files to various formats', epilog='python-fitparse version %s' % fitparse.__version__,
     )
     parser.add_argument('-v', '--verbose', action='count', default=0)
     parser.add_argument(
@@ -47,7 +127,7 @@ def parse_args(args=None):
     )
     parser.add_argument(
         # TODO: csv
-        '-t', '--type', choices=('readable', 'json'), default='readable',
+        '-t', '--type', choices=('readable', 'json', 'gpx'), default='readable',
         help='File type to output. (DEFAULT: %(default)s)',
     )
     parser.add_argument(
@@ -112,6 +192,9 @@ def main(args=None):
     elif options.type == "readable":
         options.output.writelines(format_message(n, record, options)
                                   for n, record in enumerate(records, 1))
+    elif options.type == "gpx":
+        gpxdat = get_gpxdat(records)
+        options.output.writelines(format_gpx(gpxdat))
 
 
 if __name__ == '__main__':
