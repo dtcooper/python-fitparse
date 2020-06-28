@@ -7,6 +7,7 @@ import datetime
 import json
 import sys
 import types
+import os
 
 # Python 2 compat
 try:
@@ -33,87 +34,6 @@ def format_message(num, message, options):
 
     s.append('\n')
     return "".join(s)
-
-
-def get_gpxdat(records, src=None, trkname=None):
-    gpxdat = {
-        'time': None,
-        'src': src,
-        'trkname': trkname,
-        'trkpts': [],
-    }
-    
-    for message in records:
-        
-        if message.name == 'event':
-            start_event_type = False
-            tstamp = None
-            for field_data in message:
-                if field_data.name == 'event_type' and field_data.value == 'start':
-                    start_event_type = True
-                elif field_data.name == 'timestamp':
-                    tstamp = field_data.value
-            if start_event_type and tstamp is not None:
-                gpxdat['time'] = tstamp.strftime('%Y-%m-%dT%H:%M:%S')
-        
-        elif message.name == 'record':
-            trkpt = {
-                'lat': None,
-                'lon': None,
-                'ele': None,
-                'time': None,
-                'speed': None, # in m/s
-            }
-            for field_data in message:
-                if field_data.name == 'position_lat':
-                    trkpt['lat'] = field_data.value
-                elif field_data.name == 'position_long':
-                    trkpt['lon'] = field_data.value
-                elif field_data.name == 'enhanced_altitude':
-                    trkpt['ele'] = field_data.value
-                elif field_data.name == 'timestamp':
-                    trkpt['time'] = field_data.value.strftime('%Y-%m-%dT%H:%M:%S')
-                elif field_data.name == 'enhanced_speed':
-                    trkpt['speed'] = field_data.value / 3.6 # convert to m/s
-            gpxdat['trkpts'].append(trkpt)
-    
-    return gpxdat
-
-
-def format_gpx(gpxdat):
-    s = []
-    # header
-    s.append('<?xml version="1.0"?>\n')
-    s.append('<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="fitdump (python-fitparse)" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n')
-    s.append('<metadata>\n')
-    if gpxdat['time'] is not None:
-        s.append('<time>' + gpxdat['time'] + '</time>\n')
-    if gpxdat['src'] is not None:
-        s.append('<src>' + gpxdat['src'] + '</src>\n')
-    s.append('</metadata>\n')
-    s.append('<trk>\n')
-    if gpxdat['trkname'] is not None:
-        s.append('<name>' + gpxdat['trkname'] + '</name>\n')
-    s.append('<trkseg>\n')
-    
-    # track points
-    for dat in gpxdat['trkpts']:
-        if dat['lat'] is not None and dat['lon'] is not None:
-            s.append('<trkpt lat="' + str(dat['lat']) + '" lon="' + str(dat['lon']) + '">\n')
-            if dat['ele'] is not None:
-                s.append('<ele>' + str(dat['ele']) + '</ele>\n')
-            if dat['time'] is not None:
-                s.append('<time>' + str(dat['time']) + '</time>\n')
-            if dat['speed'] is not None:
-                s.append('<speed>' + str(dat['speed']) + '</speed>\n')
-            s.append('</trkpt>\n')
-    
-    # close tags
-    s.append('</trkseg>\n')
-    s.append('</trk>\n')
-    s.append('</gpx>\n')
-     
-    return s
 
 
 def parse_args(args=None):
@@ -173,6 +93,85 @@ class RecordJSONEncoder(json.JSONEncoder):
         return super(RecordJSONEncoder, self).default(obj)
 
 
+def get_gpsdat(records, src=None, trkname=None):
+    gpsdat = {
+        'time': None, # in ISO 8601 format
+        'src': src,
+        'trkname': trkname,
+        'trkpts': [],
+    }
+
+    for message in records:
+
+        if message.name == 'file_id':
+            for field_data in message:
+                if field_data.name == 'time_created' and type(field_data.value) == datetime.datetime:
+                    gpsdat['time'] = field_data.value.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        elif message.name == 'record':
+            trkpt = {
+                'lat': None, # in decimal degrees
+                'lon': None, # in decimal degrees
+                'ele': None, # in m
+                'time': None, # in ISO 8601 format
+                'speed': None, # in m/s
+            }
+            for field_data in message:
+                if field_data.name == 'position_lat':
+                    trkpt['lat'] = field_data.value
+                elif field_data.name == 'position_long':
+                    trkpt['lon'] = field_data.value
+                elif field_data.name == 'enhanced_altitude':
+                    trkpt['ele'] = field_data.value
+                elif field_data.name == 'timestamp' and type(field_data.value) == datetime.datetime:
+                    trkpt['time'] = field_data.value.strftime('%Y-%m-%dT%H:%M:%SZ')
+                elif field_data.name == 'enhanced_speed' and type(field_data.value) == float:
+                    if field_data.units == 'm/s':
+                        trkpt['speed'] = field_data.value
+                    elif field_data.units == 'km/h':
+                        trkpt['speed'] = field_data.value / 3.6 # convert to m/s
+            gpsdat['trkpts'].append(trkpt)
+
+    return gpsdat
+
+
+def format_gpx(gpsdat):
+    s = []
+
+    # header + open tags
+    s.append('<?xml version="1.0"?>\n')
+    s.append('<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="python-fitparse (fitdump)" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n')
+    s.append('<metadata>\n')
+    if gpsdat['time'] is not None:
+        s.append('<time>' + gpsdat['time'] + '</time>\n')
+    if gpsdat['src'] is not None:
+        s.append('<src>' + gpsdat['src'] + '</src>\n')
+    s.append('</metadata>\n')
+    s.append('<trk>\n')
+    if gpsdat['trkname'] is not None:
+        s.append('<name>' + gpsdat['trkname'] + '</name>\n')
+    s.append('<trkseg>\n')
+
+    # track points
+    for dat in gpsdat['trkpts']:
+        if dat['lat'] is not None and dat['lon'] is not None:
+            s.append('<trkpt lat="' + str(dat['lat']) + '" lon="' + str(dat['lon']) + '">\n')
+            if dat['ele'] is not None:
+                s.append('<ele>' + str(dat['ele']) + '</ele>\n')
+            if dat['time'] is not None:
+                s.append('<time>' + str(dat['time']) + '</time>\n')
+            if dat['speed'] is not None:
+                s.append('<speed>' + str(dat['speed']) + '</speed>\n')
+            s.append('</trkpt>\n')
+
+    # close tags
+    s.append('</trkseg>\n')
+    s.append('</trk>\n')
+    s.append('</gpx>\n')
+
+    return s
+
+
 def main(args=None):
     options = parse_args(args)
 
@@ -193,8 +192,9 @@ def main(args=None):
         options.output.writelines(format_message(n, record, options)
                                   for n, record in enumerate(records, 1))
     elif options.type == "gpx":
-        gpxdat = get_gpxdat(records)
-        options.output.writelines(format_gpx(gpxdat))
+        src_filename = os.path.basename(options.infile.name)
+        gpsdat = get_gpsdat(records, src=src_filename, trkname=src_filename)
+        options.output.writelines(format_gpx(gpsdat))
 
 
 if __name__ == '__main__':
