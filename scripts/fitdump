@@ -38,7 +38,8 @@ def format_message(num, message, options):
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(
-        description='Dump .FIT files to various formats', epilog='python-fitparse version %s' % fitparse.__version__,
+        description='Dump .FIT files to various formats',
+        epilog='python-fitparse version %s' % fitparse.__version__,
     )
     parser.add_argument('-v', '--verbose', action='count', default=0)
     parser.add_argument(
