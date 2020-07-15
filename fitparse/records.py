@@ -450,7 +450,10 @@ def add_dev_field_description(message):
     field_def_num = message.get('field_definition_number').raw_value
     base_type_id = message.get('fit_base_type_id').raw_value
     field_name = message.get('field_name').raw_value
-    units = message.get('units').raw_value
+    if message.get('units') is not None:
+        units = message.get('units').raw_value
+    else:
+        units = None
 
     native_field_num = message.get('native_field_num')
     if native_field_num is not None:
