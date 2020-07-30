@@ -120,6 +120,12 @@ class DataMessage(RecordBase):
             if field_data.is_named(field_name):
                 return field_data.as_dict() if as_dict else field_data
 
+    def get_raw_value(self, field_name):
+        field_data = self.get(field_name)
+        if field_data:
+            return field_data.raw_value
+        return None
+
     def get_value(self, field_name):
         # SIMPLIFY: get rid of this completely
         field_data = self.get(field_name)
@@ -433,11 +439,8 @@ BASE_TYPES = {
 
 def add_dev_data_id(message):
     global DEV_TYPES
-    dev_data_index = message.get('developer_data_index').raw_value
-    if message.get('application_id'):
-        application_id = message.get('application_id').raw_value
-    else:
-        application_id = None
+    dev_data_index = message.get_raw_value('developer_data_index')
+    application_id = message.get_raw_value('application_id')
 
     # Note that nothing in the spec says overwriting an existing type is invalid
     DEV_TYPES[dev_data_index] = {'dev_data_index': dev_data_index, 'application_id': application_id, 'fields': {}}
@@ -446,15 +449,12 @@ def add_dev_data_id(message):
 def add_dev_field_description(message):
     global DEV_TYPES
 
-    dev_data_index = message.get('developer_data_index').raw_value
-    field_def_num = message.get('field_definition_number').raw_value
-    base_type_id = message.get('fit_base_type_id').raw_value
-    field_name = message.get('field_name').raw_value
-    units = message.get('units').raw_value
-
-    native_field_num = message.get('native_field_num')
-    if native_field_num is not None:
-        native_field_num = native_field_num.raw_value
+    dev_data_index = message.get_raw_value('developer_data_index')
+    field_def_num = message.get_raw_value('field_definition_number')
+    base_type_id = message.get_raw_value('fit_base_type_id')
+    field_name = message.get_raw_value('field_name')
+    units = message.get_raw_value("units")
+    native_field_num = message.get_raw_value('native_field_num')
 
     if dev_data_index not in DEV_TYPES:
         raise FitParseError("No such dev_data_index=%s found" % (dev_data_index))
