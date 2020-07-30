@@ -1,34 +1,24 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>python-fitparse Documention &#8212; python-fitparse 0.0.1-dev documentation</title>
-    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>python-fitparse Documention &#8212; python-fitparse 1.1.0 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.0.1-dev',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="The fitparse API Documentation" href="api.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -41,7 +31,8 @@
         <li class="right" >
           <a href="api.html" title="The fitparse API Documentation"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">python-fitparse 0.0.1-dev documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">python-fitparse 1.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">python-fitparse Documention</a></li> 
       </ul>
     </div>  
 
@@ -54,8 +45,8 @@
 <h1>python-fitparse Documention<a class="headerlink" href="#python-fitparse-documention" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api.html">The <code class="docutils literal"><span class="pre">fitparse</span></code> API Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api.html#the-fitfile-object">The <code class="docutils literal"><span class="pre">FitFile</span></code> Object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">The <code class="docutils literal notranslate"><span class="pre">fitparse</span></code> API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#the-fitfile-object">The <code class="docutils literal notranslate"><span class="pre">FitFile</span></code> Object</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#record-objects">Record Objects</a></li>
 </ul>
 </li>
@@ -63,8 +54,8 @@
 </div>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference internal" href="api.html#module-fitparse" title="fitparse"><code class="xref py py-mod docutils literal"><span class="pre">fitparse</span></code></a> module is a Python library for parsing
-<a class="reference external" href="http://www.thisisant.com">ANT</a>/<a class="reference external" href="http://www.garmin.com">Garmin</a> <code class="docutils literal"><span class="pre">.FIT</span></code>
+<p>The <a class="reference internal" href="api.html#module-fitparse" title="fitparse"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fitparse</span></code></a> module is a Python library for parsing
+<a class="reference external" href="http://www.thisisant.com">ANT</a>/<a class="reference external" href="http://www.garmin.com">Garmin</a> <code class="docutils literal notranslate"><span class="pre">.FIT</span></code>
 files.</p>
 <p>The FIT (Flexible and Interoperable Data Transfer) file protocol is specified
 by <a class="reference external" href="http://www.thisisant.com">ANT</a> in its FIT SDK. It’s a common file format
@@ -77,9 +68,9 @@ Forerunner series of <a class="reference external" href="http://www.garmin.com">
 <div class="section" id="installation">
 <h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="using-pip">
-<h4>Using <code class="docutils literal"><span class="pre">pip</span></code><a class="headerlink" href="#using-pip" title="Permalink to this headline">¶</a></h4>
-<p>The easiest way to grab <a class="reference internal" href="api.html#module-fitparse" title="fitparse"><code class="xref py py-mod docutils literal"><span class="pre">fitparse</span></code></a> is using <code class="docutils literal"><span class="pre">pip</span></code>,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ pip install python-fitparse
+<h4>Using <code class="docutils literal notranslate"><span class="pre">pip</span></code><a class="headerlink" href="#using-pip" title="Permalink to this headline">¶</a></h4>
+<p>The easiest way to grab <a class="reference internal" href="api.html#module-fitparse" title="fitparse"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fitparse</span></code></a> is using <code class="docutils literal notranslate"><span class="pre">pip</span></code>,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install fitparse
 </pre></div>
 </div>
 </div>
@@ -87,7 +78,7 @@ Forerunner series of <a class="reference external" href="http://www.garmin.com">
 <h4>From github<a class="headerlink" href="#from-github" title="Permalink to this headline">¶</a></h4>
 <p>Navigate to <a class="reference external" href="https://github.com/dtcooper/python-fitparse">dtcooper/python-fitparse</a>
 on github and clone the latest version:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ git clone git@github.com:dtcooper/python-fitparse.git
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone git@github.com:dtcooper/python-fitparse.git
 $ cd python-fitparse
 $ python setup.py install
 </pre></div>
@@ -95,14 +86,14 @@ $ python setup.py install
 </div>
 <div class="section" id="requirements">
 <h4>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h4>
-<p>The following are required to install <a class="reference internal" href="api.html#module-fitparse" title="fitparse"><code class="xref py py-mod docutils literal"><span class="pre">fitparse</span></code></a>,</p>
+<p>The following are required to install <a class="reference internal" href="api.html#module-fitparse" title="fitparse"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fitparse</span></code></a>,</p>
 <ul class="simple">
-<li><a class="reference external" href="http://www.python.org/">Python</a> 2.5 and above (Python 3 is currently not
-supported)</li>
-<li>The <a class="reference external" href="https://code.google.com/p/argparse/">argparse</a> is required for the
+<li><p><a class="reference external" href="http://www.python.org/">Python</a> 2.5 and above (Python 3 is currently not
+supported)</p></li>
+<li><p>The <a class="reference external" href="https://code.google.com/p/argparse/">argparse</a> is required for the
 <strong class="command">fitdump</strong> command, but it is included in the Python standard library
-as of version 2.7. Using <code class="docutils literal"><span class="pre">pip</span></code> to install the package will install this if
-needed.</li>
+as of version 2.7. Using <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install the package will install this if
+needed.</p></li>
 </ul>
 </div>
 </div>
@@ -112,8 +103,8 @@ needed.</li>
 this part of the documentation is for you.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api.html">The <code class="docutils literal"><span class="pre">fitparse</span></code> API Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api.html#the-fitfile-object">The <code class="docutils literal"><span class="pre">FitFile</span></code> Object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">The <code class="docutils literal notranslate"><span class="pre">fitparse</span></code> API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#the-fitfile-object">The <code class="docutils literal notranslate"><span class="pre">FitFile</span></code> Object</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#record-objects">Record Objects</a></li>
 </ul>
 </li>
@@ -123,7 +114,7 @@ this part of the documentation is for you.</p>
 <div class="section" id="usage-examples">
 <h3>Usage Examples<a class="headerlink" href="#usage-examples" title="Permalink to this headline">¶</a></h3>
 <p>Here’s a simple program to print all the record fields in an activity file:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fitparse</span> <span class="k">import</span> <span class="n">FitFile</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fitparse</span> <span class="kn">import</span> <span class="n">FitFile</span>
 
 
 <span class="n">fitfile</span> <span class="o">=</span> <span class="n">FitFile</span><span class="p">(</span><span class="s1">&#39;/home/dave/garmin-activities/2012-12-19-16-14-54.fit&#39;</span><span class="p">)</span>
@@ -136,20 +127,21 @@ this part of the documentation is for you.</p>
 
         <span class="c1"># Print the records name and value (and units if it has any)</span>
         <span class="k">if</span> <span class="n">record_data</span><span class="o">.</span><span class="n">units</span><span class="p">:</span>
-            <span class="nb">print</span> <span class="s2">&quot; * </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; * </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
                 <span class="n">record_data</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">record_data</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">record_data</span><span class="o">.</span><span class="n">units</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span> <span class="s2">&quot; * </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">record_data</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">record_data</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-    <span class="nb">print</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; * </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">record_data</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">record_data</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="license">
 <h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MIT</span> <span class="n">License</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MIT</span> <span class="n">License</span>
 
-<span class="n">Copyright</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="mi">2011</span><span class="o">-</span><span class="mi">2017</span><span class="p">,</span> <span class="n">David</span> <span class="n">Cooper</span> <span class="o">&lt;</span><span class="n">david</span><span class="nd">@dtcooper</span><span class="o">.</span><span class="n">com</span><span class="o">&gt;</span>
+<span class="n">Copyright</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="mi">2011</span><span class="o">-</span><span class="mi">2020</span><span class="p">,</span> <span class="n">David</span> <span class="n">Cooper</span> <span class="o">&lt;</span><span class="n">david</span><span class="nd">@dtcooper</span><span class="o">.</span><span class="n">com</span><span class="o">&gt;</span>
+<span class="n">Copyright</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="mi">2017</span><span class="o">-</span><span class="mi">2020</span><span class="p">,</span> <span class="n">Carey</span> <span class="n">Metcalfe</span> <span class="o">&lt;</span><span class="n">carey</span><span class="nd">@cmetcalfe</span><span class="o">.</span><span class="n">ca</span><span class="o">&gt;</span>
 
 <span class="n">Permission</span> <span class="ow">is</span> <span class="n">hereby</span> <span class="n">granted</span><span class="p">,</span> <span class="n">free</span> <span class="n">of</span> <span class="n">charge</span><span class="p">,</span> <span class="n">to</span> <span class="nb">any</span> <span class="n">person</span> <span class="n">obtaining</span> <span class="n">a</span> <span class="n">copy</span>
 <span class="n">of</span> <span class="n">this</span> <span class="n">software</span> <span class="ow">and</span> <span class="n">associated</span> <span class="n">documentation</span> <span class="n">files</span> <span class="p">(</span><span class="n">the</span> <span class="s2">&quot;Software&quot;</span><span class="p">),</span> <span class="n">to</span> <span class="n">deal</span>
@@ -175,18 +167,19 @@ this part of the documentation is for you.</p>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table Of Contents</a></h3>
+  <h3><a href="#">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">python-fitparse Documention</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a><ul>
 <li><a class="reference internal" href="#quickstart-guide">Quickstart Guide</a></li>
 <li><a class="reference internal" href="#installation">Installation</a><ul>
-<li><a class="reference internal" href="#using-pip">Using <code class="docutils literal"><span class="pre">pip</span></code></a></li>
+<li><a class="reference internal" href="#using-pip">Using <code class="docutils literal notranslate"><span class="pre">pip</span></code></a></li>
 <li><a class="reference internal" href="#from-github">From github</a></li>
 <li><a class="reference internal" href="#requirements">Requirements</a></li>
 </ul>
@@ -202,7 +195,7 @@ this part of the documentation is for you.</p>
 
   <h4>Next topic</h4>
   <p class="topless"><a href="api.html"
-                        title="next chapter">The <code class="docutils literal"><span class="pre">fitparse</span></code> API Documentation</a></p>
+                        title="next chapter">The <code class="docutils literal notranslate"><span class="pre">fitparse</span></code> API Documentation</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -211,15 +204,15 @@ this part of the documentation is for you.</p>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
     </form>
+    </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -236,12 +229,13 @@ this part of the documentation is for you.</p>
         <li class="right" >
           <a href="api.html" title="The fitparse API Documentation"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">python-fitparse 0.0.1-dev documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">python-fitparse 1.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">python-fitparse Documention</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2011-2013, David Cooper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.2.
     </div>
   </body>
 </html>

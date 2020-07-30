@@ -1,34 +1,24 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>The fitparse API Documentation &#8212; python-fitparse 0.0.1-dev documentation</title>
-    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The fitparse API Documentation &#8212; python-fitparse 1.1.0 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.0.1-dev',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="python-fitparse Documention" href="index.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -41,7 +31,8 @@
         <li class="right" >
           <a href="index.html" title="python-fitparse Documention"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">python-fitparse 0.0.1-dev documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">python-fitparse 1.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">The <code class="docutils literal notranslate"><span class="pre">fitparse</span></code> API Documentation</a></li> 
       </ul>
     </div>  
 
@@ -51,85 +42,78 @@
           <div class="body" role="main">
             
   <div class="section" id="module-fitparse">
-<span id="the-fitparse-api-documentation"></span><span id="api"></span><h1>The <code class="docutils literal"><span class="pre">fitparse</span></code> API Documentation<a class="headerlink" href="#module-fitparse" title="Permalink to this headline">¶</a></h1>
+<span id="the-fitparse-api-documentation"></span><span id="api"></span><h1>The <code class="docutils literal notranslate"><span class="pre">fitparse</span></code> API Documentation<a class="headerlink" href="#module-fitparse" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="the-fitfile-object">
-<h2>The <code class="docutils literal"><span class="pre">FitFile</span></code> Object<a class="headerlink" href="#the-fitfile-object" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<h2>The <code class="docutils literal notranslate"><span class="pre">FitFile</span></code> Object<a class="headerlink" href="#the-fitfile-object" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
 <dt id="fitparse.FitFile">
-<em class="property">class </em><code class="descclassname">fitparse.</code><code class="descname">FitFile</code><span class="sig-paren">(</span><em>fileish</em>, <em>check_crc=True</em>, <em>data_processor=None</em><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.FitFile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Interface for reading a <code class="docutils literal"><span class="pre">.FIT</span></code> file.</p>
-<p>Provided a <code class="docutils literal"><span class="pre">.FIT</span></code> file <cite>fileish</cite>, this is the main interface to parsing
-a <code class="docutils literal"><span class="pre">.FIT</span></code> file and reading its data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>fileish</strong> – <p>A file path, file-like object, or a string of bytes
+<em class="property">class </em><code class="sig-prename descclassname">fitparse.</code><code class="sig-name descname">FitFile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fileish</span></em>, <em class="sig-param"><span class="n">check_crc</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">data_processor</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.FitFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interface for reading a <code class="docutils literal notranslate"><span class="pre">.FIT</span></code> file.</p>
+<p>Provided a <code class="docutils literal notranslate"><span class="pre">.FIT</span></code> file <cite>fileish</cite>, this is the main interface to parsing
+a <code class="docutils literal notranslate"><span class="pre">.FIT</span></code> file and reading its data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fileish</strong> – <p>A file path, file-like object, or a string of bytes
 representing FIT data to be read.</p>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
+<p class="admonition-title">Note</p>
 <p>Usage Notes</p>
 <p>All of the following work with the <cite>fileish</cite> parameter:</p>
-<pre class="last literal-block">
-# Specifying a file path
-fitfile = FitFile(‘/path.to/fitfile.fit’)
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Specifying a file path</span>
+<span class="n">fitfile</span> <span class="o">=</span> <span class="n">FitFile</span><span class="p">(</span><span class="s1">&#39;/path.to/fitfile.fit&#39;</span><span class="p">)</span>
 
-# Providing a file-like object
-file_obj = open(‘/path.to/fitfile.fit’, ‘rb’)
-fitfile = FitFile(file_obj)
+<span class="c1"># Providing a file-like object</span>
+<span class="n">file_obj</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/path.to/fitfile.fit&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="n">fitfile</span> <span class="o">=</span> <span class="n">FitFile</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span>
 
-# Providing a raw string of bytes
-file_obj = open(‘/path.to/fitfile.fit’, ‘rb’)
-raw_fit_data = file_obj.read()
-fitfile = FitFile(raw_fit_data)
-</pre>
+<span class="c1"># Providing a raw string of bytes</span>
+<span class="n">file_obj</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/path.to/fitfile.fit&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="n">raw_fit_data</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="n">fitfile</span> <span class="o">=</span> <span class="n">FitFile</span><span class="p">(</span><span class="n">raw_fit_data</span><span class="p">)</span>
+</pre></div>
 </div>
-</li>
-<li><strong>check_crc</strong> – Set to <code class="docutils literal"><span class="pre">False</span></code> if to disable CRC validation while
-reading the current <code class="docutils literal"><span class="pre">.FIT</span></code> file.</li>
-<li><strong>data_processor</strong> – Use this parameter to specify an alternate data
+</div>
+</p></li>
+<li><p><strong>check_crc</strong> – Set to <code class="docutils literal notranslate"><span class="pre">False</span></code> if to disable CRC validation while
+reading the current <code class="docutils literal notranslate"><span class="pre">.FIT</span></code> file.</p></li>
+<li><p><strong>data_processor</strong> – Use this parameter to specify an alternate data
 processor object to use. If one is not provided, an instance of
-<code class="xref py py-class docutils literal"><span class="pre">FitFileDataProcessor</span></code> will be used.</li>
+<code class="xref py py-class docutils literal notranslate"><span class="pre">FitFileDataProcessor</span></code> will be used.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">Creating a <a class="reference internal" href="#fitparse.FitFile" title="fitparse.FitFile"><code class="xref py py-class docutils literal"><span class="pre">FitFile</span></code></a> may raise a <code class="xref py py-exc docutils literal"><span class="pre">FitParseError</span></code>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p>Creating a <a class="reference internal" href="#fitparse.FitFile" title="fitparse.FitFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitFile</span></code></a> may raise a <code class="xref py py-exc docutils literal notranslate"><span class="pre">FitParseError</span></code>
 exception. See the <a class="reference internal" href="#exception-warning"><span class="std std-ref">note on exceptions</span></a>.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
+</dd>
+</dl>
+<dl class="py method">
 <dt id="fitparse.FitFile.get_messages">
-<code class="descname">get_messages</code><span class="sig-paren">(</span><em>name=None</em>, <em>with_definitions=False</em>, <em>as_dict=False</em><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.FitFile.get_messages" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_messages</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">with_definitions</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">as_dict</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.FitFile.get_messages" title="Permalink to this definition">¶</a></dt>
 <dd><p>TODO: document and implement</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="fitparse.FitFile.parse">
-<code class="descname">parse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.FitFile.parse" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">parse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.FitFile.parse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse the underlying FIT data completely.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">May raise a <code class="xref py py-exc docutils literal"><span class="pre">FitParseError</span></code> exception.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p>May raise a <code class="xref py py-exc docutils literal notranslate"><span class="pre">FitParseError</span></code> exception.</p>
+</dd>
+</dl>
 <div class="admonition warning" id="exception-warning">
-<p class="first admonition-title">Warning</p>
-<p>Note on Exceptions While Parsing a <code class="docutils literal"><span class="pre">.FIT</span></code> File</p>
-<p>In general, any operation on a that <a class="reference internal" href="#fitparse.FitFile" title="fitparse.FitFile"><code class="xref py py-class docutils literal"><span class="pre">FitFile</span></code></a> that results in
-parsing the underlying FIT data may throw a <code class="xref py py-exc docutils literal"><span class="pre">FitParseError</span></code>
+<p class="admonition-title">Warning</p>
+<p>Note on Exceptions While Parsing a <code class="docutils literal notranslate"><span class="pre">.FIT</span></code> File</p>
+<p>In general, any operation on a that <a class="reference internal" href="#fitparse.FitFile" title="fitparse.FitFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitFile</span></code></a> that results in
+parsing the underlying FIT data may throw a <code class="xref py py-exc docutils literal notranslate"><span class="pre">FitParseError</span></code>
 exception when invalid data is encountered.</p>
 <p>One way to catch these before you start reading going through the
-messages contained in a <a class="reference internal" href="#fitparse.FitFile" title="fitparse.FitFile"><code class="xref py py-class docutils literal"><span class="pre">FitFile</span></code></a> is to call
-<a class="reference internal" href="#fitparse.FitFile.parse" title="fitparse.FitFile.parse"><code class="xref py py-meth docutils literal"><span class="pre">parse()</span></code></a> immediately after creating a
-<a class="reference internal" href="#fitparse.FitFile" title="fitparse.FitFile"><code class="xref py py-class docutils literal"><span class="pre">FitFile</span></code></a> object. For example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">fitparse</span> <span class="k">import</span> <span class="n">FitFile</span><span class="p">,</span> <span class="n">FitParseError</span>
+messages contained in a <a class="reference internal" href="#fitparse.FitFile" title="fitparse.FitFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitFile</span></code></a> is to call
+<a class="reference internal" href="#fitparse.FitFile.parse" title="fitparse.FitFile.parse"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse()</span></code></a> immediately after creating a
+<a class="reference internal" href="#fitparse.FitFile" title="fitparse.FitFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitFile</span></code></a> object. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">fitparse</span> <span class="kn">import</span> <span class="n">FitFile</span><span class="p">,</span> <span class="n">FitParseError</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="n">fitfile</span> <span class="o">=</span> <span class="n">FitFile</span><span class="p">(</span><span class="s1">&#39;/path.to/fitfile.fit&#39;</span><span class="p">)</span>
@@ -139,19 +123,19 @@ messages contained in a <a class="reference internal" href="#fitparse.FitFile" t
     <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
-<p class="last">Any file related IO exceptions caught during a <cite>read()</cite> or <cite>close()</cite>
+<p>Any file related IO exceptions caught during a <cite>read()</cite> or <cite>close()</cite>
 operation will be raised as usual.</p>
 </div>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="fitparse.FitFile.messages">
-<code class="descname">messages</code><a class="headerlink" href="#fitparse.FitFile.messages" title="Permalink to this definition">¶</a></dt>
-<dd><p>The complete <cite>list</cite> of <a class="reference internal" href="#fitparse.DataMessage" title="fitparse.DataMessage"><code class="xref py py-class docutils literal"><span class="pre">DataMessage</span></code></a> record objects that are
-contained in this <a class="reference internal" href="#fitparse.FitFile" title="fitparse.FitFile"><code class="xref py py-class docutils literal"><span class="pre">FitFile</span></code></a>. This list is provided as a
-convenience attribute that wraps <a class="reference internal" href="#fitparse.FitFile.get_messages" title="fitparse.FitFile.get_messages"><code class="xref py py-meth docutils literal"><span class="pre">get_messages()</span></code></a>. It is
+<code class="sig-name descname">messages</code><a class="headerlink" href="#fitparse.FitFile.messages" title="Permalink to this definition">¶</a></dt>
+<dd><p>The complete <cite>list</cite> of <a class="reference internal" href="#fitparse.DataMessage" title="fitparse.DataMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataMessage</span></code></a> record objects that are
+contained in this <a class="reference internal" href="#fitparse.FitFile" title="fitparse.FitFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitFile</span></code></a>. This list is provided as a
+convenience attribute that wraps <a class="reference internal" href="#fitparse.FitFile.get_messages" title="fitparse.FitFile.get_messages"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_messages()</span></code></a>. It is
 functionally equivalent to:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">FitFile</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">FitFile</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="c1"># ...</span>
 
     <span class="nd">@property</span>
@@ -159,26 +143,23 @@ functionally equivalent to:</p>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_messages</span><span class="p">())</span>
 </pre></div>
 </div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">Reading this property may raise a <code class="xref py py-exc docutils literal"><span class="pre">FitParseError</span></code>
-exception. See the <a class="reference internal" href="#exception-warning"><span class="std std-ref">note on exceptions</span></a>.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p>Reading this property may raise a <code class="xref py py-exc docutils literal notranslate"><span class="pre">FitParseError</span></code>
+exception. See the <a class="reference internal" href="#exception-warning"><span class="std std-ref">note on exceptions</span></a>.</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="fitparse.FitFile.profile_version">
-<code class="descname">profile_version</code><a class="headerlink" href="#fitparse.FitFile.profile_version" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">profile_version</code><a class="headerlink" href="#fitparse.FitFile.profile_version" title="Permalink to this definition">¶</a></dt>
 <dd><p>The profile version of the FIT data read (see ANT FIT SDK for)</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="fitparse.FitFile.protocol_version">
-<code class="descname">protocol_version</code><a class="headerlink" href="#fitparse.FitFile.protocol_version" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">protocol_version</code><a class="headerlink" href="#fitparse.FitFile.protocol_version" title="Permalink to this definition">¶</a></dt>
 <dd><p>The protocol version of the FIT data read (see ANT FIT SDK)</p>
 </dd></dl>
 
@@ -189,38 +170,38 @@ exception. See the <a class="reference internal" href="#exception-warning"><span
 <h2>Record Objects<a class="headerlink" href="#record-objects" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="common-used-record-objects">
 <h3>Common Used Record Objects<a class="headerlink" href="#common-used-record-objects" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
+<dl class="py class">
 <dt id="fitparse.DataMessage">
-<em class="property">class </em><code class="descclassname">fitparse.</code><code class="descname">DataMessage</code><a class="headerlink" href="#fitparse.DataMessage" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">fitparse.</code><code class="sig-name descname">DataMessage</code><a class="headerlink" href="#fitparse.DataMessage" title="Permalink to this definition">¶</a></dt>
 <dd><p>A list of <cite>DataMessage</cite> objects are returned by
-<a class="reference internal" href="#fitparse.FitFile.get_messages" title="fitparse.FitFile.get_messages"><code class="xref py py-meth docutils literal"><span class="pre">FitFile.get_messages()</span></code></a> and <a class="reference internal" href="#fitparse.FitFile.messages" title="fitparse.FitFile.messages"><code class="xref py py-attr docutils literal"><span class="pre">FitFile.messages</span></code></a>. These are not
+<a class="reference internal" href="#fitparse.FitFile.get_messages" title="fitparse.FitFile.get_messages"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FitFile.get_messages()</span></code></a> and <a class="reference internal" href="#fitparse.FitFile.messages" title="fitparse.FitFile.messages"><code class="xref py py-attr docutils literal notranslate"><span class="pre">FitFile.messages</span></code></a>. These are not
 meant to be created directly.</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="fitparse.DataMessage.fields">
-<code class="descname">fields</code><a class="headerlink" href="#fitparse.DataMessage.fields" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <cite>list</cite> of <code class="xref py py-class docutils literal"><span class="pre">FieldData</span></code> objects representing the fields contained
+<code class="sig-name descname">fields</code><a class="headerlink" href="#fitparse.DataMessage.fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <cite>list</cite> of <code class="xref py py-class docutils literal notranslate"><span class="pre">FieldData</span></code> objects representing the fields contained
 in this message.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="fitparse.DataMessage.get">
-<code class="descname">get</code><span class="sig-paren">(</span><em>field_name</em>, <em>as_dict=False</em><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.DataMessage.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a <code class="xref py py-class docutils literal"><span class="pre">FieldData</span></code> for field <cite>field_name</cite> if it exists,
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">field_name</span></em>, <em class="sig-param"><span class="n">as_dict</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.DataMessage.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <code class="xref py py-class docutils literal notranslate"><span class="pre">FieldData</span></code> for field <cite>field_name</cite> if it exists,
 otherwise <cite>None</cite>. If <cite>as_dict</cite> is set to <cite>True</cite>, returns a <cite>dict</cite>
-representation of the field (see <code class="xref py py-class docutils literal"><span class="pre">FieldData.as_dict()</span></code>)</p>
+representation of the field (see <code class="xref py py-class docutils literal notranslate"><span class="pre">FieldData.as_dict()</span></code>)</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="fitparse.DataMessage.get_value">
-<code class="descname">get_value</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.DataMessage.get_value" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">field_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.DataMessage.get_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the value of <cite>field_name</cite> if it exists, otherwise <cite>None</cite></p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="fitparse.DataMessage.get_values">
-<code class="descname">get_values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.DataMessage.get_values" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.DataMessage.get_values" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a <cite>dict</cite> mapping of field names to their values. For example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">data_message</span><span class="o">.</span><span class="n">get_values</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">data_message</span><span class="o">.</span><span class="n">get_values</span><span class="p">()</span>
 <span class="p">{</span>
     <span class="s1">&#39;altitude&#39;</span><span class="p">:</span> <span class="mf">24.6</span><span class="p">,</span>
     <span class="s1">&#39;cadence&#39;</span><span class="p">:</span> <span class="mi">97</span><span class="p">,</span>
@@ -240,41 +221,41 @@ representation of the field (see <code class="xref py py-class docutils literal"
 </div>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="fitparse.DataMessage.as_dict">
-<code class="descname">as_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.DataMessage.as_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">as_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fitparse.DataMessage.as_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>TODO: document me</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="fitparse.DataMessage.name">
-<code class="descname">name</code><a class="headerlink" href="#fitparse.DataMessage.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>The name of this <cite>DataMessage</cite>, as defined by its <a class="reference internal" href="#fitparse.DataMessage.def_mesg" title="fitparse.DataMessage.def_mesg"><code class="xref py py-attr docutils literal"><span class="pre">def_mesg</span></code></a>.</p>
+<code class="sig-name descname">name</code><a class="headerlink" href="#fitparse.DataMessage.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of this <cite>DataMessage</cite>, as defined by its <a class="reference internal" href="#fitparse.DataMessage.def_mesg" title="fitparse.DataMessage.def_mesg"><code class="xref py py-attr docutils literal notranslate"><span class="pre">def_mesg</span></code></a>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="fitparse.DataMessage.def_mesg">
-<code class="descname">def_mesg</code><a class="headerlink" href="#fitparse.DataMessage.def_mesg" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">def_mesg</code><a class="headerlink" href="#fitparse.DataMessage.def_mesg" title="Permalink to this definition">¶</a></dt>
 <dd><div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Generally this attribute is for access to FIT internals only</p>
+<p class="admonition-title">Note</p>
+<p>Generally this attribute is for access to FIT internals only</p>
 </div>
-<p>The <code class="xref py py-class docutils literal"><span class="pre">DefinitionMessage</span></code> associated with this <cite>DataMessage</cite>.
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">DefinitionMessage</span></code> associated with this <cite>DataMessage</cite>.
 These are encountered while parsing FIT data and are declared to define
 the data contained in a <a href="#id1"><span class="problematic" id="id2">`</span></a>DataMessage.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="fitparse.DataMessage.mesg_num">
-<code class="descname">mesg_num</code><a class="headerlink" href="#fitparse.DataMessage.mesg_num" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">mesg_num</code><a class="headerlink" href="#fitparse.DataMessage.mesg_num" title="Permalink to this definition">¶</a></dt>
 <dd><p>The message number of this <cite>DataMessage</cite>, as defined by its
-<a class="reference internal" href="#fitparse.DataMessage.def_mesg" title="fitparse.DataMessage.def_mesg"><code class="xref py py-attr docutils literal"><span class="pre">def_mesg</span></code></a>.</p>
+<a class="reference internal" href="#fitparse.DataMessage.def_mesg" title="fitparse.DataMessage.def_mesg"><code class="xref py py-attr docutils literal notranslate"><span class="pre">def_mesg</span></code></a>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="fitparse.DataMessage.mesg_type">
-<code class="descname">mesg_type</code><a class="headerlink" href="#fitparse.DataMessage.mesg_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <code class="xref py py-class docutils literal"><span class="pre">MessageType</span></code> associated with the <a class="reference internal" href="#fitparse.DataMessage.mesg_num" title="fitparse.DataMessage.mesg_num"><code class="xref py py-attr docutils literal"><span class="pre">mesg_num</span></code></a> for this
+<code class="sig-name descname">mesg_type</code><a class="headerlink" href="#fitparse.DataMessage.mesg_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">MessageType</span></code> associated with the <a class="reference internal" href="#fitparse.DataMessage.mesg_num" title="fitparse.DataMessage.mesg_num"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mesg_num</span></code></a> for this
 <cite>DataMessage</cite>. If no associated message type is defined in the
 <span class="xref std std-ref">SDK profile</span>, then this is set to <cite>None</cite>.</p>
 <p>TODO: Document SDK profile and update link</p>
@@ -287,15 +268,16 @@ the data contained in a <a href="#id1"><span class="problematic" id="id2">`</spa
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">The <code class="docutils literal"><span class="pre">fitparse</span></code> API Documentation</a><ul>
-<li><a class="reference internal" href="#the-fitfile-object">The <code class="docutils literal"><span class="pre">FitFile</span></code> Object</a></li>
+<li><a class="reference internal" href="#">The <code class="docutils literal notranslate"><span class="pre">fitparse</span></code> API Documentation</a><ul>
+<li><a class="reference internal" href="#the-fitfile-object">The <code class="docutils literal notranslate"><span class="pre">FitFile</span></code> Object</a></li>
 <li><a class="reference internal" href="#record-objects">Record Objects</a><ul>
 <li><a class="reference internal" href="#common-used-record-objects">Common Used Record Objects</a></li>
 </ul>
@@ -315,15 +297,15 @@ the data contained in a <a href="#id1"><span class="problematic" id="id2">`</spa
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
     </form>
+    </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -340,12 +322,13 @@ the data contained in a <a href="#id1"><span class="problematic" id="id2">`</spa
         <li class="right" >
           <a href="index.html" title="python-fitparse Documention"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">python-fitparse 0.0.1-dev documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">python-fitparse 1.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">The <code class="docutils literal notranslate"><span class="pre">fitparse</span></code> API Documentation</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2011-2013, David Cooper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.2.
     </div>
   </body>
 </html>
