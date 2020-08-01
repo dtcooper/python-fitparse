@@ -107,12 +107,17 @@ def main(args=None):
         as_dict=options.as_dict
     )
 
-    if options.type == "json":
-        json.dump(records, fp=options.output, cls=RecordJSONEncoder)
-    elif options.type == "readable":
-        options.output.writelines(format_message(n, record, options)
-                                  for n, record in enumerate(records, 1))
-
+    try:
+        if options.type == "json":
+            json.dump(records, fp=options.output, cls=RecordJSONEncoder)
+        elif options.type == "readable":
+            options.output.writelines(format_message(n, record, options)
+                                      for n, record in enumerate(records, 1))
+    finally:
+        try:
+            options.output.close()
+        except IOError:
+            pass
 
 if __name__ == '__main__':
     try:
