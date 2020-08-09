@@ -452,7 +452,7 @@ def add_dev_field_description(message):
     dev_data_index = message.get_raw_value('developer_data_index')
     field_def_num = message.get_raw_value('field_definition_number')
     base_type_id = message.get_raw_value('fit_base_type_id')
-    field_name = message.get_raw_value('field_name')
+    field_name = message.get_raw_value('field_name') or "unnamed_dev_field_%s" % field_def_num
     units = message.get_raw_value("units")
     native_field_num = message.get_raw_value('native_field_num')
 
