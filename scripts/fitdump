@@ -99,7 +99,7 @@ def main(args=None):
     fitfile = fitparse.FitFile(
         options.infile,
         data_processor=fitparse.StandardUnitsDataProcessor(),
-        check_crc = not(options.ignore_crc),
+        check_crc=not(options.ignore_crc),
     )
     records = fitfile.get_messages(
         name=options.name,

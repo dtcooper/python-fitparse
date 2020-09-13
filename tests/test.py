@@ -420,6 +420,10 @@ class FitFileTestCase(unittest.TestCase):
             assert all("falling back to byte encoding" in str(x) for x in w)
         self.assertEqual(len(f.messages), 11293)
 
+    def test_unterminated_file(self):
+        f = FitFile(testfile('nick.fit'), check_crc=False)
+        f.parse()
+
     # TODO:
     #  * Test Processors:
     #    - process_type_<>, process_field_<>, process_units_<>, process_message_<>

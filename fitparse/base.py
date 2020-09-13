@@ -80,6 +80,7 @@ class FitFile(object):
 
     def _read_and_assert_crc(self, allow_zero=False):
         # CRC Calculation is little endian from SDK
+        # TODO - How to handle the case of unterminated file? Error out and have user retry with check_crc=false?
         crc_computed, crc_read = self._crc.value, self._read_struct(Crc.FMT)
         if not self.check_crc:
             return
@@ -132,7 +133,8 @@ class FitFile(object):
     def _parse_message(self):
         # When done, calculate the CRC and return None
         if self._bytes_left <= 0:
-            if not self._complete:
+            # Don't assert CRC if requested not
+            if not self._complete and self.check_crc:
                 self._read_and_assert_crc()
 
             if self._file.tell() >= self._filesize:
@@ -245,9 +247,14 @@ class FitFile(object):
             struct_fmt = str(int(field_def.size / base_type.size)) + base_type.fmt
 
             # Extract the raw value, ask for a tuple if it's a byte type
-            raw_value = self._read_struct(
-                struct_fmt, endian=def_mesg.endian, always_tuple=is_byte,
-            )
+            try:
+                raw_value = self._read_struct(
+                    struct_fmt, endian=def_mesg.endian, always_tuple=is_byte,
+                )
+            except FitEOFError:
+                # file was suddenly terminated, usually due to
+                print("File was terminated unexpectedly, some data will not be loaded.")
+                break
 
             # If the field returns with a tuple of values it's definitely an
             # oddball, but we'll parse it on a per-value basis it.
