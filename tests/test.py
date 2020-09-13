@@ -416,7 +416,7 @@ class FitFileTestCase(unittest.TestCase):
         f.parse()
 
     def test_unterminated_file(self):
-        f = FitFile(testfile('nick.fit'))
+        f = FitFile(testfile('nick.fit'), check_crc=False)
         f.parse()
 
     # TODO:
