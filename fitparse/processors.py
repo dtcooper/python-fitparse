@@ -1,5 +1,5 @@
 import datetime
-from fitparse.utils import scrub_method_name
+from fitparse.utils import scrub_method_name, is_iterable
 
 # Datetimes (uint32) represent seconds since this UTC_REFERENCE
 UTC_REFERENCE = 631065600  # timestamp for UTC 00:00 Dec 31 1989
@@ -107,7 +107,13 @@ class StandardUnitsDataProcessor(FitFileDataProcessor):
 
     def process_field_speed(self, field_data):
         if field_data.value is not None:
-            field_data.value *= 60.0 * 60.0 / 1000.0
+            factor = 60.0 * 60.0 / 1000.0
+
+            # record.enhanced_speed field can be a tuple
+            if is_iterable(field_data.value):
+                field_data.value = tuple(x * factor for x in field_data.value)
+            else:
+                field_data.value *= factor
         field_data.units = 'km/h'
 
     def process_units_semicircles(self, field_data):
