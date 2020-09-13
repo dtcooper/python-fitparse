@@ -415,6 +415,10 @@ class FitFileTestCase(unittest.TestCase):
         f = FitFile(testfile('rollers.fit'))
         f.parse()
 
+    def test_unterminated_file(self):
+        f = FitFile(testfile('nick.fit'))
+        f.parse()
+
     # TODO:
     #  * Test Processors:
     #    - process_type_<>, process_field_<>, process_units_<>, process_message_<>
