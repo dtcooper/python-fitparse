@@ -418,6 +418,7 @@ class FitFileTestCase(unittest.TestCase):
     def test_unterminated_file(self):
         f = FitFile(testfile('nick.fit'), check_crc=False)
         f.parse()
+        f.
 
     # TODO:
     #  * Test Processors:
