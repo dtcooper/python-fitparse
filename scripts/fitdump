@@ -81,7 +81,7 @@ class RecordJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, types.GeneratorType):
             return list(obj)
-        if isinstance(obj, datetime.datetime):
+        if isinstance(obj, (datetime.datetime, datetime.time)):
             return obj.isoformat()
         if isinstance(obj, fitparse.DataMessage):
             return {
@@ -187,16 +187,21 @@ def main(args=None):
         as_dict=options.as_dict
     )
 
-    if options.type == "json":
-        json.dump(records, fp=options.output, cls=RecordJSONEncoder)
-    elif options.type == "readable":
-        options.output.writelines(format_message(n, record, options)
-                                  for n, record in enumerate(records, 1))
-    elif options.type == "gpx":
-        src_filename = os.path.basename(options.infile.name)
-        gpsdat = get_gpsdat(records, src=src_filename, trkname=src_filename)
-        options.output.writelines(format_gpx(gpsdat))
-
+    try:
+        if options.type == "json":
+            json.dump(records, fp=options.output, cls=RecordJSONEncoder)
+        elif options.type == "readable":
+            options.output.writelines(format_message(n, record, options)
+                                      for n, record in enumerate(records, 1))
+        elif options.type == "gpx":
+            src_filename = os.path.basename(options.infile.name)
+            gpsdat = get_gpsdat(records, src=src_filename, trkname=src_filename)
+            options.output.writelines(format_gpx(gpsdat))
+    finally:
+        try:
+            options.output.close()
+        except IOError:
+            pass
 
 if __name__ == '__main__':
     try:
