@@ -1,6 +1,7 @@
 import io
 import os
 import struct
+import warnings
 
 # Python 2 compat
 try:
@@ -191,10 +192,9 @@ class FitFile(object):
             base_type = BASE_TYPES.get(base_type_num, BASE_TYPE_BYTE)
 
             if (field_size % base_type.size) != 0:
-                # NOTE: we could fall back to byte encoding if there's any
-                # examples in the wild. For now, just throw an exception
-                raise FitParseError("Invalid field size %d for type '%s' (expected a multiple of %d)" % (
-                    field_size, base_type.name, base_type.size))
+                warnings.warn("Message %d: Invalid field size %d for field '%s' of type '%s' (expected a multiple of %d); falling back to byte encoding." % (
+                    len(self._messages)+1, field_size, field.name, base_type.name, base_type.size))
+                base_type = BASE_TYPE_BYTE
 
             # If the field has components that are accumulators
             # start recording their accumulation at 0
