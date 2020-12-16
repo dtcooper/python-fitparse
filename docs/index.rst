@@ -56,13 +56,7 @@ Requirements
 
 The following are required to install :mod:`fitparse`,
 
-* `Python <http://www.python.org/>`_ 2.5 and above (Python 3 is currently not
-  supported)
-
-* The `argparse <https://code.google.com/p/argparse/>`_ is required for the
-  :command:`fitdump` command, but it is included in the Python standard library
-  as of version 2.7. Using ``pip`` to install the package will install this if
-  needed.
+* `Python <http://www.python.org/>`_ 2.7 and above
 
 
 API Documentation
