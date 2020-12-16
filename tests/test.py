@@ -411,6 +411,11 @@ class FitFileTestCase(unittest.TestCase):
         avg_speed = list(f.get_messages('session'))[0].get_values().get('avg_speed')
         self.assertEqual(avg_speed, 5.86)
 
+    def test_mismatched_field_size(self):
+        f = FitFile(testfile('coros-pace-2-cycling-misaligned-fields.fit'))
+        f.parse()
+        self.assertEqual(len(f.messages), 11293)
+
     # TODO:
     #  * Test Processors:
     #    - process_type_<>, process_field_<>, process_units_<>, process_message_<>
