@@ -5,6 +5,7 @@ import datetime
 import os
 from struct import pack
 import sys
+import warnings
 
 from fitparse import FitFile
 from fitparse.processors import UTC_REFERENCE, StandardUnitsDataProcessor
@@ -410,6 +411,14 @@ class FitFileTestCase(unittest.TestCase):
         f = FitFile(testfile('2019-02-17-062644-ELEMNT-297E-195-0.fit'))
         avg_speed = list(f.get_messages('session'))[0].get_values().get('avg_speed')
         self.assertEqual(avg_speed, 5.86)
+
+    def test_mismatched_field_size(self):
+        f = FitFile(testfile('coros-pace-2-cycling-misaligned-fields.fit'))
+        with warnings.catch_warnings(record=True) as w:
+            f.parse()
+            assert len(w) == 5
+            assert all("falling back to byte encoding" in str(x) for x in w)
+        self.assertEqual(len(f.messages), 11293)
 
     # TODO:
     #  * Test Processors:
