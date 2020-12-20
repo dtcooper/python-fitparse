@@ -2,6 +2,8 @@ python-fitparse
 ===============
 
 Here's a Python library to parse ANT/Garmin `.FIT` files.
+[![Build Status](https://github.com/dtcooper/python-fitparse/workflows/test/badge.svg)](https://github.com/dtcooper/python-fitparse/actions?query=workflow%3Atest)
+
 
 Install from [![PyPI](https://img.shields.io/pypi/v/fitparse.svg)](https://pypi.python.org/pypi/fitparse/):
 ```
