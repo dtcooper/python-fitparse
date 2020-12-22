@@ -252,8 +252,8 @@ class FitFile(object):
                     struct_fmt, endian=def_mesg.endian, always_tuple=is_byte,
                 )
             except FitEOFError:
-                # file was suddenly terminated, usually due to
-                print("File was terminated unexpectedly, some data will not be loaded.")
+                # file was suddenly terminated
+                warnings.warn("File was terminated unexpectedly, some data will not be loaded.")
                 break
 
             # If the field returns with a tuple of values it's definitely an

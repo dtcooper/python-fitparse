@@ -333,7 +333,8 @@ class FitFileTestCase(unittest.TestCase):
 
     def test_unexpected_eof(self):
         try:
-            FitFile(testfile('activity-unexpected-eof.fit')).parse()
+            with warnings.catch_warnings(record=True):
+                FitFile(testfile('activity-unexpected-eof.fit')).parse()
             self.fail("Didn't detect an unexpected EOF")
         except FitEOFError:
             pass
@@ -422,7 +423,8 @@ class FitFileTestCase(unittest.TestCase):
 
     def test_unterminated_file(self):
         f = FitFile(testfile('nick.fit'), check_crc=False)
-        f.parse()
+        with warnings.catch_warnings(record=True) as w:
+            f.parse()
 
     # TODO:
     #  * Test Processors:
