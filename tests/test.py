@@ -417,7 +417,7 @@ class FitFileTestCase(unittest.TestCase):
         f = FitFile(testfile('coros-pace-2-cycling-misaligned-fields.fit'))
         with warnings.catch_warnings(record=True) as w:
             f.parse()
-            assert len(w) == 5
+            assert w
             assert all("falling back to byte encoding" in str(x) for x in w)
         self.assertEqual(len(f.messages), 11293)
 
