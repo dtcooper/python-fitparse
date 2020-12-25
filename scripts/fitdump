@@ -96,7 +96,7 @@ class RecordJSONEncoder(json.JSONEncoder):
 def main(args=None):
     options = parse_args(args)
 
-    fitfile = fitparse.FitFile(
+    fitfile = fitparse.UncachedFitFile(
         options.infile,
         data_processor=fitparse.StandardUnitsDataProcessor(),
         check_crc=not(options.ignore_crc),
