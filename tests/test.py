@@ -10,7 +10,7 @@ import warnings
 from fitparse import FitFile
 from fitparse.processors import UTC_REFERENCE, StandardUnitsDataProcessor
 from fitparse.records import BASE_TYPES, Crc
-from fitparse.utils import FitEOFError, FitCRCError, FitHeaderError
+from fitparse.utils import FitEOFError, FitCRCError, FitHeaderError, FitParseError
 
 if sys.version_info >= (2, 7):
     import unittest
@@ -425,6 +425,31 @@ class FitFileTestCase(unittest.TestCase):
         f = FitFile(testfile('nick.fit'), check_crc=False)
         with warnings.catch_warnings(record=True) as w:
             f.parse()
+
+    def test_developer_data_thread_safe(self):
+        """
+        Test that a file with developer types in it can be parsed thread-safe.
+        This test opens 2 FIT files and tests whether the dev_types of one does not change the dev_types of the other.
+        """
+        fit_file_1 = FitFile(testfile('developer-types-sample.fit'))
+        field_description_count = 0
+        for message in fit_file_1.get_messages():
+            if message.mesg_type.name == "field_description":
+                field_description_count += 1
+                if field_description_count >= 4:
+                    # Break after final field description message
+                    break
+
+        fit_file_2 = FitFile(testfile('developer-types-sample.fit'))
+        for message in fit_file_2.get_messages():
+            if message.mesg_type.name == "developer_data_id":
+                break
+
+        try:
+            fit_file_1.parse()
+        except FitParseError:
+            self.fail("parse() unexpectedly raised a FitParseError")
+
 
     # TODO:
     #  * Test Processors:

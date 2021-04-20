@@ -14,17 +14,64 @@ except NameError:
 from fitparse.processors import FitFileDataProcessor
 from fitparse.profile import FIELD_TYPE_TIMESTAMP, MESSAGE_TYPES
 from fitparse.records import (
-    Crc, DataMessage, FieldData, FieldDefinition, DevFieldDefinition, DefinitionMessage, MessageHeader,
-    BASE_TYPES, BASE_TYPE_BYTE,
-    add_dev_data_id, add_dev_field_description, get_dev_type
+    Crc, DevField, DataMessage, FieldData, FieldDefinition, DevFieldDefinition, DefinitionMessage,
+    MessageHeader, BASE_TYPES, BASE_TYPE_BYTE,
 )
 from fitparse.utils import fileish_open, is_iterable, FitParseError, FitEOFError, FitCRCError, FitHeaderError
 
 
-class FitFileDecoder(object):
+class DeveloperDataMixin(object):
+    def __init__(self, *args, **kwargs):
+        self.dev_types = {}
+
+        super(DeveloperDataMixin, self).__init__(*args, **kwargs)
+
+    def add_dev_data_id(self, message):
+        dev_data_index = message.get_raw_value('developer_data_index')
+        application_id = message.get_raw_value('application_id')
+
+        # Note that nothing in the spec says overwriting an existing type is invalid
+        self.dev_types[dev_data_index] = {
+            'dev_data_index': dev_data_index,
+            'application_id': application_id,
+            'fields': {}
+        }
+
+    def add_dev_field_description(self, message):
+        dev_data_index = message.get_raw_value('developer_data_index')
+        field_def_num = message.get_raw_value('field_definition_number')
+        base_type_id = message.get_raw_value('fit_base_type_id')
+        field_name = message.get_raw_value('field_name') or "unnamed_dev_field_%s" % field_def_num
+        units = message.get_raw_value("units")
+        native_field_num = message.get_raw_value('native_field_num')
+
+        if dev_data_index not in self.dev_types:
+            raise FitParseError("No such dev_data_index=%s found" % (dev_data_index))
+        fields = self.dev_types[int(dev_data_index)]['fields']
+
+        # Note that nothing in the spec says overwriting an existing field is invalid
+        fields[field_def_num] = DevField(dev_data_index=dev_data_index,
+                                         def_num=field_def_num,
+                                         type=BASE_TYPES[base_type_id],
+                                         name=field_name,
+                                         units=units,
+                                         native_field_num=native_field_num)
+
+
+    def get_dev_type(self, dev_data_index, field_def_num):
+        if dev_data_index not in self.dev_types:
+            raise FitParseError("No such dev_data_index=%s found when looking up field %s" % (dev_data_index, field_def_num))
+
+        if field_def_num not in self.dev_types[dev_data_index]['fields']:
+            raise FitParseError("No such field %s for dev_data_index %s" % (field_def_num, dev_data_index))
+
+        return self.dev_types[dev_data_index]['fields'][field_def_num]
+
+
+class FitFileDecoder(DeveloperDataMixin):
     """Basic decoder for fit files"""
 
-    def __init__(self, fileish, check_crc=True, data_processor=None):
+    def __init__(self, fileish, *args, check_crc=True, data_processor=None, **kwargs):
         self._file = fileish_open(fileish, 'rb')
 
         self.check_crc = check_crc
@@ -37,6 +84,8 @@ class FitFileDecoder(object):
 
         # Start off by parsing the file header (sets initial attribute values)
         self._parse_file_header()
+
+        super(FitFileDecoder, self).__init__(*args, **kwargs)
 
     def __del__(self):
         self.close()
@@ -156,9 +205,9 @@ class FitFileDecoder(object):
             message = self._parse_data_message(header)
             if message.mesg_type is not None:
                 if message.mesg_type.name == 'developer_data_id':
-                    add_dev_data_id(message)
+                    self.add_dev_data_id(message)
                 elif message.mesg_type.name == 'field_description':
-                    add_dev_field_description(message)
+                    self.add_dev_field_description(message)
 
         return message
 
@@ -221,7 +270,7 @@ class FitFileDecoder(object):
             num_dev_fields = self._read_struct('B', endian=endian)
             for n in range(num_dev_fields):
                 field_def_num, field_size, dev_data_index = self._read_struct('3B', endian=endian)
-                field = get_dev_type(dev_data_index, field_def_num)
+                field = self.get_dev_type(dev_data_index, field_def_num)
                 dev_field_defs.append(DevFieldDefinition(
                     field=field,
                     dev_data_index=dev_data_index,
