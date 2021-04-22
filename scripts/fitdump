@@ -4,7 +4,9 @@ from __future__ import print_function
 import argparse
 import codecs
 import datetime
+import itertools
 import json
+import os.path
 import sys
 import types
 
@@ -116,6 +118,7 @@ def parse_args(args=None):
     )
     parser.add_argument(
         '-t', '--type', choices=('readable', 'json', 'csv'), default='readable',
+        '-t', '--type', choices=('readable', 'json', 'gpx', 'csv'), default='readable',
         help='File type to output. (DEFAULT: %(default)s)',
     )
     parser.add_argument(
@@ -161,13 +164,93 @@ class RecordJSONEncoder(json.JSONEncoder):
         return super(RecordJSONEncoder, self).default(obj)
 
 
+def generate_gpx(records, filename=None):
+    # TODO: Use xml.etree.ElementTree ?
+
+    GPX_TIME_FMT = "%Y-%m-%dT%H:%M:%SZ"  # ISO 8601 format
+
+    records = iter(records)
+
+    # header + open tags
+    yield '<?xml version="1.0"?>\n'
+    yield '<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="python-fitparse (fitdump)" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n'
+    yield ' <metadata>\n'
+
+    # file creation time (if a file_id record exists)
+    first_record = []
+    for message in records:
+        if message.name == "file_id":
+            for field_data in message:
+                if field_data.name == "time_created" and type(field_data.value) == datetime.datetime:
+                    yield '  <time>{}</time>\n'.format(field_data.value.strftime(GPX_TIME_FMT))
+                    break
+            else:
+                # No time found in the fields, check next record
+                continue
+            break
+        elif message.name == "record":
+            first_record.append(message)
+            break
+
+    if filename:
+        yield '  <src>{}</src>\n'.format(filename)
+
+    yield ' </metadata>\n'
+    yield ' <trk>\n'
+
+    if filename:
+        yield '  <name>{}</name>\n'.format(filename)
+
+    yield '  <trkseg>\n'
+
+    # track points
+    for message in itertools.chain(first_record, records):
+        if message.name != "record":
+            continue
+
+        trkpt = {}
+
+        # TODO: support more data types (heart rate, cadence, etc)
+        for field_data in message:
+            if field_data.name == "position_lat":
+                # Units are decimal degrees
+                trkpt["lat"] = field_data.value
+            elif field_data.name == "position_long":
+                # Units are decimal degrees
+                trkpt["lon"] = field_data.value
+            elif field_data.name == "enhanced_altitude":
+                # Units are m
+                trkpt["ele"] = field_data.value
+            elif field_data.name == "timestamp" and type(field_data.value) == datetime.datetime:
+                trkpt["time"] = field_data.value.strftime(GPX_TIME_FMT)
+            elif field_data.name == "enhanced_speed" and type(field_data.value) == float:
+                # convert from km/h to m/s
+                trkpt["speed"] = field_data.value / 3.6
+
+        # Add trackpoint
+        if "lat" in trkpt and "lon" in trkpt:
+            yield '   <trkpt lat="{lat}" lon="{lon}">\n'.format(**trkpt)
+            if "ele" in trkpt:
+                yield '    <ele>{ele}</ele>\n'.format(**trkpt)
+            if "time" in trkpt:
+                yield '    <time>{time}</time>\n'.format(**trkpt)
+            if "speed" in trkpt:
+                yield '    <speed>{speed}</speed>\n'.format(**trkpt)
+            yield '   </trkpt>\n'
+
+    # close tags
+    yield '  </trkseg>\n'
+    yield ' </trk>\n'
+    yield '</gpx>\n'
+
+
 def main(args=None):
     options = parse_args(args)
 
-    fitfile = fitparse.FitFile(
+    fitfile = fitparse.UncachedFitFile(
         options.infile,
         data_processor=fitparse.StandardUnitsDataProcessor(),
-        check_crc = not(options.ignore_crc),
+        check_crc=not(options.ignore_crc),
     )
     records = fitfile.get_messages(
         name=options.name,
@@ -183,6 +266,11 @@ def main(args=None):
                                       for n, record in enumerate(records, 1))
         elif options.type == 'csv':
             write_csv(options, records)
+        elif options.type == "gpx":
+            filename = getattr(options.infile, "name")
+            if filename:
+                filename = os.path.basename(filename)
+            options.output.writelines(generate_gpx(records, filename))
     finally:
         try:
             options.output.close()

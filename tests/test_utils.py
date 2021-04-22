@@ -5,6 +5,12 @@ import os
 import sys
 import tempfile
 
+try:
+    # Python 3.4+
+    from pathlib import Path
+except ImportError:
+    Path = None
+
 from fitparse.utils import fileish_open, is_iterable
 
 if sys.version_info >= (2, 7):
@@ -38,6 +44,8 @@ class UtilsTestCase(unittest.TestCase):
             test_fopen(f.read())
         with open(testfile("nametest.FIT"), 'rb') as f:
             test_fopen(io.BytesIO(f.read()))
+        if Path:
+            test_fopen(Path(testfile('nametest.FIT')))
 
     def test_fileish_open_write(self):
 

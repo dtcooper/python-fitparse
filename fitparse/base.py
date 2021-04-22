@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+
 import io
 import os
 import struct
+import warnings
 
 # Python 2 compat
 try:
@@ -18,19 +21,19 @@ from fitparse.records import (
 from fitparse.utils import fileish_open, is_iterable, FitParseError, FitEOFError, FitCRCError, FitHeaderError
 
 
-class FitFile(object):
+class FitFileDecoder(object):
+    """Basic decoder for fit files"""
+
     def __init__(self, fileish, check_crc=True, data_processor=None):
         self._file = fileish_open(fileish, 'rb')
 
         self.check_crc = check_crc
         self._crc = None
-        self._processor = data_processor or FitFileDataProcessor()
 
         # Get total filesize
         self._file.seek(0, os.SEEK_END)
         self._filesize = self._file.tell()
         self._file.seek(0, os.SEEK_SET)
-        self._messages = []
 
         # Start off by parsing the file header (sets initial attribute values)
         self._parse_file_header()
@@ -79,6 +82,7 @@ class FitFile(object):
 
     def _read_and_assert_crc(self, allow_zero=False):
         # CRC Calculation is little endian from SDK
+        # TODO - How to handle the case of unterminated file? Error out and have user retry with check_crc=false?
         crc_computed, crc_read = self._crc.value, self._read_struct(Crc.FMT)
         if not self.check_crc:
             return
@@ -131,7 +135,8 @@ class FitFile(object):
     def _parse_message(self):
         # When done, calculate the CRC and return None
         if self._bytes_left <= 0:
-            if not self._complete:
+            # Don't assert CRC if requested not
+            if not self._complete and self.check_crc:
                 self._read_and_assert_crc()
 
             if self._file.tell() >= self._filesize:
@@ -155,7 +160,6 @@ class FitFile(object):
                 elif message.mesg_type.name == 'field_description':
                     add_dev_field_description(message)
 
-        self._messages.append(message)
         return message
 
     def _parse_message_header(self):
@@ -191,10 +195,11 @@ class FitFile(object):
             base_type = BASE_TYPES.get(base_type_num, BASE_TYPE_BYTE)
 
             if (field_size % base_type.size) != 0:
-                # NOTE: we could fall back to byte encoding if there's any
-                # examples in the wild. For now, just throw an exception
-                raise FitParseError("Invalid field size %d for type '%s' (expected a multiple of %d)" % (
-                    field_size, base_type.name, base_type.size))
+                warnings.warn(
+                    "Invalid field size %d for field '%s' of type '%s' (expected a multiple of %d); falling back to byte encoding." % (
+                    field_size, field.name, base_type.name, base_type.size)
+                )
+                base_type = BASE_TYPE_BYTE
 
             # If the field has components that are accumulators
             # start recording their accumulation at 0
@@ -245,9 +250,14 @@ class FitFile(object):
             struct_fmt = str(int(field_def.size / base_type.size)) + base_type.fmt
 
             # Extract the raw value, ask for a tuple if it's a byte type
-            raw_value = self._read_struct(
-                struct_fmt, endian=def_mesg.endian, always_tuple=is_byte,
-            )
+            try:
+                raw_value = self._read_struct(
+                    struct_fmt, endian=def_mesg.endian, always_tuple=is_byte,
+                )
+            except FitEOFError:
+                # file was suddenly terminated
+                warnings.warn("File was terminated unexpectedly, some data will not be loaded.")
+                break
 
             # If the field returns with a tuple of values it's definitely an
             # oddball, but we'll parse it on a per-value basis it.
@@ -299,7 +309,7 @@ class FitFile(object):
 
         return base_value
 
-    def _parse_data_message(self, header):
+    def _parse_data_message_components(self, header):
         def_mesg = self._local_mesgs.get(header.local_mesg_num)
         if not def_mesg:
             raise FitParseError('Got data message with invalid local message type %d' % (
@@ -389,6 +399,96 @@ class FitFile(object):
                 )
             )
 
+        return header, def_mesg, field_datas
+
+    def _parse_data_message(self, header):
+        header, def_mesg, field_datas = self._parse_data_message_components(header)
+        return DataMessage(header=header, def_mesg=def_mesg, fields=field_datas)
+
+    @staticmethod
+    def _should_yield(message, with_definitions, names):
+        if not message:
+            return False
+        if with_definitions or message.type == 'data':
+            # name arg is None we return all
+            if names is None:
+                return True
+            elif (message.name in names) or (message.mesg_num in names):
+                return True
+        return False
+
+    @staticmethod
+    def _make_set(obj):
+        if obj is None:
+            return None
+
+        if is_iterable(obj):
+            return set(obj)
+        else:
+            return set((obj,))
+
+    ##########
+    # Public API
+
+    def get_messages(self, name=None, with_definitions=False, as_dict=False):
+        if with_definitions:  # with_definitions implies as_dict=False
+            as_dict = False
+
+        names = self._make_set(name)
+
+        while not self._complete:
+            message = self._parse_message()
+            if self._should_yield(message, with_definitions, names):
+                yield message.as_dict() if as_dict else message
+
+    def __iter__(self):
+        return self.get_messages()
+
+
+class CacheMixin(object):
+    """Add message caching to the FitFileDecoder"""
+
+    def __init__(self, *args, **kwargs):
+        super(CacheMixin, self).__init__(*args, **kwargs)
+        self._messages = []
+
+    def _parse_message(self):
+        self._messages.append(super(CacheMixin, self)._parse_message())
+        return self._messages[-1]
+
+    def get_messages(self, name=None, with_definitions=False, as_dict=False):
+        if with_definitions:  # with_definitions implies as_dict=False
+            as_dict = False
+
+        names = self._make_set(name)
+
+        # Yield all parsed messages first
+        for message in self._messages:
+            if self._should_yield(message, with_definitions, names):
+                yield message.as_dict() if as_dict else message
+
+        for message in super(CacheMixin, self).get_messages(names, with_definitions, as_dict):
+            yield message
+
+    @property
+    def messages(self):
+        return list(self.get_messages())
+
+    def parse(self):
+        while self._parse_message():
+            pass
+
+
+class DataProcessorMixin(object):
+    """Add data processing to the FitFileDecoder"""
+
+    def __init__(self, *args, **kwargs):
+        self._processor = kwargs.pop("data_processor", None) or FitFileDataProcessor()
+        super(DataProcessorMixin, self).__init__(*args, **kwargs)
+
+    def _parse_data_message(self, header):
+        header, def_mesg, field_datas = self._parse_data_message_components(header)
+
         # Apply data processors
         for field_data in field_datas:
             # Apply type name processor
@@ -401,51 +501,23 @@ class FitFile(object):
 
         return data_message
 
-    ##########
-    # Public API
 
-    def get_messages(self, name=None, with_definitions=False, as_dict=False):
-        if with_definitions:  # with_definitions implies as_dict=False
-            as_dict = False
+class UncachedFitFile(DataProcessorMixin, FitFileDecoder):
+    """FitFileDecoder with data processing"""
 
-        if name is not None:
-            if is_iterable(name):
-                names = set(name)
-            else:
-                names = set((name,))
+    def __init__(self, fileish, check_crc=True, data_processor=None):
+        # Ensure all optional params are passed as kwargs
+        super(UncachedFitFile, self).__init__(
+            fileish,
+            check_crc=check_crc,
+            data_processor=data_processor
+        )
 
-        def should_yield(message):
-            if with_definitions or message.type == 'data':
-                # name arg is None we return all
-                if name is None:
-                    return True
-                else:
-                    if (message.name in names) or (message.mesg_num in names):
-                        return True
-            return False
 
-        # Yield all parsed messages first
-        for message in self._messages:
-            if should_yield(message):
-                yield message.as_dict() if as_dict else message
+class FitFile(CacheMixin, UncachedFitFile):
+    """FitFileDecoder with caching and data processing"""
+    pass
 
-        # If there are unparsed messages, yield those too
-        while not self._complete:
-            message = self._parse_message()
-            if message and should_yield(message):
-                yield message.as_dict() if as_dict else message
-
-    @property
-    def messages(self):
-        # TODO: could this be more efficient?
-        return list(self.get_messages())
-
-    def parse(self):
-        while self._parse_message():
-            pass
-
-    def __iter__(self):
-        return self.get_messages()
 
 
 # TODO: Create subclasses like Activity and do per-value monkey patching

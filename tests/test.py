@@ -5,6 +5,7 @@ import datetime
 import os
 from struct import pack
 import sys
+import warnings
 
 from fitparse import FitFile
 from fitparse.processors import UTC_REFERENCE, StandardUnitsDataProcessor
@@ -332,7 +333,8 @@ class FitFileTestCase(unittest.TestCase):
 
     def test_unexpected_eof(self):
         try:
-            FitFile(testfile('activity-unexpected-eof.fit')).parse()
+            with warnings.catch_warnings(record=True):
+                FitFile(testfile('activity-unexpected-eof.fit')).parse()
             self.fail("Didn't detect an unexpected EOF")
         except FitEOFError:
             pass
@@ -418,6 +420,19 @@ class FitFileTestCase(unittest.TestCase):
     def test_unterminated_file(self):
         f = FitFile(testfile('nick.fit'))
         f.parse()
+
+    def test_mismatched_field_size(self):
+        f = FitFile(testfile('coros-pace-2-cycling-misaligned-fields.fit'))
+        with warnings.catch_warnings(record=True) as w:
+            f.parse()
+            assert w
+            assert all("falling back to byte encoding" in str(x) for x in w)
+        self.assertEqual(len(f.messages), 11293)
+
+    def test_unterminated_file(self):
+        f = FitFile(testfile('nick.fit'), check_crc=False)
+        with warnings.catch_warnings(record=True) as w:
+            f.parse()
 
     # TODO:
     #  * Test Processors:
