@@ -80,7 +80,7 @@ The old version is archived as
     and internal parts. (Still unstable and partially complete.)
 
   * Proper documentation!
-    [Available here](http://dtcooper.github.com/python-fitparse/).
+    [Available here](https://dtcooper.github.io/python-fitparse/).
 
   * Unit tests and example programs.
 
