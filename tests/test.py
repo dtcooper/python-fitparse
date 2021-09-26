@@ -345,7 +345,7 @@ class FitFileTestCase(unittest.TestCase):
     def test_invalid_chained_files(self):
         """Detect errors when files are chained together
 
-        Note that 'chained' means just concatinated in this case
+        Note that 'chained' means just concatenated in this case
         """
         try:
             FitFile(testfile('activity-activity-filecrc.fit')).parse()
