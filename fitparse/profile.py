@@ -1380,6 +1380,14 @@ FIELD_TYPES = {
             7: 'swiss_ball_dumbbell_flye',
         },
     ),
+    'strava_product': FieldType(
+        name='strava_product',
+        base_type=BASE_TYPES[0x84],  # uint16
+        values={
+            101: 'Strava iPhone App',   # recent versions of Strava iPhone app
+            102: 'Strava Android App',  # recent versions of Strava Android app
+        }
+    ),
     'garmin_product': FieldType(
         name='garmin_product',
         base_type=BASE_TYPES[0x84],  # uint16
@@ -4008,6 +4016,19 @@ MESSAGE_TYPES = {
                                 def_num=1,
                                 value='dynastream_oem',
                                 raw_value=13,
+                            ),
+                        )
+                    ),
+                    SubField(
+                        name='strava_product',
+                        def_num=2,
+                        type=FIELD_TYPES['strava_product'],
+                        ref_fields=(
+                            ReferenceField(
+                                name='manufacturer',
+                                def_num=1,
+                                value='strava',
+                                raw_value=265,
                             ),
                         ),
                     ),
@@ -7077,6 +7098,19 @@ MESSAGE_TYPES = {
                             ),
                         ),
                     ),
+                    SubField(
+                        name='strava_product',
+                        def_num=4,
+                        type=FIELD_TYPES['strava_product'],
+                        ref_fields=(
+                            ReferenceField(
+                                name='manufacturer',
+                                def_num=2,
+                                value='strava',
+                                raw_value=265,
+                            ),
+                        ),
+                    ),
                 ),
             ),
             5: Field(
@@ -8577,6 +8611,19 @@ MESSAGE_TYPES = {
                                 def_num=0,
                                 value='dynastream_oem',
                                 raw_value=13,
+                            ),
+                        ),
+                    ),
+                    SubField(
+                        name='strava_product',
+                        def_num=1,
+                        type=FIELD_TYPES['strava_product'],
+                        ref_fields=(
+                            ReferenceField(
+                                name='manufacturer',
+                                def_num=0,
+                                value='strava',
+                                raw_value=265,
                             ),
                         ),
                     ),
@@ -11443,6 +11490,19 @@ MESSAGE_TYPES = {
                                 def_num=0,
                                 value='dynastream_oem',
                                 raw_value=13,
+                            ),
+                        ),
+                    ),
+                    SubField(
+                        name='strava_product',
+                        def_num=1,
+                        type=FIELD_TYPES['strava_product'],
+                        ref_fields=(
+                            ReferenceField(
+                                name='manufacturer',
+                                def_num=0,
+                                value='strava',
+                                raw_value=265,
                             ),
                         ),
                     ),
