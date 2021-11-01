@@ -16,9 +16,9 @@ import os
 import re
 import sys
 import zipfile
+from itertools import islice
 
-import xlrd  # Dev requirement for parsing Excel spreadsheet
-
+import openpyxl  # Dev requirement for parsing Excel spreadsheet
 
 FIELD_NUM_TIMESTAMP = 253
 
@@ -60,7 +60,8 @@ MESSAGE_NUM_DECLARATIONS = ()
 # E.g. 'hr.event_timestamp' -> FIELD_NUM_HR_EVENT_TIMESTAMP = 9
 FIELD_NUM_DECLARATIONS = ()
 
-SPECIAL_FIELD_DECLARATIONS = "FIELD_TYPE_TIMESTAMP = Field(name='timestamp', type=FIELD_TYPES['date_time'], def_num=" + str(FIELD_NUM_TIMESTAMP) + ", units='s')"
+SPECIAL_FIELD_DECLARATIONS = "FIELD_TYPE_TIMESTAMP = Field(name='timestamp', type=FIELD_TYPES['date_time'], def_num=" + str(
+    FIELD_NUM_TIMESTAMP) + ", units='s')"
 
 IGNORE_TYPE_VALUES = (
     # of the form 'type_name:value_name'
@@ -158,11 +159,11 @@ class MessageList(namedtuple('MessageList', ('messages'))):
         s = 'MESSAGE_TYPES = {\n'
         last_group_name = None
         for message in sorted(
-            self.messages,
-            key=lambda mi: (
-                0 if mi.group_name.lower().startswith('common') else 1,
-                mi.group_name.lower(), mi.num,
-            ),
+                self.messages,
+                key=lambda mi: (
+                        0 if mi.group_name.lower().startswith('common') else 1,
+                        mi.group_name.lower(), mi.num,
+                ),
         ):
             # Group name comment
             if message.group_name != last_group_name:
@@ -211,7 +212,8 @@ class MessageInfo(namedtuple('MessageInfo', ('name', 'num', 'group_name', 'field
         return s
 
 
-class FieldInfo(namedtuple('FieldInfo', ('name', 'type', 'num', 'scale', 'offset', 'units', 'components', 'subfields', 'comment'))):
+class FieldInfo(
+    namedtuple('FieldInfo', ('name', 'type', 'num', 'scale', 'offset', 'units', 'components', 'subfields', 'comment'))):
     def __str__(self):
         if self.num == FIELD_NUM_TIMESTAMP:
             # Add trailing comma here because of comment
@@ -242,7 +244,8 @@ class FieldInfo(namedtuple('FieldInfo', ('name', 'type', 'num', 'scale', 'offset
         return s
 
 
-class ComponentFieldInfo(namedtuple('ComponentFieldInfo', ('name', 'num', 'scale', 'offset', 'units', 'bits', 'bit_offset', 'accumulate'))):
+class ComponentFieldInfo(
+    namedtuple('ComponentFieldInfo', ('name', 'num', 'scale', 'offset', 'units', 'bits', 'bit_offset', 'accumulate'))):
     def __str__(self):
         s = "ComponentField(\n"
         s += "    name='%s',\n" % self.name
@@ -260,7 +263,8 @@ class ComponentFieldInfo(namedtuple('ComponentFieldInfo', ('name', 'num', 'scale
         return s
 
 
-class SubFieldInfo(namedtuple('SubFieldInfo', ('name', 'num', 'type', 'scale', 'offset', 'units', 'ref_fields', 'components', 'comment'))):
+class SubFieldInfo(namedtuple('SubFieldInfo', (
+'name', 'num', 'type', 'scale', 'offset', 'units', 'ref_fields', 'components', 'comment'))):
     def __str__(self):
         s = "SubField(%s\n" % render_comment(self.comment)
         s += "    name='%s',\n" % self.name
@@ -333,24 +337,24 @@ def parse_csv_fields(data, num_expected):
 
 
 def parse_spreadsheet(xls_file, *sheet_names):
-    if isinstance(xls_file, str):
-        workbook = xlrd.open_workbook(xls_file)
-    else:
-        workbook = xlrd.open_workbook(file_contents=xls_file.read())
+    workbook = openpyxl.load_workbook(xls_file)
 
     for sheet_name in sheet_names:
-        sheet = workbook.sheet_by_name(sheet_name)
+        sheet = workbook[sheet_name]
 
         parsed_values = []
 
         # Strip sheet header
-        for n in range(1, sheet.nrows):
+        for row in islice(sheet.rows, 1, None):
+            row_values = [cell.value for cell in row]
             values = []
 
-            row_values = sheet.row_values(n)
             if sheet_name.lower() == 'messages':
                 # Only care about the first 14 rows for Messages
                 row_values = row_values[:14]
+                # Skip the blocking information
+                if is_metadata_row(row_values):
+                    continue
 
             for value in row_values:
                 if isinstance(value, str):
@@ -372,14 +376,20 @@ def parse_spreadsheet(xls_file, *sheet_names):
         yield parsed_values
 
 
+def is_metadata_row(row_values):
+    label_index = 3
+    return row_values[label_index] and all(v is None for v in row_values[0:label_index]) and \
+           all(v is None for v in row_values[label_index + 1:])
+
+
 def parse_types(types_rows):
     type_list = TypeList([])
 
     for row in types_rows:
         if row[0]:
-            # First column means new type
+            # First column means new type - allow for no comments
             type = TypeInfo(
-                name=row[0].decode(), base_type=row[1].decode(), values=[], comment=row[4].decode(),
+                name=row[0].decode(), base_type=row[1].decode(), values=[], comment=default_comment(row[4]),
             )
             type_list.types.append(type)
             assert type.name
@@ -387,7 +397,7 @@ def parse_types(types_rows):
 
         else:
             # No first column means a value for this type
-            value = TypeValueInfo(name=row[2].decode(), value=maybe_decode(row[3]), comment=row[4].decode())
+            value = TypeValueInfo(name=row[2].decode(), value=maybe_decode(row[3]), comment=default_comment(row[4]))
 
             if value.name and value.value is not None:
                 # Don't add ignore keyed types
@@ -407,6 +417,10 @@ def maybe_decode(o):
     return o
 
 
+def default_comment(x):
+    return (x or b'').decode()
+
+
 def parse_messages(messages_rows, type_list):
     message_list = MessageList([])
 
@@ -420,13 +434,13 @@ def parse_messages(messages_rows, type_list):
             name = row[0].decode()
             message = MessageInfo(
                 name=name, num=type_list.get_mesg_num(name),
-                group_name=group_name, fields=[], comment=row[13].decode(),
+                group_name=group_name, fields=[], comment=default_comment(row[13]),
             )
             message_list.messages.append(message)
         else:
             # Get components if they exist
             components = []
-            component_names = parse_csv_fields(row[5].decode(), 0)
+            component_names = parse_csv_fields(default_comment(row[5]), 0)
             if component_names and (len(component_names) != 1 or component_names[0] != ''):
                 num_components = len(component_names)
                 components = [
@@ -437,10 +451,10 @@ def parse_messages(messages_rows, type_list):
                     )
                     for cmp_name, cmp_scale, cmp_offset, cmp_units, cmp_bits, cmp_accumulate in zip(
                         component_names,  # name
-                        parse_csv_fields(maybe_decode(row[6]), num_components),   # scale
-                        parse_csv_fields(maybe_decode(row[7]), num_components),   # offset
-                        parse_csv_fields(maybe_decode(row[8]), num_components),   # units
-                        parse_csv_fields(maybe_decode(row[9]), num_components),   # bits
+                        parse_csv_fields(maybe_decode(row[6]), num_components),  # scale
+                        parse_csv_fields(maybe_decode(row[7]), num_components),  # offset
+                        parse_csv_fields(maybe_decode(row[8]), num_components),  # units
+                        parse_csv_fields(maybe_decode(row[9]), num_components),  # bits
                         parse_csv_fields(maybe_decode(row[10]), num_components),  # accumulate
                     )
                 ]
@@ -455,8 +469,8 @@ def parse_messages(messages_rows, type_list):
             if row[1] is not None and row[1] != b'':
                 field = FieldInfo(
                     name=row[2].decode(), type=row[3].decode(), num=maybe_decode(row[1]), scale=fix_scale(row[6]),
-                    offset=maybe_decode(row[7]), units=fix_units(row[8].decode()), components=[],
-                    subfields=[], comment=row[13].decode(),
+                    offset=maybe_decode(row[7]), units=fix_units(default_comment(row[8])), components=[],
+                    subfields=[], comment=default_comment(row[13]),
                 )
 
                 assert field.name
@@ -475,8 +489,8 @@ def parse_messages(messages_rows, type_list):
                 # Sub fields
                 subfield = SubFieldInfo(
                     name=row[2].decode(), num=field.num, type=row[3].decode(), scale=fix_scale(row[6]),
-                    offset=maybe_decode(row[7]), units=fix_units(row[8].decode()), ref_fields=[],
-                    components=[], comment=row[13].decode(),
+                    offset=maybe_decode(row[7]), units=fix_units(default_comment(row[8])), ref_fields=[],
+                    components=[], comment=default_comment(row[13]),
                 )
 
                 ref_field_names = parse_csv_fields(row[11].decode(), 0)
