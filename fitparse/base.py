@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import io
+import logging
 import os
 import struct
 import warnings
@@ -217,8 +218,8 @@ class FitFileDecoder(DeveloperDataMixin):
         header_size, protocol_ver_enc, profile_ver_enc, data_size = self._read_struct('2BHI4x', data=header_data)
 
         # Decode the same way the SDK does
-        self.protocol_version = float("%d.%d" % (protocol_ver_enc >> 4, protocol_ver_enc & ((1 << 4) - 1)))
-        self.profile_version = float("%d.%d" % (profile_ver_enc / 100, profile_ver_enc % 100))
+        self.protocol_version = FitVersion("%d.%d" % (protocol_ver_enc >> 4, protocol_ver_enc & ((1 << 4) - 1)))
+        self.profile_version = FitVersion("%d.%d" % (profile_ver_enc / 100, profile_ver_enc % 100))
 
         # Consume extra header information
         extra_header_size = header_size - 12
@@ -624,6 +625,65 @@ class UncachedFitFile(DataProcessorMixin, FitFileDecoder):
 class FitFile(CacheMixin, UncachedFitFile):
     """FitFileDecoder with caching and data processing"""
     pass
+
+
+class FitVersion():
+    def __init__(self, version=None):
+        self._major = 0
+        self._minor = 0
+        if isinstance(version, float):
+            # Legacy match
+            logging.warning("Legacy matching with float versions, provide a string or FitVersion object for precision")
+            # Cast to a string and fall through
+            version = str(version)
+        if isinstance(version, str):
+            version_fields = version.split('.')
+            self._major = int(version_fields[0])
+            self._minor = int(version_fields[1])
+        else:
+            raise ValueError(f"Unknown quantity {version} cannot be parsed as a version string/float.")
+
+    @property
+    def major(self):
+        return self._major
+
+    @property
+    def minor(self):
+        return self._minor
+
+    def __str__(self):
+        return f"{self.major}.{self.minor}"
+
+    def __eq__(self, other):
+        if isinstance(other, FitVersion):
+            return self.major == other.major and self.minor == other.minor
+        else:
+            return self == FitVersion(other)
+
+    def __gt__(self, other):
+        if isinstance(other, FitVersion):
+            return self.major > other.major or self.major == other.major and self.minor > other.minor
+        else:
+            return self > FitVersion(other)
+
+    def __lt__(self, other):
+        if isinstance(other, FitVersion):
+            return self.major < other.major or self.major == other.major and self.minor < other.minor
+        else:
+            return self > FitVersion(other)
+
+    def __ge__(self, other):
+        if isinstance(other, FitVersion):
+            return self.major > other.major or self.major == other.major and self.minor >= other.minor
+        else:
+            return self > FitVersion(other)
+
+    def __le__(self, other):
+        if isinstance(other, FitVersion):
+            return self.major < other.major or self.major == other.major and self.minor <= other.minor
+        else:
+            return self > FitVersion(other)
+
 
 
 

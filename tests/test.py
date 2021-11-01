@@ -8,6 +8,7 @@ import sys
 import warnings
 
 from fitparse import FitFile
+from fitparse.base import FitVersion
 from fitparse.processors import UTC_REFERENCE, StandardUnitsDataProcessor
 from fitparse.records import BASE_TYPES, Crc
 from fitparse.utils import FitEOFError, FitCRCError, FitHeaderError, FitParseError
@@ -75,6 +76,50 @@ def secs_to_dt(secs):
 
 def testfile(filename):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), 'files', filename)
+
+
+class FitVersionTestCase(unittest.TestCase):
+    def test_version_parse(self):
+        v10 = FitVersion("1.0")
+        v11 = FitVersion("1.1")
+        v12 = FitVersion(1.2)
+
+        self.assertEqual(v10, "1.0")
+        self.assertEqual(v11, "1.1")
+        self.assertEqual(v12, "1.2")
+
+    def test_version_parse_errors(self):
+        with self.assertRaises(ValueError):
+            FitVersion(1)
+        with self.assertRaises(ValueError):
+            FitVersion([1, 2])
+
+    def test_version_equality(self):
+        v10 = FitVersion("1.0")
+        v10_ = FitVersion("1.0")
+        v11 = FitVersion("1.1")
+
+        self.assertEqual(v10, v10_)
+        self.assertEqual(v10_, v10)
+        self.assertNotEqual(v10, v11)
+
+        self.assertGreaterEqual(v10, v10_)
+        self.assertLessEqual(v10, v10_)
+
+    def test_version_inequality(self):
+        v10 = FitVersion("1.0")
+        v11 = FitVersion("1.1")
+        v20 = FitVersion("2.0")
+
+        self.assertGreater(v11, v10)
+        self.assertGreater(v20, v11)
+        self.assertGreaterEqual(v11, v10)
+        self.assertGreaterEqual(v20, v11)
+
+        self.assertLess(v10, v11)
+        self.assertLess(v11, v20)
+        self.assertLessEqual(v10, v11)
+        self.assertLessEqual(v11, v20)
 
 
 class FitFileTestCase(unittest.TestCase):
