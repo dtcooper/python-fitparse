@@ -417,10 +417,6 @@ class FitFileTestCase(unittest.TestCase):
         f = FitFile(testfile('rollers.fit'))
         f.parse()
 
-    def test_unterminated_file(self):
-        f = FitFile(testfile('nick.fit'), check_crc=False)
-        f.parse()
-
     def test_mismatched_field_size(self):
         f = FitFile(testfile('coros-pace-2-cycling-misaligned-fields.fit'))
         with warnings.catch_warnings(record=True) as w:
@@ -430,7 +426,7 @@ class FitFileTestCase(unittest.TestCase):
         self.assertEqual(len(f.messages), 11293)
 
     def test_unterminated_file(self):
-        f = FitFile(testfile('nick.fit'), check_crc=False)
+        f = FitFile(testfile('ELEMNT_ROAM_Unterminated.fit'), check_crc=False)
         with warnings.catch_warnings(record=True) as w:
             f.parse()
 

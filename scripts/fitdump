@@ -117,7 +117,6 @@ def parse_args(args=None):
         help='File to output data into (defaults to stdout)',
     )
     parser.add_argument(
-        '-t', '--type', choices=('readable', 'json', 'csv'), default='readable',
         '-t', '--type', choices=('readable', 'json', 'gpx', 'csv'), default='readable',
         help='File type to output. (DEFAULT: %(default)s)',
     )
