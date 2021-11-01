@@ -5,6 +5,12 @@ try:
 except ImportError:
     from collections import Iterable
 
+try:
+    # Python 3.4+
+    from pathlib import PurePath
+except ImportError:
+    PurePath = None
+
 
 class FitParseError(ValueError):
     pass
@@ -56,9 +62,13 @@ def fileish_open(fileish, mode):
             return open(fileish, mode)
         except TypeError:
             return io.BytesIO(fileish)
-    else:
-        # Python 3 - file contents
-        return io.BytesIO(fileish)
+
+    # Python 3 - pathlib obj
+    if PurePath and isinstance(fileish, PurePath):
+        return fileish.open(mode)
+
+    # Python 3 - file contents
+    return io.BytesIO(fileish)
 
 
 def is_iterable(obj):

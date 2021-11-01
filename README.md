@@ -2,6 +2,8 @@ python-fitparse
 ===============
 
 Here's a Python library to parse ANT/Garmin `.FIT` files.
+[![Build Status](https://github.com/dtcooper/python-fitparse/workflows/test/badge.svg)](https://github.com/dtcooper/python-fitparse/actions?query=workflow%3Atest)
+
 
 Install from [![PyPI](https://img.shields.io/pypi/v/fitparse.svg)](https://pypi.python.org/pypi/fitparse/):
 ```
@@ -64,7 +66,7 @@ optional arguments:
   --ignore-crc          Some devices can write invalid crc's, ignore these.
 ```
 
-See the documentation for more: http://dtcooper.github.com/python-fitparse
+See the documentation for more: http://dtcooper.github.io/python-fitparse
 
 
 Major Changes From Original Version
@@ -78,7 +80,7 @@ The old version is archived as
     and internal parts. (Still unstable and partially complete.)
 
   * Proper documentation!
-    [Available here](http://dtcooper.github.com/python-fitparse/).
+    [Available here](https://dtcooper.github.io/python-fitparse/).
 
   * Unit tests and example programs.
 
