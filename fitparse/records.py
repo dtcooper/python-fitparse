@@ -14,11 +14,6 @@ try:
 except ImportError:
     from itertools import izip_longest as zip_longest
 
-from fitparse.utils import FitParseError
-
-
-DEV_TYPES = {}
-
 
 class RecordBase(object):
     # namedtuple-like base class. Subclasses should must __slots__
@@ -435,44 +430,3 @@ BASE_TYPES = {
     0x8F: BaseType(name='uint64', identifier=0x8F, fmt='Q', parse=lambda x: None if x == 0xFFFFFFFFFFFFFFFF else x),
     0x90: BaseType(name='uint64z', identifier=0x90, fmt='Q', parse=lambda x: None if x == 0 else x),
 }
-
-
-def add_dev_data_id(message):
-    global DEV_TYPES
-    dev_data_index = message.get_raw_value('developer_data_index')
-    application_id = message.get_raw_value('application_id')
-
-    # Note that nothing in the spec says overwriting an existing type is invalid
-    DEV_TYPES[dev_data_index] = {'dev_data_index': dev_data_index, 'application_id': application_id, 'fields': {}}
-
-
-def add_dev_field_description(message):
-    global DEV_TYPES
-
-    dev_data_index = message.get_raw_value('developer_data_index')
-    field_def_num = message.get_raw_value('field_definition_number')
-    base_type_id = message.get_raw_value('fit_base_type_id')
-    field_name = message.get_raw_value('field_name') or "unnamed_dev_field_%s" % field_def_num
-    units = message.get_raw_value("units")
-    native_field_num = message.get_raw_value('native_field_num')
-
-    if dev_data_index not in DEV_TYPES:
-        raise FitParseError("No such dev_data_index=%s found" % (dev_data_index))
-    fields = DEV_TYPES[int(dev_data_index)]['fields']
-
-    # Note that nothing in the spec says overwriting an existing field is invalid
-    fields[field_def_num] = DevField(dev_data_index=dev_data_index,
-                                     def_num=field_def_num,
-                                     type=BASE_TYPES[base_type_id],
-                                     name=field_name,
-                                     units=units,
-                                     native_field_num=native_field_num)
-
-
-def get_dev_type(dev_data_index, field_def_num):
-    if dev_data_index not in DEV_TYPES:
-        raise FitParseError("No such dev_data_index=%s found when looking up field %s" % (dev_data_index, field_def_num))
-    elif field_def_num not in DEV_TYPES[dev_data_index]['fields']:
-        raise FitParseError("No such field %s for dev_data_index %s" % (field_def_num, dev_data_index))
-
-    return DEV_TYPES[dev_data_index]['fields'][field_def_num]
