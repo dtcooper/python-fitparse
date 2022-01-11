@@ -348,6 +348,7 @@ class FitFileDecoder(DeveloperDataMixin):
     def _parse_raw_values_from_data_message(self, def_mesg):
         # Go through mesg's field defs and read them
         raw_values = []
+        raw_values_pos = []
         for field_def in def_mesg.field_defs + def_mesg.dev_field_defs:
             base_type = field_def.base_type
             is_byte = base_type.name == 'byte'
@@ -355,6 +356,7 @@ class FitFileDecoder(DeveloperDataMixin):
             struct_fmt = str(int(field_def.size / base_type.size)) + base_type.fmt
 
             # Extract the raw value, ask for a tuple if it's a byte type
+            filepos1=self._filesize-self._bytes_left-2
             try:
                 raw_value = self._read_struct(
                     struct_fmt, endian=def_mesg.endian, always_tuple=is_byte,
@@ -374,7 +376,8 @@ class FitFileDecoder(DeveloperDataMixin):
                 raw_value = base_type.parse(raw_value)
 
             raw_values.append(raw_value)
-        return raw_values
+            raw_values_pos.append(filepos1)
+        return raw_values, raw_values_pos
 
     @staticmethod
     def _resolve_subfield(field, def_mesg, raw_values):
@@ -420,12 +423,12 @@ class FitFileDecoder(DeveloperDataMixin):
             raise FitParseError('Got data message with invalid local message type %d' % (
                 header.local_mesg_num))
 
-        raw_values = self._parse_raw_values_from_data_message(def_mesg)
+        raw_values, raw_values_pos = self._parse_raw_values_from_data_message(def_mesg)
         field_datas = []  # TODO: I don't love this name, update on DataMessage too
 
         # TODO: Maybe refactor this and make it simpler (or at least broken
         #       up into sub-functions)
-        for field_def, raw_value in zip(def_mesg.field_defs + def_mesg.dev_field_defs, raw_values):
+        for field_def, raw_value, raw_value_pos in zip(def_mesg.field_defs + def_mesg.dev_field_defs, raw_values, raw_values_pos):
             field, parent_field = field_def.field, None
             if field:
                 field, parent_field = self._resolve_subfield(field, def_mesg, raw_values)
@@ -486,6 +489,7 @@ class FitFileDecoder(DeveloperDataMixin):
                     parent_field=parent_field,
                     value=value,
                     raw_value=raw_value,
+                    filepos=raw_value_pos,
                 )
             )
 
@@ -539,10 +543,15 @@ class FitFileDecoder(DeveloperDataMixin):
         if with_definitions:  # with_definitions implies as_dict=False
             as_dict = False
 
+        # this is the position of the start of the first message
+        filepos=self._filesize-self._bytes_left-2
+        self.recpos=[ filepos  ]
         names = self._make_set(name)
 
         while not self._complete:
             message = self._parse_message()
+            filepos=self._filesize-self._bytes_left-2  # points to next byte in file
+            self.recpos.append(filepos)  # last byte of this record
             if self._should_yield(message, with_definitions, names):
                 yield message.as_dict() if as_dict else message
 

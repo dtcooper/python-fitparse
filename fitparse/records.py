@@ -168,7 +168,7 @@ class DataMessage(RecordBase):
 
 
 class FieldData(RecordBase):
-    __slots__ = ('field_def', 'field', 'parent_field', 'value', 'raw_value', 'units')
+    __slots__ = ('field_def', 'field', 'parent_field', 'value', 'raw_value', 'units', 'filepos')
 
     def __init__(self, *args, **kwargs):
         super(FieldData, self).__init__(self, *args, **kwargs)
@@ -224,12 +224,14 @@ class FieldData(RecordBase):
             'name': self.name, 'def_num': self.def_num, 'base_type': self.base_type.name,
             'type': self.type.name, 'units': self.units, 'value': self.value,
             'raw_value': self.raw_value,
+            'filepos': self.filepos,
         }
 
     def __repr__(self):
         return '<FieldData: %s: %s%s, def num: %d, type: %s (%s), raw value: %s>' % (
             self.name, self.value, ' [%s]' % self.units if self.units else '',
             self.def_num, self.type.name, self.base_type.name, self.raw_value,
+            self.filepos,
         )
 
     def __str__(self):
