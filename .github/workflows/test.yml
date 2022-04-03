@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['2.7', '3.3', '3.4', '3.5', '3.6', '3.x', 'pypy2', 'pypy3']
+        python-version: ['2.7', '3.5', '3.6', '3.x', 'pypy2', 'pypy3']
 
     steps:
     - uses: actions/checkout@v2
