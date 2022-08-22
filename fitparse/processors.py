@@ -5,7 +5,7 @@ from fitparse.utils import scrub_method_name, is_iterable
 UTC_REFERENCE = 631065600  # timestamp for UTC 00:00 Dec 31 1989
 
 
-class FitFileDataProcessor(object):
+class FitFileDataProcessor:
     # TODO: Document API
     # Functions that will be called to do the processing:
     #def run_type_processor(field_data)
@@ -107,7 +107,7 @@ class StandardUnitsDataProcessor(FitFileDataProcessor):
         if field_data.name.endswith("_speed"):
             self.process_field_speed(field_data)
         else:
-            super(StandardUnitsDataProcessor, self).run_field_processor(field_data)
+            super().run_field_processor(field_data)
 
     def process_field_distance(self, field_data):
         if field_data.value is not None:
