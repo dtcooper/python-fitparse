@@ -7,15 +7,7 @@ import datetime
 import itertools
 import json
 import os.path
-import sys
 import types
-
-# Python 2 compat
-try:
-    BrokenPipeError
-except NameError:
-    import socket
-    BrokenPipeError = socket.error
 
 import fitparse
 
@@ -44,7 +36,8 @@ def parse_args(args=None):
     )
     parser.add_argument('-v', '--verbose', action='count', default=0)
     parser.add_argument(
-        '-o', '--output', type=argparse.FileType(mode='w'), default="-",
+        '-o', '--output', type=argparse.FileType(mode='w', encoding="utf-8"),
+        default="-",
         help='File to output data into (defaults to stdout)',
     )
     parser.add_argument(
@@ -64,12 +57,6 @@ def parse_args(args=None):
     )
 
     options = parser.parse_args(args)
-
-    # Work around argparse.FileType not accepting an `encoding` kwarg in
-    # Python < 3.4 by closing and reopening the file (unless it's stdout)
-    if options.output is not sys.stdout:
-        options.output.close()
-        options.output = codecs.open(options.output.name, 'w', encoding='UTF-8')
 
     options.verbose = options.verbose >= 1
     options.with_defs = (options.type == "readable" and options.verbose)
