@@ -35,7 +35,7 @@ def generate_messages(mesg_num, local_mesg_num, field_defs, endian='<', data=Non
         for mesg_data in data:
             s = pack('B', local_mesg_num)
             for value, base_type in zip(mesg_data, base_type_list):
-                s += pack("%s%s" % (endian, base_type.fmt), value)
+                s += pack("{}{}".format(endian, base_type.fmt), value)
             mesgs.append(s)
 
     return b''.join(mesgs)
@@ -106,7 +106,7 @@ class FitFileTestCase(unittest.TestCase):
 
     def test_component_field_accumulaters(self):
         # TODO: abstract CSV parsing
-        csv_fp = open(testfile('compressed-speed-distance-records.csv'), 'r')
+        csv_fp = open(testfile('compressed-speed-distance-records.csv'))
         csv_file = csv.reader(csv_fp)
         next(csv_file)  # Consume header
 
@@ -252,7 +252,7 @@ class FitFileTestCase(unittest.TestCase):
             'garmin-edge-820-bike-records.csv')
 
     def _csv_test_helper(self, fit_file, csv_file):
-        csv_fp = open(testfile(csv_file), 'r')
+        csv_fp = open(testfile(csv_file))
         csv_messages = csv.reader(csv_fp)
         field_names = next(csv_messages)  # Consume header
 
@@ -298,7 +298,7 @@ class FitFileTestCase(unittest.TestCase):
                     self.assertAlmostEqual(fit_value, float(csv_value))
                 else:
                     self.assertEqual(fit_value, csv_value,
-                        msg="For %s, FIT value '%s' did not match CSV value '%s'" % (field_name, fit_value, csv_value))
+                        msg="For {}, FIT value '{}' did not match CSV value '{}'".format(field_name, fit_value, csv_value))
 
         try:
             next(messages)
