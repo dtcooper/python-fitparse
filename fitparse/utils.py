@@ -3,7 +3,7 @@ import re
 try:
     from collections.abc import Iterable
 except ImportError:
-    from collections import Iterable
+    from collections.abc import Iterable
 
 try:
     # Python 3.4+

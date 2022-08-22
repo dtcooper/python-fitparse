@@ -15,7 +15,7 @@ except ImportError:
     from itertools import izip_longest as zip_longest
 
 
-class RecordBase(object):
+class RecordBase:
     # namedtuple-like base class. Subclasses should must __slots__
     __slots__ = ()
 
@@ -83,7 +83,7 @@ class DevFieldDefinition(RecordBase):
     __slots__ = ('field', 'dev_data_index', 'base_type', 'def_num', 'size')
 
     def __init__(self, **kwargs):
-        super(DevFieldDefinition, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # For dev fields, the base_type and type are always the same.
         self.base_type = self.type
 
@@ -129,7 +129,7 @@ class DataMessage(RecordBase):
 
     def get_values(self):
         # SIMPLIFY: get rid of this completely
-        return dict((f.name if f.name else f.def_num, f.value) for f in self.fields)
+        return {f.name if f.name else f.def_num: f.value for f in self.fields}
 
     @property
     def name(self):
@@ -159,7 +159,7 @@ class DataMessage(RecordBase):
     def __repr__(self):
         return '<DataMessage: %s (#%d) -- local mesg: #%d, fields: [%s]>' % (
             self.name, self.mesg_num, self.header.local_mesg_num,
-            ', '.join(["%s: %s" % (fd.name, fd.value) for fd in self.fields]),
+            ', '.join([f"{fd.name}: {fd.value}" for fd in self.fields]),
         )
 
     def __str__(self):
@@ -171,7 +171,7 @@ class FieldData(RecordBase):
     __slots__ = ('field_def', 'field', 'parent_field', 'value', 'raw_value', 'units')
 
     def __init__(self, *args, **kwargs):
-        super(FieldData, self).__init__(self, *args, **kwargs)
+        super().__init__(self, *args, **kwargs)
         if not self.units and self.field:
             # Default to units on field, otherwise None.
             # NOTE:Not a property since you may want to override this in a data processor
@@ -233,7 +233,7 @@ class FieldData(RecordBase):
         )
 
     def __str__(self):
-        return '%s: %s%s' % (
+        return '{}: {}{}'.format(
             self.name, self.value, ' [%s]' % self.units if self.units else '',
         )
 
@@ -260,7 +260,7 @@ class FieldType(RecordBase):
     __slots__ = ('name', 'base_type', 'values')
 
     def __repr__(self):
-        return '<FieldType: %s (%s)>' % (self.name, self.base_type)
+        return f'<FieldType: {self.name} ({self.base_type})>'
 
 
 class MessageType(RecordBase):
@@ -342,7 +342,7 @@ class ComponentField(RecordBase):
         return raw_value
 
 
-class Crc(object):
+class Crc:
     """FIT file CRC computation."""
 
     CRC_TABLE = (
@@ -358,7 +358,7 @@ class Crc(object):
             self.update(byte_arr)
 
     def __repr__(self):
-        return '<%s %s>' % (self.__class__.__name__, self.value or "-")
+        return '<{} {}>'.format(self.__class__.__name__, self.value or "-")
 
     def __str__(self):
         return self.format(self.value)
