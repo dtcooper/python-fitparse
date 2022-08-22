@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 
-import sys
-
 from fitparse.records import Crc
 
-if sys.version_info >= (2, 7):
-    import unittest
-else:
-    import unittest2 as unittest
-
+import unittest
 
 class RecordsTestCase(unittest.TestCase):
     def test_crc(self):

@@ -1,18 +1,7 @@
 import math
 import struct
 
-# Python 2 compat
-try:
-    int_types = (int, long,)
-    byte_iter = bytearray
-except NameError:
-    int_types = (int,)
-    byte_iter = lambda x: x
-
-try:
-    from itertools import zip_longest
-except ImportError:
-    from itertools import izip_longest as zip_longest
+from itertools import zip_longest
 
 
 class RecordBase:
@@ -336,7 +325,7 @@ class ComponentField(RecordBase):
             raw_value = unpacked_num
 
         # Mask and shift like a normal number
-        if isinstance(raw_value, int_types):
+        if isinstance(raw_value, int):
             raw_value = (raw_value >> self.bit_offset) & ((1 << self.bits) - 1)
 
         return raw_value
@@ -376,7 +365,7 @@ class Crc:
     @classmethod
     def calculate(cls, byte_arr, crc=0):
         """Compute CRC for input bytes."""
-        for byte in byte_iter(byte_arr):
+        for byte in byte_arr:
             # Taken verbatim from FIT SDK docs
             tmp = cls.CRC_TABLE[crc & 0xF]
             crc = (crc >> 4) & 0x0FFF
@@ -390,10 +379,7 @@ class Crc:
 
 def parse_string(string):
     try:
-        try:
-            s = string[:string.index(0x00)]
-        except TypeError: # Python 2 compat
-            s = string[:string.index('\x00')]
+        s = string[:string.index('\x00')]
     except ValueError:
         # FIT specification defines the 'string' type as follows: "Null
         # terminated string encoded in UTF-8 format".

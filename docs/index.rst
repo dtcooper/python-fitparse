@@ -56,7 +56,7 @@ Requirements
 
 The following are required to install :mod:`fitparse`,
 
-* `Python <http://www.python.org/>`_ 2.7 and above
+* `Python <http://www.python.org/>`_ 3.6 and above
 
 
 API Documentation

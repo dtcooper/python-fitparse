@@ -4,7 +4,6 @@ import csv
 import datetime
 import os
 from struct import pack
-import sys
 import warnings
 
 from fitparse import FitFile
@@ -12,10 +11,7 @@ from fitparse.processors import UTC_REFERENCE, StandardUnitsDataProcessor
 from fitparse.records import BASE_TYPES, Crc
 from fitparse.utils import FitEOFError, FitCRCError, FitHeaderError, FitParseError
 
-if sys.version_info >= (2, 7):
-    import unittest
-else:
-    import unittest2 as unittest
+import unittest
 
 
 def generate_messages(mesg_num, local_mesg_num, field_defs, endian='<', data=None):

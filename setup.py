@@ -5,8 +5,8 @@ import fitparse
 
 
 requires = None
-if sys.version_info < (2, 7) or (3, 0) <= sys.version_info < (3, 3):
-    sys.exit("Python 2.7 or Python 3.3+ are required.")
+if sys.version_info < (3, 6):
+    sys.exit("Python 3.6+ is required.")
 
 
 setup(

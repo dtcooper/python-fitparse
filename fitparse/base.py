@@ -5,12 +5,6 @@ import os
 import struct
 import warnings
 
-# Python 2 compat
-try:
-    num_types = (int, float, long)
-except NameError:
-    num_types = (int, float)
-
 from fitparse.processors import FitFileDataProcessor
 from fitparse.profile import FIELD_TYPE_TIMESTAMP, MESSAGE_TYPES
 from fitparse.records import (
@@ -396,7 +390,7 @@ class FitFileDecoder(DeveloperDataMixin):
         if isinstance(raw_value, tuple):
             # Contains multiple values, apply transformations to all of them
             return tuple(self._apply_scale_offset(field, x) for x in raw_value)
-        elif isinstance(raw_value, num_types):
+        elif isinstance(raw_value, (int, float)):
             if field.scale:
                 raw_value = float(raw_value) / field.scale
             if field.offset:
