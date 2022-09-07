@@ -379,7 +379,7 @@ class Crc:
 
 def parse_string(string):
     try:
-        s = string[:string.index('\x00')]
+        s = string[:string.index(0x00)]
     except ValueError:
         # FIT specification defines the 'string' type as follows: "Null
         # terminated string encoded in UTF-8 format".
