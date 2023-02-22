@@ -7,6 +7,10 @@ python-fitparse
 > I am looking for a maintainer to help with issues and updating/releasing the package.
 > Please reach out via email at <david@dtcooper.com> if you have interest in helping.
 >
+> If you're having trouble using this package for whatever reason, might we suggest using
+> an alternative library: [fitdecode](https://github.com/polyvertex/fitdecode) by
+> [polyvertex](https://github.com/polyvertex).
+>
 > Cheers,
 >
 > David
