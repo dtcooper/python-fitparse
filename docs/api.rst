@@ -76,7 +76,7 @@ The ``FitFile`` Object
                 try:
                     fitfile = FitFile('/path.to/fitfile.fit')
                     fitfile.parse()
-                except FitParseError, e:
+                except FitParseError as e:
                     print "Error while parsing .FIT file: %s" % e
                     sys.exit(1)
 
