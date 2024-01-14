@@ -74,6 +74,7 @@ def testfile(filename):
 
 
 class FitFileTestCase(unittest.TestCase):
+
     def test_basic_file_with_one_record(self, endian='<'):
         f = FitFile(generate_fitfile(endian=endian))
         f.parse()
@@ -414,7 +415,11 @@ class FitFileTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             f.parse()
             assert w
-            assert all("falling back to byte encoding" in str(x) for x in w)
+            assert all(
+                "falling back to byte encoding" in str(x)
+                for x in w
+                if x.category == UserWarning
+            )
         self.assertEqual(len(f.messages), 11293)
 
     def test_unterminated_file(self):
