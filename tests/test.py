@@ -410,6 +410,14 @@ class FitFileTestCase(unittest.TestCase):
         avg_speed = list(f.get_messages('session'))[0].get_values().get('avg_speed')
         self.assertEqual(avg_speed, 5.86)
 
+    def test_rollers(self):
+        f = FitFile(testfile('rollers.fit'))
+        f.parse()
+
+    def test_unterminated_file(self):
+        f = FitFile(testfile('nick.fit'))
+        f.parse()
+
     def test_mismatched_field_size(self):
         f = FitFile(testfile('coros-pace-2-cycling-misaligned-fields.fit'))
         with warnings.catch_warnings(record=True) as w:
