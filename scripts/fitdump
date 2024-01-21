@@ -28,6 +28,75 @@ def format_message(num, message, options):
     return "".join(s)
 
 
+def sort_record_types(record_type: str = '') -> int:
+    # Header order
+    record_order = {'file_id': 0,
+                    'sport': 1,
+                    'workout': 2,
+                    'activity': 3,
+                    'session': 4,
+                    'lap': 5,
+                    'device_info': 10,
+                    'hr_zone': 11,
+                    'power_zone': 12,
+                    'record': 20,
+                    'event': 30,
+                    'field_description': 40,
+                    'developer_data_id': 100}
+    DEFAULT_ORDER = max(record_order.values()) + 1
+    try:
+        return record_order[record_type]
+    except KeyError:
+        # Not found, last
+        return DEFAULT_ORDER
+
+
+def field_header_format(field_data) -> str:
+    s = field_data.name
+    if field_data.units:
+        s += ' [{}]'.format(field_data.units)
+    return s
+
+
+def field_data_format(messages, message_header):
+    for message in messages:
+        # Format this line
+        s = [''] * len(message_header)
+        for field_data in message:
+            s[message_header.index(field_data.name)] = str(field_data.value)
+        yield ','.join(s) + '\n'
+
+
+def write_csv(options, records):
+    records = list(records)
+    # Collect all the message types in the file
+    record_types = set([message.name for message in records])
+    # Two-stage sort, header info, then alphabetic
+    record_types = list(sorted(sorted(record_types), key=sort_record_types))
+
+    # Cache for all lines
+    all_lines = list()
+
+    for write_type in record_types:
+        # Collect all messages of this type
+        write_messages = [message for message in records if message.name == write_type]
+        # Collect the data field information in alphabetic order
+        field_names_header = sorted(set([field_header_format(field_data) for message in write_messages for field_data in message]))
+        field_names = sorted(set(field_data.name for message in write_messages for field_data in message))
+        # Write the overall header line
+        all_lines.append(write_type + '\n')
+        # Write the field names header line
+        all_lines.append(','.join(field_names_header) + '\n')
+        # Write the data
+        all_lines.extend(field_data_format(write_messages, field_names))
+        # Write a blank line
+        all_lines.append('\n\n')
+
+    # Write the actual file
+    options.output.writelines(all_lines)
+    pass
+
+
 def parse_args(args=None):
     parser = argparse.ArgumentParser(
         description='Dump .FIT files to various formats',
@@ -40,8 +109,7 @@ def parse_args(args=None):
         help='File to output data into (defaults to stdout)',
     )
     parser.add_argument(
-        # TODO: csv
-        '-t', '--type', choices=('readable', 'json', 'gpx'), default='readable',
+        '-t', '--type', choices=('readable', 'json', 'gpx', 'csv'), default='readable',
         help='File type to output. (DEFAULT: %(default)s)',
     )
     parser.add_argument(
@@ -167,7 +235,7 @@ def main(args=None):
     fitfile = fitparse.UncachedFitFile(
         options.infile,
         data_processor=fitparse.StandardUnitsDataProcessor(),
-        check_crc=not(options.ignore_crc),
+        check_crc=not options.ignore_crc,
     )
     records = fitfile.get_messages(
         name=options.name,
@@ -187,11 +255,14 @@ def main(args=None):
             if filename:
                 filename = os.path.basename(filename)
             options.output.writelines(generate_gpx(records, filename))
+        elif options.type == 'csv':
+            write_csv(options, records)
     finally:
         try:
             options.output.close()
         except OSError:
             pass
+
 
 if __name__ == '__main__':
     try:
