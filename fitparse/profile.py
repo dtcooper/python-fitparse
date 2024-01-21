@@ -9586,7 +9586,7 @@ MESSAGE_TYPES = {
             ),
         },
     ),
-    150: MessageType(  # Navigation and race evaluation point for a segment decribing a point along the segment path and time it took each segment leader to reach that point
+    150: MessageType(  # Navigation and race evaluation point for a segment describing a point along the segment path and time it took each segment leader to reach that point
         name='segment_point',
         mesg_num=150,
         fields={
@@ -9866,7 +9866,7 @@ MESSAGE_TYPES = {
                 def_num=0,
                 units='ms',
             ),
-            1: Field(  # Each time in the array describes the time at which the gyro sample with the corrosponding index was taken. Limited to 30 samples in each message. The samples may span across seconds. Array size must match the number of samples in gyro_x and gyro_y and gyro_z
+            1: Field(  # Each time in the array describes the time at which the gyro sample with the corresponding index was taken. Limited to 30 samples in each message. The samples may span across seconds. Array size must match the number of samples in gyro_x and gyro_y and gyro_z
                 name='sample_time_offset',
                 type=BASE_TYPES[0x84],  # uint16
                 def_num=1,
@@ -9921,7 +9921,7 @@ MESSAGE_TYPES = {
                 def_num=0,
                 units='ms',
             ),
-            1: Field(  # Each time in the array describes the time at which the accelerometer sample with the corrosponding index was taken. Limited to 30 samples in each message. The samples may span across seconds. Array size must match the number of samples in accel_x and accel_y and accel_z
+            1: Field(  # Each time in the array describes the time at which the accelerometer sample with the corresponding index was taken. Limited to 30 samples in each message. The samples may span across seconds. Array size must match the number of samples in accel_x and accel_y and accel_z
                 name='sample_time_offset',
                 type=BASE_TYPES[0x84],  # uint16
                 def_num=1,
@@ -10081,7 +10081,7 @@ MESSAGE_TYPES = {
                 def_num=0,
                 units='ms',
             ),
-            1: Field(  # Offset of PID reading [i] from start_timestamp+start_timestamp_ms. Readings may span accross seconds.
+            1: Field(  # Offset of PID reading [i] from start_timestamp+start_timestamp_ms. Readings may span across seconds.
                 name='time_offset',
                 type=BASE_TYPES[0x84],  # uint16
                 def_num=1,
@@ -10606,7 +10606,7 @@ MESSAGE_TYPES = {
                 def_num=0,
                 units='ms',
             ),
-            1: Field(  # Each time in the array describes the time at which the compass sample with the corrosponding index was taken. Limited to 30 samples in each message. The samples may span across seconds. Array size must match the number of samples in cmps_x and cmps_y and cmps_z
+            1: Field(  # Each time in the array describes the time at which the compass sample with the corresponding index was taken. Limited to 30 samples in each message. The samples may span across seconds. Array size must match the number of samples in cmps_x and cmps_y and cmps_z
                 name='sample_time_offset',
                 type=BASE_TYPES[0x84],  # uint16
                 def_num=1,
@@ -10661,7 +10661,7 @@ MESSAGE_TYPES = {
                 def_num=0,
                 units='ms',
             ),
-            1: Field(  # Each time in the array describes the time at which the barometer sample with the corrosponding index was taken. The samples may span across seconds. Array size must match the number of samples in baro_cal
+            1: Field(  # Each time in the array describes the time at which the barometer sample with the corresponding index was taken. The samples may span across seconds. Array size must match the number of samples in baro_cal
                 name='sample_time_offset',
                 type=BASE_TYPES[0x84],  # uint16
                 def_num=1,
@@ -10736,7 +10736,7 @@ MESSAGE_TYPES = {
                 scale=1000,
                 units='s',
             ),
-            3: Field(  # # of repitions of the movement
+            3: Field(  # # of repetitions of the movement
                 name='repetitions',
                 type=BASE_TYPES[0x84],  # uint16
                 def_num=3,
