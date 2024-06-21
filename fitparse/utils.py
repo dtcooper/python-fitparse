@@ -1,15 +1,8 @@
 import io
 import re
-try:
-    from collections.abc import Iterable
-except ImportError:
-    from collections import Iterable
+from collections.abc import Iterable
 
-try:
-    # Python 3.4+
-    from pathlib import PurePath
-except ImportError:
-    PurePath = None
+from pathlib import PurePath
 
 
 class FitParseError(ValueError):
@@ -56,18 +49,14 @@ def fileish_open(fileish, mode):
         # BytesIO-like object
         return fileish
     elif isinstance(fileish, str):
-        # Python2 - file path, file contents in the case of a TypeError
-        # Python3 - file path
-        try:
-            return open(fileish, mode)
-        except TypeError:
-            return io.BytesIO(fileish)
+        # file path
+        return open(fileish, mode)
 
-    # Python 3 - pathlib obj
-    if PurePath and isinstance(fileish, PurePath):
+    # pathlib obj
+    if isinstance(fileish, PurePath):
         return fileish.open(mode)
 
-    # Python 3 - file contents
+    # file contents
     return io.BytesIO(fileish)
 
 

@@ -5,12 +5,6 @@ import os
 import struct
 import warnings
 
-# Python 2 compat
-try:
-    num_types = (int, float, long)
-except NameError:
-    num_types = (int, float)
-
 from fitparse.processors import FitFileDataProcessor
 from fitparse.profile import FIELD_TYPE_TIMESTAMP, MESSAGE_TYPES
 from fitparse.records import (
@@ -20,12 +14,12 @@ from fitparse.records import (
 from fitparse.utils import fileish_open, is_iterable, FitParseError, FitEOFError, FitCRCError, FitHeaderError
 
 
-class DeveloperDataMixin(object):
+class DeveloperDataMixin:
     def __init__(self, *args, check_developer_data=True, **kwargs):
         self.check_developer_data = check_developer_data
         self.dev_types = {}
 
-        super(DeveloperDataMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _append_dev_data_id(self, dev_data_index, application_id=None, fields=None):
         if fields is None:
@@ -97,7 +91,7 @@ class DeveloperDataMixin(object):
         if dev_data_index not in self.dev_types:
             if self.check_developer_data:
                 raise FitParseError(
-                    "No such dev_data_index=%s found when looking up field %s" % (dev_data_index, field_def_num)
+                    f"No such dev_data_index={dev_data_index} found when looking up field {field_def_num}"
                 )
 
             warnings.warn(
@@ -110,11 +104,11 @@ class DeveloperDataMixin(object):
         if field_def_num not in dev_type['fields']:
             if self.check_developer_data:
                 raise FitParseError(
-                    "No such field %s for dev_data_index %s" % (field_def_num, dev_data_index)
+                    f"No such field {field_def_num} for dev_data_index {dev_data_index}"
                 )
 
             warnings.warn(
-                "Field %s for dev_data_index %s missing. Adding dummy field." % (field_def_num, dev_data_index)
+                f"Field {field_def_num} for dev_data_index {dev_data_index} missing. Adding dummy field."
             )
             self._append_dev_field_description(
                 dev_data_index=dev_data_index,
@@ -141,7 +135,7 @@ class FitFileDecoder(DeveloperDataMixin):
         # Start off by parsing the file header (sets initial attribute values)
         self._parse_file_header()
 
-        super(FitFileDecoder, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __del__(self):
         self.close()
@@ -193,7 +187,7 @@ class FitFileDecoder(DeveloperDataMixin):
             return
         if crc_computed == crc_read or (allow_zero and crc_read == 0):
             return
-        raise FitCRCError('CRC Mismatch [computed: %s, read: %s]' % (
+        raise FitCRCError('CRC Mismatch [computed: {}, read: {}]'.format(
             Crc.format(crc_computed), Crc.format(crc_read)))
 
     ##########
@@ -396,7 +390,7 @@ class FitFileDecoder(DeveloperDataMixin):
         if isinstance(raw_value, tuple):
             # Contains multiple values, apply transformations to all of them
             return tuple(self._apply_scale_offset(field, x) for x in raw_value)
-        elif isinstance(raw_value, num_types):
+        elif isinstance(raw_value, (int, float)):
             if field.scale:
                 raw_value = float(raw_value) / field.scale
             if field.offset:
@@ -530,7 +524,7 @@ class FitFileDecoder(DeveloperDataMixin):
         if is_iterable(obj):
             return set(obj)
         else:
-            return set((obj,))
+            return {obj}
 
     ##########
     # Public API
@@ -550,15 +544,15 @@ class FitFileDecoder(DeveloperDataMixin):
         return self.get_messages()
 
 
-class CacheMixin(object):
+class CacheMixin:
     """Add message caching to the FitFileDecoder"""
 
     def __init__(self, *args, **kwargs):
-        super(CacheMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._messages = []
 
     def _parse_message(self):
-        self._messages.append(super(CacheMixin, self)._parse_message())
+        self._messages.append(super()._parse_message())
         return self._messages[-1]
 
     def get_messages(self, name=None, with_definitions=False, as_dict=False):
@@ -572,7 +566,7 @@ class CacheMixin(object):
             if self._should_yield(message, with_definitions, names):
                 yield message.as_dict() if as_dict else message
 
-        for message in super(CacheMixin, self).get_messages(names, with_definitions, as_dict):
+        for message in super().get_messages(names, with_definitions, as_dict):
             yield message
 
     @property
@@ -584,12 +578,12 @@ class CacheMixin(object):
             pass
 
 
-class DataProcessorMixin(object):
+class DataProcessorMixin:
     """Add data processing to the FitFileDecoder"""
 
     def __init__(self, *args, **kwargs):
         self._processor = kwargs.pop("data_processor", None) or FitFileDataProcessor()
-        super(DataProcessorMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _parse_data_message(self, header):
         header, def_mesg, field_datas = self._parse_data_message_components(header)
@@ -612,7 +606,7 @@ class UncachedFitFile(DataProcessorMixin, FitFileDecoder):
 
     def __init__(self, fileish, *args, check_crc=True, data_processor=None, **kwargs):
         # Ensure all optional params are passed as kwargs
-        super(UncachedFitFile, self).__init__(
+        super().__init__(
             fileish,
             *args,
             check_crc=check_crc,

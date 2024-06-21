@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
 
 import argparse
 import codecs
@@ -7,30 +6,22 @@ import datetime
 import itertools
 import json
 import os.path
-import sys
 import types
-
-# Python 2 compat
-try:
-    BrokenPipeError
-except NameError:
-    import socket
-    BrokenPipeError = socket.error
 
 import fitparse
 
 
 def format_message(num, message, options):
-    s = ["{}. {}".format(num, message.name)]
+    s = [f"{num}. {message.name}"]
     if options.with_defs:
-        s.append(' [{}]'.format(message.type))
+        s.append(f' [{message.type}]')
     s.append('\n')
 
     if message.type == 'data':
         for field_data in message:
-            s.append(' * {}: {}'.format(field_data.name, field_data.value))
+            s.append(f' * {field_data.name}: {field_data.value}')
             if field_data.units:
-                s.append(' [{}]'.format(field_data.units))
+                s.append(f' [{field_data.units}]')
             s.append('\n')
 
     s.append('\n')
@@ -44,7 +35,8 @@ def parse_args(args=None):
     )
     parser.add_argument('-v', '--verbose', action='count', default=0)
     parser.add_argument(
-        '-o', '--output', type=argparse.FileType(mode='w'), default="-",
+        '-o', '--output', type=argparse.FileType(mode='w', encoding="utf-8"),
+        default="-",
         help='File to output data into (defaults to stdout)',
     )
     parser.add_argument(
@@ -64,12 +56,6 @@ def parse_args(args=None):
     )
 
     options = parser.parse_args(args)
-
-    # Work around argparse.FileType not accepting an `encoding` kwarg in
-    # Python < 3.4 by closing and reopening the file (unless it's stdout)
-    if options.output is not sys.stdout:
-        options.output.close()
-        options.output = codecs.open(options.output.name, 'w', encoding='UTF-8')
 
     options.verbose = options.verbose >= 1
     options.with_defs = (options.type == "readable" and options.verbose)
@@ -92,7 +78,7 @@ class RecordJSONEncoder(json.JSONEncoder):
                 }
             }
         # Fall back to original to raise a TypeError
-        return super(RecordJSONEncoder, self).default(obj)
+        return super().default(obj)
 
 
 def generate_gpx(records, filename=None):
@@ -113,7 +99,7 @@ def generate_gpx(records, filename=None):
         if message.name == "file_id":
             for field_data in message:
                 if field_data.name == "time_created" and type(field_data.value) == datetime.datetime:
-                    yield '  <time>{}</time>\n'.format(field_data.value.strftime(GPX_TIME_FMT))
+                    yield f'  <time>{field_data.value.strftime(GPX_TIME_FMT)}</time>\n'
                     break
             else:
                 # No time found in the fields, check next record
@@ -124,13 +110,13 @@ def generate_gpx(records, filename=None):
             break
 
     if filename:
-        yield '  <src>{}</src>\n'.format(filename)
+        yield f'  <src>{filename}</src>\n'
 
     yield ' </metadata>\n'
     yield ' <trk>\n'
 
     if filename:
-        yield '  <name>{}</name>\n'.format(filename)
+        yield f'  <name>{filename}</name>\n'
 
     yield '  <trkseg>\n'
 
@@ -204,7 +190,7 @@ def main(args=None):
     finally:
         try:
             options.output.close()
-        except IOError:
+        except OSError:
             pass
 
 if __name__ == '__main__':

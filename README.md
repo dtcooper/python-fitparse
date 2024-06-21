@@ -1,6 +1,20 @@
 python-fitparse
 ===============
 
+> :warning: **NOTE:** *I have **limited to no time** to work on this package
+> these days!*
+> 
+> I am looking for a maintainer to help with issues and updating/releasing the package.
+> Please reach out via email at <david@dtcooper.com> if you have interest in helping.
+>
+> If you're having trouble using this package for whatever reason, might we suggest using
+> an alternative library: [fitdecode](https://github.com/polyvertex/fitdecode) by
+> [polyvertex](https://github.com/polyvertex).
+>
+> Cheers,
+>
+> David
+
 Here's a Python library to parse ANT/Garmin `.FIT` files.
 [![Build Status](https://github.com/dtcooper/python-fitparse/workflows/test/badge.svg)](https://github.com/dtcooper/python-fitparse/actions?query=workflow%3Atest)
 

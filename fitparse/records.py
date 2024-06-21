@@ -1,21 +1,10 @@
 import math
 import struct
 
-# Python 2 compat
-try:
-    int_types = (int, long,)
-    byte_iter = bytearray
-except NameError:
-    int_types = (int,)
-    byte_iter = lambda x: x
-
-try:
-    from itertools import zip_longest
-except ImportError:
-    from itertools import izip_longest as zip_longest
+from itertools import zip_longest
 
 
-class RecordBase(object):
+class RecordBase:
     # namedtuple-like base class. Subclasses should must __slots__
     __slots__ = ()
 
@@ -83,7 +72,7 @@ class DevFieldDefinition(RecordBase):
     __slots__ = ('field', 'dev_data_index', 'base_type', 'def_num', 'size')
 
     def __init__(self, **kwargs):
-        super(DevFieldDefinition, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # For dev fields, the base_type and type are always the same.
         self.base_type = self.type
 
@@ -129,7 +118,7 @@ class DataMessage(RecordBase):
 
     def get_values(self):
         # SIMPLIFY: get rid of this completely
-        return dict((f.name if f.name else f.def_num, f.value) for f in self.fields)
+        return {f.name if f.name else f.def_num: f.value for f in self.fields}
 
     @property
     def name(self):
@@ -159,7 +148,7 @@ class DataMessage(RecordBase):
     def __repr__(self):
         return '<DataMessage: %s (#%d) -- local mesg: #%d, fields: [%s]>' % (
             self.name, self.mesg_num, self.header.local_mesg_num,
-            ', '.join(["%s: %s" % (fd.name, fd.value) for fd in self.fields]),
+            ', '.join([f"{fd.name}: {fd.value}" for fd in self.fields]),
         )
 
     def __str__(self):
@@ -171,7 +160,7 @@ class FieldData(RecordBase):
     __slots__ = ('field_def', 'field', 'parent_field', 'value', 'raw_value', 'units')
 
     def __init__(self, *args, **kwargs):
-        super(FieldData, self).__init__(self, *args, **kwargs)
+        super().__init__(self, *args, **kwargs)
         if not self.units and self.field:
             # Default to units on field, otherwise None.
             # NOTE:Not a property since you may want to override this in a data processor
@@ -233,7 +222,7 @@ class FieldData(RecordBase):
         )
 
     def __str__(self):
-        return '%s: %s%s' % (
+        return '{}: {}{}'.format(
             self.name, self.value, ' [%s]' % self.units if self.units else '',
         )
 
@@ -260,7 +249,7 @@ class FieldType(RecordBase):
     __slots__ = ('name', 'base_type', 'values')
 
     def __repr__(self):
-        return '<FieldType: %s (%s)>' % (self.name, self.base_type)
+        return f'<FieldType: {self.name} ({self.base_type})>'
 
 
 class MessageType(RecordBase):
@@ -336,13 +325,13 @@ class ComponentField(RecordBase):
             raw_value = unpacked_num
 
         # Mask and shift like a normal number
-        if isinstance(raw_value, int_types):
+        if isinstance(raw_value, int):
             raw_value = (raw_value >> self.bit_offset) & ((1 << self.bits) - 1)
 
         return raw_value
 
 
-class Crc(object):
+class Crc:
     """FIT file CRC computation."""
 
     CRC_TABLE = (
@@ -358,7 +347,7 @@ class Crc(object):
             self.update(byte_arr)
 
     def __repr__(self):
-        return '<%s %s>' % (self.__class__.__name__, self.value or "-")
+        return '<{} {}>'.format(self.__class__.__name__, self.value or "-")
 
     def __str__(self):
         return self.format(self.value)
@@ -376,7 +365,7 @@ class Crc(object):
     @classmethod
     def calculate(cls, byte_arr, crc=0):
         """Compute CRC for input bytes."""
-        for byte in byte_iter(byte_arr):
+        for byte in byte_arr:
             # Taken verbatim from FIT SDK docs
             tmp = cls.CRC_TABLE[crc & 0xF]
             crc = (crc >> 4) & 0x0FFF
@@ -390,10 +379,7 @@ class Crc(object):
 
 def parse_string(string):
     try:
-        try:
-            s = string[:string.index(0x00)]
-        except TypeError: # Python 2 compat
-            s = string[:string.index('\x00')]
+        s = string[:string.index(0x00)]
     except ValueError:
         # FIT specification defines the 'string' type as follows: "Null
         # terminated string encoded in UTF-8 format".

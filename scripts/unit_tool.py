@@ -54,7 +54,7 @@ def do_fitparse_profile():
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Usage: {0} Profile.xls".format(os.path.basename(__file__)))
+        print(f"Usage: {os.path.basename(__file__)} Profile.xls")
         sys.exit(0)
 
     do_profile_xls()
