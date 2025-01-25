@@ -66,7 +66,7 @@ def generate_fitfile(data=None, endian='<'):
 
 
 def secs_to_dt(secs):
-    return datetime.datetime.utcfromtimestamp(secs + UTC_REFERENCE)
+    return datetime.datetime.fromtimestamp(timestamp=(secs + UTC_REFERENCE), tz=datetime.timezone.utc).replace(tzinfo=None)
 
 
 def testfile(filename):
