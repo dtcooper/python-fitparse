@@ -1,0 +1,117 @@
+## Pre-commit configuration
+# Last update: 2025-01-24
+
+# Save this file to '/.pre-commit-config.yaml'
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-vcs-permalinks
+      - id: check-xml
+      - id: check-yaml
+      - id: debug-statements
+      - id: destroyed-symlinks
+      # - id: detect-aws-credentials
+      - id: detect-private-key
+      - id: double-quote-string-fixer
+      - id: end-of-file-fixer
+      - id: file-contents-sorter
+      - id: fix-byte-order-marker
+      - id: fix-encoding-pragma
+        args: ["--remove"]
+      - id: forbid-new-submodules
+      # - id: forbid-submodules
+      #   args: ["--fix=lf"]
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+      - id: name-tests-test
+      - id: pretty-format-json
+        args: ["--autofix"]
+      - id: requirements-txt-fixer
+      - id: sort-simple-yaml
+      - id: trailing-whitespace
+
+  - repo: https://github.com/rtts/djhtml
+    rev: 3.0.7 # Without leading 'v'
+    hooks:
+      # - id: djhtml
+      - id: djcss
+      - id: djjs
+
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.3.0 # Without leading 'v'
+    hooks:
+      - id: sqlfluff-fix
+        args: ["--dialect=mysql", "--exclude-rules=ambiguous.column_count, layout.long_lines, references.keywords"]
+
+  # - repo: https://github.com/digitalpulp/pre-commit-php # Requires brew install php-cs-fixer
+    # rev: 1.4.0 # Without leading 'v'
+    # hooks:
+    # - id: php-cs-fixer
+      # files: \.(php)$
+      # args: [--rules=@PSR12]
+
+  # - repo: https://github.com/lorenzwalthert/precommit
+    # rev: v0.4.3.9003
+    # hooks:
+      # - id: no-browser-statement
+      # - id: no-debug-statement
+      # - id: parsable-R
+      # # - id: lintr
+      # - id: style-files
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.9.3
+    hooks:
+      - id: ruff
+        args: ["--fix", "--exit-non-zero-on-fix", "--ignore=B007,B023,C408,D103,E203,E266,E402,E501,F821,S105,S110,S310,SIM105"] # ruff-pre-commit does not recognize these rule selectors: B902,CM001,S410,SCS109,W503,W504
+      - id: ruff-format
+        args: ["--line-length=220", "--config", "format.quote-style='single'", "--config", "format.indent-style='space'"]
+
+  - repo: https://github.com/asottile/add-trailing-comma
+    rev: v3.1.0
+    hooks:
+      - id: add-trailing-comma
+
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: python-check-blanket-noqa
+      # - id: python-check-blanket-type-ignore
+      - id: python-check-mock-methods
+      - id: python-no-eval
+      - id: python-no-log-warn
+      - id: python-use-type-annotations
+      - id: rst-backticks
+      - id: rst-directive-colons
+      - id: rst-inline-touching-normal
+      - id: text-unicode-replacement-char
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.19.1
+    hooks:
+      - id: pyupgrade
+        args: ["--py312-plus"]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.0
+    hooks:
+      - id: codespell
+        exclude: '^data/'
+        args: ["--ignore-words-list=alle,als,deine,dokument,ges,ist,itens,nax,oder,produkt,ressource,ser,sie,tage,termine"] # The --ignore-words-list argument has a bug where it needs to be lowercase, see: https://github.com/codespell-project/codespell/issues/1390
+
+default_language_version:
+  python: python3
